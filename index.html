@@ -1,0 +1,3351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SCQ Match Generator</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+/* ─── Design Tokens ─────────────────────────────────────────── */
+:root {
+  --bg:        #0d1117;
+  --bg2:       #161b22;
+  --bg3:       #1c2230;
+  --bg4:       #222b3a;
+  --border:    #2a3547;
+  --border2:   #3d4f6a;
+  --gold:      #e8b84b;
+  --gold2:     #f5d27a;
+  --gold-dim:  #7a5f22;
+  --teal:      #3ecfba;
+  --teal-dim:  #1a5c54;
+  --red:       #e05252;
+  --red-dim:   #4a1e1e;
+  --green:     #4cca7c;
+  --green-dim: #1a3d2a;
+  --text:      #cdd5e0;
+  --text2:     #8b9db5;
+  --text3:     #5a6f8a;
+  --alt-col:   #3e78d4;
+  --min-col:   #d46b3e;
+  --buz-col:   #a855f7;
+  --font-ui:   'Segoe UI', system-ui, sans-serif;
+  --font-mono: 'Cascadia Code', 'Fira Code', 'Courier New', monospace;
+  --radius:    6px;
+  --radius2:   10px;
+  --shadow:    0 4px 20px rgba(0,0,0,0.5);
+}
+
+/* ─── Reset / Base ──────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { height: 100%; }
+body {
+  font-family: var(--font-ui);
+  background: var(--bg);
+  color: var(--text);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  font-size: 14px;
+  line-height: 1.5;
+}
+button { cursor: pointer; font-family: var(--font-ui); }
+input, select, textarea { font-family: var(--font-ui); }
+a { color: var(--gold); text-decoration: none; }
+a:hover { color: var(--gold2); }
+
+/* ─── Header ────────────────────────────────────────────────── */
+#app-header {
+  background: var(--bg2);
+  border-bottom: 2px solid var(--gold-dim);
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  height: 56px;
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.header-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.header-logo .emblem {
+  width: 36px; height: 36px;
+  background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dim) 100%);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; font-weight: 900; color: var(--bg);
+  letter-spacing: -1px;
+  flex-shrink: 0;
+}
+.header-logo .app-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--gold);
+  letter-spacing: 0.5px;
+}
+.header-logo .app-sub {
+  font-size: 11px;
+  color: var(--text3);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+#nav-tabs {
+  display: flex;
+  gap: 2px;
+  margin-left: 20px;
+  height: 100%;
+  align-items: flex-end;
+}
+.nav-tab {
+  background: none;
+  border: none;
+  border-bottom: 3px solid transparent;
+  color: var(--text2);
+  padding: 0 14px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+  transition: color 0.15s, border-color 0.15s;
+  white-space: nowrap;
+}
+.nav-tab:hover { color: var(--text); }
+.nav-tab.active { color: var(--gold); border-bottom-color: var(--gold); }
+.header-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+#db-status {
+  font-size: 11px;
+  color: var(--text3);
+  display: flex; align-items: center; gap: 5px;
+}
+.status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--text3); }
+.status-dot.ok { background: var(--green); }
+
+/* ─── Layout ────────────────────────────────────────────────── */
+#main-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+}
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+/* ─── Cards / Sections ──────────────────────────────────────── */
+.card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius2);
+  padding: 20px;
+  margin-bottom: 16px;
+}
+.card-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text2);
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.card-title .ct-icon {
+  width: 20px; height: 20px;
+  border-radius: 4px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px;
+}
+.section-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+@media (max-width: 900px) { .section-grid { grid-template-columns: 1fr; } }
+
+/* ─── Buttons ───────────────────────────────────────────────── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: none;
+  border-radius: var(--radius);
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.btn-primary {
+  background: var(--gold);
+  color: var(--bg);
+}
+.btn-primary:hover { background: var(--gold2); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(232,184,75,0.3); }
+.btn-secondary {
+  background: var(--bg4);
+  color: var(--text);
+  border: 1px solid var(--border2);
+}
+.btn-secondary:hover { background: var(--bg3); border-color: var(--text3); }
+.btn-alt { background: var(--alt-col); color: #fff; }
+.btn-alt:hover { background: #5090e8; }
+.btn-min { background: var(--min-col); color: #fff; }
+.btn-min:hover { background: #e88050; }
+.btn-buz { background: var(--buz-col); color: #fff; }
+.btn-buz:hover { background: #bf7fff; }
+.btn-teal { background: var(--teal); color: var(--bg); }
+.btn-teal:hover { background: #6de8d8; }
+.btn-danger { background: var(--red-dim); color: var(--red); border: 1px solid var(--red-dim); }
+.btn-danger:hover { background: var(--red); color: #fff; }
+.btn-sm { padding: 5px 10px; font-size: 12px; }
+.btn-xs { padding: 3px 7px; font-size: 11px; }
+.btn-icon { padding: 6px 8px; }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
+
+/* ─── Form Controls ─────────────────────────────────────────── */
+.form-row { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; flex-wrap: wrap; }
+.form-group { display: flex; flex-direction: column; gap: 5px; }
+label { font-size: 12px; color: var(--text2); font-weight: 500; }
+input[type="text"], input[type="number"], select, textarea {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  padding: 7px 10px;
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+input[type="text"]:focus, input[type="number"]:focus, select:focus, textarea:focus {
+  border-color: var(--gold);
+}
+select option { background: var(--bg3); }
+textarea { resize: vertical; min-height: 80px; }
+input[type="checkbox"] { accent-color: var(--gold); width: 14px; height: 14px; }
+.checkbox-row { display: flex; align-items: center; gap: 7px; cursor: pointer; }
+.checkbox-row label { cursor: pointer; color: var(--text); font-size: 13px; font-weight: 400; }
+input[type="file"] { display: none; }
+.file-drop-zone {
+  border: 2px dashed var(--border2);
+  border-radius: var(--radius2);
+  padding: 32px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: var(--text2);
+}
+.file-drop-zone:hover, .file-drop-zone.drag-over {
+  border-color: var(--gold);
+  background: rgba(232,184,75,0.05);
+  color: var(--gold);
+}
+.file-drop-zone .drop-icon { font-size: 32px; margin-bottom: 8px; }
+.file-drop-zone .drop-label { font-size: 14px; font-weight: 600; }
+.file-drop-zone .drop-sub { font-size: 12px; color: var(--text3); margin-top: 4px; }
+
+/* ─── Tables ────────────────────────────────────────────────── */
+.data-table-wrap { overflow-x: auto; border-radius: var(--radius); border: 1px solid var(--border); }
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.data-table th {
+  background: var(--bg3);
+  color: var(--text2);
+  font-weight: 600;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  padding: 9px 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+  position: sticky;
+  top: 0;
+}
+.data-table td {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+  vertical-align: top;
+}
+.data-table tr:last-child td { border-bottom: none; }
+.data-table tr:hover td { background: var(--bg3); }
+.data-table .q-id {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--gold);
+  white-space: nowrap;
+}
+.data-table .q-text { max-width: 340px; }
+.data-table .q-ans { color: var(--teal); }
+.data-table .q-subj { font-weight: 600; }
+.data-table .q-cat { color: var(--text2); font-size: 12px; }
+.data-table .q-diff {
+  display: inline-block;
+  padding: 2px 7px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+}
+.diff-Easy { background: var(--green-dim); color: var(--green); }
+.diff-Medium { background: rgba(232,184,75,0.15); color: var(--gold); }
+.diff-Hard { background: var(--red-dim); color: var(--red); }
+
+/* ─── Section Header (Alternate / Minute / Buzzer) ──────────── */
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+.section-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+.pill-alt { background: rgba(62,120,212,0.2); color: var(--alt-col); border: 1px solid rgba(62,120,212,0.4); }
+.pill-min { background: rgba(212,107,62,0.2); color: var(--min-col); border: 1px solid rgba(212,107,62,0.4); }
+.pill-buz { background: rgba(168,85,247,0.2); color: var(--buz-col); border: 1px solid rgba(168,85,247,0.4); }
+
+/* ─── Subject Selector ──────────────────────────────────────── */
+.subject-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 420px;
+  overflow-y: auto;
+  padding: 2px;
+}
+/* Category mode toggle */
+.cat-mode-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+  font-size: 12px;
+  color: var(--text2);
+}
+.cat-mode-row .mode-label { font-weight: 600; }
+.mode-toggle {
+  display: flex;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  overflow: hidden;
+}
+.mode-btn {
+  background: none;
+  border: none;
+  color: var(--text3);
+  padding: 3px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: 20px;
+  transition: all 0.15s;
+}
+.mode-btn.active { background: var(--gold); color: var(--bg); }
+/* Subject row wrapper */
+.subject-row { display: flex; flex-direction: column; }
+.subject-chip {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: all 0.12s;
+  user-select: none;
+  font-size: 13px;
+  background: none;
+  color: var(--text);
+  text-align: left;
+  width: 100%;
+  font-family: var(--font-ui);
+}
+.subject-chip:hover { border-color: var(--border2); background: var(--bg3); }
+.subject-chip.selected {
+  border-color: var(--gold);
+  background: rgba(232,184,75,0.1);
+  color: var(--gold);
+}
+.subject-chip.selected.cat-open { border-radius: var(--radius) var(--radius) 0 0; border-bottom-color: rgba(232,184,75,0.3); }
+.subject-chip input[type="checkbox"] { pointer-events: none; flex-shrink: 0; }
+.subject-chip .chip-name { flex: 1; }
+.subject-chip .chip-count {
+  font-size: 11px;
+  color: var(--text3);
+  font-family: var(--font-mono);
+  flex-shrink: 0;
+}
+.subject-chip.selected .chip-count { color: var(--gold-dim); }
+.chip-expand-btn {
+  background: none;
+  border: none;
+  color: var(--text3);
+  padding: 0 2px;
+  cursor: pointer;
+  font-size: 10px;
+  line-height: 1;
+  flex-shrink: 0;
+  display: none;
+}
+.chip-expand-btn:hover { color: var(--gold); }
+.manual-mode .chip-expand-btn { display: block; }
+/* Category panel */
+.cat-panel {
+  display: none;
+  background: rgba(232,184,75,0.04);
+  border: 1px solid var(--gold);
+  border-top: none;
+  border-radius: 0 0 var(--radius) var(--radius);
+  padding: 8px 10px;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.cat-panel.open { display: flex; }
+.cat-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border: 1px solid var(--border2);
+  border-radius: 20px;
+  font-size: 11px;
+  cursor: pointer;
+  background: var(--bg3);
+  color: var(--text2);
+  transition: all 0.12s;
+  user-select: none;
+  font-family: var(--font-ui);
+}
+.cat-chip:hover { border-color: var(--gold); color: var(--gold); }
+.cat-chip.selected { background: rgba(232,184,75,0.15); border-color: var(--gold); color: var(--gold); }
+.cat-chip input[type="checkbox"] { pointer-events: none; width: 11px; height: 11px; }
+.cat-panel-hint { font-size: 10px; color: var(--text3); width: 100%; margin-bottom: 3px; }
+
+/* ─── Generated Match ───────────────────────────────────────── */
+.match-section {
+  margin-bottom: 24px;
+}
+.match-section-title {
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.q-row {
+  display: flex;
+  gap: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin-bottom: 6px;
+  background: var(--bg2);
+  transition: border-color 0.1s;
+}
+.q-row:hover { border-color: var(--border2); }
+.q-num {
+  background: var(--bg3);
+  border-right: 1px solid var(--border);
+  padding: 10px 14px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--gold);
+  min-width: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.q-body { flex: 1; padding: 10px 14px; }
+.q-meta {
+  font-size: 11px;
+  color: var(--text3);
+  margin-bottom: 4px;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.q-meta .meta-subj { color: var(--text2); font-weight: 600; }
+.q-meta .meta-cat { color: var(--text3); }
+.q-meta .meta-id { font-family: var(--font-mono); color: var(--gold-dim); }
+.q-question { font-size: 14px; color: var(--text); margin-bottom: 3px; }
+.q-answer-wrap { display: flex; align-items: center; gap: 8px; margin-top: 4px; }
+.q-answer {
+  font-size: 13px;
+  color: var(--teal);
+  font-weight: 600;
+}
+.q-answer.hidden { filter: blur(4px); color: var(--bg3); background: var(--bg3); border-radius: 3px; cursor: pointer; }
+.q-answer.hidden:hover { filter: blur(2px); }
+.reveal-btn {
+  background: none;
+  border: 1px solid var(--teal-dim);
+  border-radius: 3px;
+  color: var(--text3);
+  padding: 2px 6px;
+  font-size: 10px;
+  cursor: pointer;
+}
+.reveal-btn:hover { color: var(--teal); border-color: var(--teal); }
+
+/* ─── Stats ─────────────────────────────────────────────────── */
+.stat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
+.stat-card {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px;
+  text-align: center;
+}
+.stat-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--gold);
+  font-family: var(--font-mono);
+  line-height: 1;
+  margin-bottom: 4px;
+}
+.stat-label { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.8px; }
+
+/* ─── Alerts ─────────────────────────────────────────────────── */
+.alert {
+  border-radius: var(--radius);
+  padding: 10px 14px;
+  font-size: 13px;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+.alert-warn { background: rgba(232,184,75,0.12); border: 1px solid var(--gold-dim); color: var(--gold2); }
+.alert-error { background: var(--red-dim); border: 1px solid rgba(224,82,82,0.4); color: var(--red); }
+.alert-ok { background: var(--green-dim); border: 1px solid rgba(76,202,124,0.4); color: var(--green); }
+.alert-info { background: rgba(62,120,212,0.12); border: 1px solid rgba(62,120,212,0.4); color: #7db3ff; }
+
+/* ─── Badge / Pill ───────────────────────────────────────────── */
+.badge {
+  display: inline-block;
+  padding: 2px 7px;
+  border-radius: 20px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+.badge-alt { background: rgba(62,120,212,0.2); color: var(--alt-col); }
+.badge-min { background: rgba(212,107,62,0.2); color: var(--min-col); }
+.badge-buz { background: rgba(168,85,247,0.2); color: var(--buz-col); }
+
+/* ─── Scrollbar ──────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text3); }
+
+/* ─── Spinner ────────────────────────────────────────────────── */
+.spinner {
+  width: 18px; height: 18px;
+  border: 2px solid var(--border);
+  border-top-color: var(--gold);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  display: inline-block;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ─── Modal ──────────────────────────────────────────────────── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.modal-overlay.hidden { display: none; }
+.modal {
+  background: var(--bg2);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius2);
+  padding: 24px;
+  max-width: 700px;
+  width: 100%;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: var(--shadow);
+}
+.modal-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--gold);
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.modal-close {
+  background: none; border: none;
+  color: var(--text3); font-size: 18px; cursor: pointer;
+  padding: 0 4px;
+}
+.modal-close:hover { color: var(--text); }
+
+/* ─── Tab: Import ───────────────────────────────────────────── */
+.import-step {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 10px;
+  background: var(--bg3);
+}
+.import-step-num {
+  background: var(--gold-dim);
+  color: var(--gold);
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.import-step-body { flex: 1; }
+.import-step-title { font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+
+/* ─── Column map grid ────────────────────────────────────────── */
+.col-map-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+/* ─── Usage tracking tab ─────────────────────────────────────── */
+.usage-bar-row { display: flex; gap: 8px; align-items: center; margin-bottom: 6px; }
+.usage-bar-label { width: 160px; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text2); }
+.usage-bar-track { flex: 1; height: 8px; background: var(--bg4); border-radius: 4px; overflow: hidden; }
+.usage-bar-fill { height: 100%; background: var(--gold); border-radius: 4px; transition: width 0.4s; }
+.usage-bar-count { font-size: 11px; color: var(--text3); font-family: var(--font-mono); width: 50px; text-align: right; }
+
+/* ─── Settings ────────────────────────────────────────────────── */
+.settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 600px) { .settings-grid { grid-template-columns: 1fr; } }
+.settings-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.settings-row-label { font-size: 13px; font-weight: 500; }
+.settings-row-desc { font-size: 11px; color: var(--text3); margin-top: 2px; }
+.num-input { width: 70px; }
+
+/* ─── Generator tab layout ────────────────────────────────────── */
+.gen-layout { display: grid; grid-template-columns: 280px 1fr; gap: 16px; }
+@media (max-width: 800px) { .gen-layout { grid-template-columns: 1fr; } }
+.gen-sidebar { display: flex; flex-direction: column; gap: 12px; }
+.gen-main { min-width: 0; }
+.gen-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+#match-output { min-height: 200px; }
+
+/* ─── Templates ────────────────────────────────────────────────── */
+.template-card {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.template-card:hover { border-color: var(--gold); background: rgba(232,184,75,0.05); }
+.template-card .tc-name { font-size: 13px; font-weight: 600; margin-bottom: 4px; color: var(--gold); }
+.template-card .tc-subjects { font-size: 11px; color: var(--text3); }
+.template-list { display: flex; flex-direction: column; gap: 6px; }
+
+/* ─── Search bar ───────────────────────────────────────────────── */
+.search-row { display: flex; gap: 8px; align-items: center; margin-bottom: 12px; }
+.search-input { flex: 1; }
+
+/* ─── Empty state ──────────────────────────────────────────────── */
+.empty-state {
+  text-align: center;
+  padding: 48px 20px;
+  color: var(--text3);
+}
+.empty-state .es-icon { font-size: 40px; margin-bottom: 12px; }
+.empty-state .es-title { font-size: 16px; font-weight: 600; color: var(--text2); margin-bottom: 6px; }
+.empty-state .es-sub { font-size: 13px; }
+
+/* ─── Progress bar ─────────────────────────────────────────────── */
+.progress-bar {
+  height: 4px;
+  background: var(--bg4);
+  border-radius: 2px;
+  overflow: hidden;
+  margin: 8px 0;
+}
+.progress-fill { height: 100%; background: var(--gold); border-radius: 2px; transition: width 0.3s; }
+
+/* ─── Misc ──────────────────────────────────────────────────────── */
+.text-mono { font-family: var(--font-mono); }
+.text-gold { color: var(--gold); }
+.text-teal { color: var(--teal); }
+.text-dim { color: var(--text3); }
+.text-small { font-size: 12px; }
+.flex-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.flex-col { display: flex; flex-direction: column; gap: 8px; }
+.mt-8 { margin-top: 8px; }
+.mt-12 { margin-top: 12px; }
+.mt-16 { margin-top: 16px; }
+.w-full { width: 100%; }
+.hidden { display: none !important; }
+hr.divider { border: none; border-top: 1px solid var(--border); margin: 14px 0; }
+.code-block {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 14px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text2);
+  overflow-x: auto;
+  white-space: pre;
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════ HEADER -->
+<header id="app-header">
+  <div class="header-logo">
+    <div class="emblem">SCQ</div>
+    <div>
+      <div class="app-name">Match Generator</div>
+      <div class="app-sub">School Challenge Quiz</div>
+    </div>
+  </div>
+  <nav id="nav-tabs">
+    <button class="nav-tab active" data-tab="generate">⚡ Generate</button>
+    <button class="nav-tab" data-tab="questions">📚 Question Bank</button>
+    <button class="nav-tab" data-tab="import">📥 Import</button>
+    <button class="nav-tab" data-tab="usage">📊 Usage</button>
+    <button class="nav-tab" data-tab="settings">⚙️ Settings</button>
+  </nav>
+  <div class="header-right">
+    <div id="db-status">
+      <div class="status-dot" id="status-dot"></div>
+      <span id="status-text">No data loaded</span>
+    </div>
+  </div>
+</header>
+
+<!-- ══════════════════════════════════════════════════ MAIN -->
+<div id="main-content">
+
+<!-- ────────────── TAB: GENERATE ────────────── -->
+<div id="tab-generate" class="tab-panel active">
+  <div class="gen-layout">
+    <!-- Sidebar: controls -->
+    <div class="gen-sidebar">
+
+      <!-- Templates -->
+      <div class="card">
+        <div class="card-title"><span class="ct-icon">📋</span>Templates</div>
+        <div class="template-list" id="template-list">
+          <!-- populated by JS -->
+        </div>
+        <button class="btn btn-secondary btn-sm w-full mt-8" onclick="showSaveTemplateModal()">+ Save Current as Template</button>
+      </div>
+
+      <!-- Match Name -->
+      <div class="card">
+        <div class="card-title"><span class="ct-icon">🏷️</span>Match Name</div>
+        <input type="text" id="match-name" placeholder="e.g. Practice Match 1" class="w-full">
+        <div class="form-row mt-8">
+          <label class="checkbox-row"><input type="checkbox" id="cb-alt"> <label for="cb-alt">Alternate</label></label>
+          <label class="checkbox-row"><input type="checkbox" id="cb-min"> <label for="cb-min">Minute</label></label>
+          <label class="checkbox-row"><input type="checkbox" id="cb-buz"> <label for="cb-buz">Buzzer</label></label>
+        </div>
+      </div>
+
+      <!-- Subject selection -->
+      <div class="card">
+        <div class="card-title"><span class="ct-icon">🗂️</span>Subjects &amp; Categories</div>
+        <input type="text" class="search-input w-full" id="subj-search" placeholder="Filter subjects…" oninput="filterSubjects()" style="margin-bottom:8px">
+        <div class="cat-mode-row">
+          <span class="mode-label">Categories:</span>
+          <div class="mode-toggle">
+            <button class="mode-btn active" id="mode-auto" onclick="setCatMode('auto')">Auto</button>
+            <button class="mode-btn" id="mode-manual" onclick="setCatMode('manual')">Manual</button>
+          </div>
+          <span class="text-dim text-small" id="cat-mode-hint">app picks</span>
+        </div>
+        <div class="flex-row" style="margin-bottom:6px">
+          <button class="btn btn-secondary btn-xs" onclick="selectAllSubjects()">All</button>
+          <button class="btn btn-secondary btn-xs" onclick="deselectAllSubjects()">None</button>
+          <span class="text-small text-dim" id="subj-count-label">0 selected</span>
+        </div>
+        <div class="subject-grid" id="subject-grid">
+          <div class="empty-state" style="padding:20px">
+            <div class="es-icon">📭</div>
+            <div class="es-sub">Load a question bank first</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Main: output -->
+    <div class="gen-main">
+      <div class="gen-actions">
+        <button class="btn btn-primary" onclick="generateMatch()" id="btn-generate">
+          ⚡ Generate Match
+        </button>
+        <button class="btn btn-secondary" onclick="clearMatch()">🗑 Clear</button>
+        <button class="btn btn-teal" onclick="exportMatchHTML()" id="btn-export-html" disabled>
+          📄 Export HTML Report
+        </button>
+        <button class="btn btn-secondary" onclick="exportMatchJSON()" id="btn-export-json" disabled>
+          {} Export JSON
+        </button>
+        <button class="btn btn-secondary btn-sm" onclick="toggleAllAnswers()" id="btn-reveal-all">
+          👁 Show Answers
+        </button>
+      </div>
+
+      <!-- Stats before generation -->
+      <div id="pre-gen-stats" class="card">
+        <div class="card-title"><span class="ct-icon">📊</span>Database Overview</div>
+        <div class="stat-grid" id="overview-stats">
+          <div class="stat-card"><div class="stat-value" id="stat-total">0</div><div class="stat-label">Total Questions</div></div>
+          <div class="stat-card"><div class="stat-value" id="stat-subjects">0</div><div class="stat-label">Subjects</div></div>
+          <div class="stat-card"><div class="stat-value" id="stat-categories">0</div><div class="stat-label">Categories</div></div>
+          <div class="stat-card"><div class="stat-value" id="stat-used">0</div><div class="stat-label">Used</div></div>
+          <div class="stat-card"><div class="stat-value" id="stat-unused">0</div><div class="stat-label">Available</div></div>
+          <div class="stat-card"><div class="stat-value" id="stat-media">0</div><div class="stat-label">With Media</div></div>
+        </div>
+      </div>
+
+      <!-- Generated Match output -->
+      <div id="match-output"></div>
+
+      <!-- Post-gen stats -->
+      <div id="post-gen-stats" class="card hidden">
+        <div class="card-title"><span class="ct-icon">📈</span>Generation Summary</div>
+        <div class="stat-grid" id="gen-summary-stats"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ────────────── TAB: QUESTION BANK ────────────── -->
+<div id="tab-questions" class="tab-panel">
+  <div class="card">
+    <div class="card-title"><span class="ct-icon">📚</span>Question Bank</div>
+    <div class="flex-row" style="margin-bottom:12px">
+      <input type="text" class="search-input" id="qb-search" placeholder="Search questions, subjects, categories…" oninput="filterQuestionBank()" style="flex:1">
+      <select id="qb-filter-subj" onchange="filterQuestionBank()">
+        <option value="">All Subjects</option>
+      </select>
+      <select id="qb-filter-diff" onchange="filterQuestionBank()">
+        <option value="">All Difficulties</option>
+        <option>Easy</option><option>Medium</option><option>Hard</option>
+      </select>
+      <span class="text-small text-dim" id="qb-count-label"></span>
+    </div>
+    <div class="data-table-wrap" style="max-height:540px; overflow-y:auto;">
+      <table class="data-table" id="qb-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Subject</th>
+            <th>Category</th>
+            <th>Question</th>
+            <th>Answer</th>
+            <th>Diff</th>
+            <th>Media</th>
+          </tr>
+        </thead>
+        <tbody id="qb-tbody"></tbody>
+      </table>
+    </div>
+    <div id="qb-empty" class="empty-state">
+      <div class="es-icon">📭</div>
+      <div class="es-title">No question bank loaded</div>
+      <div class="es-sub">Import an Excel file or load questions.json from the Import tab</div>
+    </div>
+  </div>
+</div>
+
+<!-- ────────────── TAB: IMPORT ────────────── -->
+<div id="tab-import" class="tab-panel">
+  <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
+    <div>
+      <!-- Excel Import -->
+      <div class="card">
+        <div class="card-title"><span class="ct-icon">📊</span>Import from Excel</div>
+
+        <div class="import-step">
+          <div class="import-step-num">1</div>
+          <div class="import-step-body">
+            <div class="import-step-title">Select Excel File</div>
+            <div class="file-drop-zone" id="excel-drop" onclick="document.getElementById('excel-file-input').click()"
+              ondragover="event.preventDefault();this.classList.add('drag-over')"
+              ondragleave="this.classList.remove('drag-over')"
+              ondrop="handleExcelDrop(event)">
+              <div class="drop-icon">📂</div>
+              <div class="drop-label">Click or drag .xlsx / .xls here</div>
+              <div class="drop-sub">Supports Excel 97-2007+ formats</div>
+            </div>
+            <input type="file" id="excel-file-input" accept=".xlsx,.xls" onchange="handleExcelFile(event)">
+          </div>
+        </div>
+
+        <div class="import-step" id="step-sheet" style="display:none">
+          <div class="import-step-num">2</div>
+          <div class="import-step-body">
+            <div class="import-step-title">Select Sheet</div>
+            <select id="sheet-select" onchange="loadSheet()" class="w-full"></select>
+          </div>
+        </div>
+
+        <div class="import-step" id="step-map" style="display:none">
+          <div class="import-step-num">3</div>
+          <div class="import-step-body">
+            <div class="import-step-title">Map Columns</div>
+            <div class="col-map-grid" id="col-map-grid"></div>
+          </div>
+        </div>
+
+        <div id="import-preview-wrap" style="display:none">
+          <div class="import-step">
+            <div class="import-step-num">4</div>
+            <div class="import-step-body">
+              <div class="import-step-title">Preview <span id="preview-count" class="text-dim text-small"></span></div>
+              <div class="data-table-wrap" style="max-height:240px; overflow-y:auto">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Subject</th><th>Category</th><th>Question</th><th>Answer</th><th>Diff</th><th>Media</th>
+                    </tr>
+                  </thead>
+                  <tbody id="import-preview-tbody"></tbody>
+                </table>
+              </div>
+              <div class="flex-row mt-8">
+                <button class="btn btn-primary" onclick="finalizeImport()">✅ Import Questions</button>
+                <div id="import-validation-msg"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <!-- JSON Import/Export -->
+      <div class="card">
+        <div class="card-title"><span class="ct-icon">📁</span>JSON Files</div>
+
+        <div class="import-step">
+          <div class="import-step-num">📂</div>
+          <div class="import-step-body">
+            <div class="import-step-title">Load questions.json</div>
+            <div class="file-drop-zone" onclick="document.getElementById('json-file-input').click()"
+              ondragover="event.preventDefault();this.classList.add('drag-over')"
+              ondragleave="this.classList.remove('drag-over')"
+              ondrop="handleJSONDrop(event)">
+              <div class="drop-icon">{ }</div>
+              <div class="drop-label">Click or drag questions.json</div>
+              <div class="drop-sub">Load an existing question bank</div>
+            </div>
+            <input type="file" id="json-file-input" accept=".json" onchange="handleJSONFile(event)">
+          </div>
+        </div>
+
+        <div class="import-step">
+          <div class="import-step-num">📤</div>
+          <div class="import-step-body">
+            <div class="import-step-title">Export Files</div>
+            <div class="flex-col">
+              <button class="btn btn-secondary btn-sm" onclick="exportQuestionsJSON()">Export questions.json</button>
+              <button class="btn btn-secondary btn-sm" onclick="exportCatalogJSON()">Export catalog.json</button>
+              <button class="btn btn-secondary btn-sm" onclick="exportUsageJSON()">Export used_questions.json</button>
+              <button class="btn btn-secondary btn-sm" onclick="exportSettingsJSON()">Export settings.json</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sample Data -->
+      <div class="card">
+        <div class="card-title"><span class="ct-icon">🎲</span>Sample Data</div>
+        <p class="text-small text-dim" style="margin-bottom:10px">Load a sample question bank to explore the app's features.</p>
+        <button class="btn btn-secondary btn-sm" onclick="loadSampleData()">🎲 Load Sample Data</button>
+      </div>
+
+      <!-- Catalog Generation -->
+      <div class="card mt-12">
+        <div class="card-title"><span class="ct-icon">🗂️</span>Catalog Builder</div>
+        <p class="text-small text-dim" style="margin-bottom:10px">Generates catalog.json from the current question bank. Run this after importing or updating questions.</p>
+        <button class="btn btn-secondary btn-sm" onclick="buildCatalog()">🔄 Rebuild Catalog</button>
+        <div id="catalog-status" class="mt-8"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ────────────── TAB: USAGE ────────────── -->
+<div id="tab-usage" class="tab-panel">
+  <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
+    <div class="card">
+      <div class="card-title"><span class="ct-icon">📊</span>Usage by Subject</div>
+      <div id="usage-by-subject"></div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="ct-icon">📋</span>Recent Usage</div>
+      <div id="usage-recent"></div>
+    </div>
+  </div>
+  <div class="card mt-12">
+    <div class="card-title"><span class="ct-icon">⚙️</span>Usage Management</div>
+    <div class="flex-row">
+      <button class="btn btn-secondary btn-sm" onclick="exportUsageJSON()">📤 Export used_questions.json</button>
+      <button class="btn btn-danger btn-sm" onclick="confirmClearUsage()">🗑 Clear All Usage History</button>
+    </div>
+    <div class="mt-12">
+      <div class="import-step">
+        <div class="import-step-num">📥</div>
+        <div class="import-step-body">
+          <div class="import-step-title">Load used_questions.json</div>
+          <div class="file-drop-zone" onclick="document.getElementById('usage-file-input').click()">
+            <div class="drop-icon">📂</div>
+            <div class="drop-label">Load usage file from GitHub</div>
+            <div class="drop-sub">Syncs usage history from a previously exported file</div>
+          </div>
+          <input type="file" id="usage-file-input" accept=".json" onchange="handleUsageFile(event)">
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ────────────── TAB: SETTINGS ────────────── -->
+<div id="tab-settings" class="tab-panel">
+
+  <!-- Row 1: generation knobs -->
+  <div class="settings-grid" style="margin-bottom:16px">
+    <div class="card">
+      <div class="card-title"><span class="ct-icon">🔢</span>Questions per Subject</div>
+      <div class="settings-row">
+        <div><div class="settings-row-label">Alternate</div><div class="settings-row-desc">Pairs from same category</div></div>
+        <input type="number" class="num-input" id="set-alt-count" min="1" max="10" value="2" onchange="saveSettings()">
+      </div>
+      <div class="settings-row" style="margin-top:6px">
+        <div><div class="settings-row-label">Minute</div><div class="settings-row-desc">Pairs from same category</div></div>
+        <input type="number" class="num-input" id="set-min-count" min="1" max="10" value="2" onchange="saveSettings()">
+      </div>
+      <div class="settings-row" style="margin-top:6px">
+        <div><div class="settings-row-label">Buzzer</div><div class="settings-row-desc">One per subject</div></div>
+        <input type="number" class="num-input" id="set-buz-count" min="1" max="10" value="1" onchange="saveSettings()">
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="ct-icon">⚙️</span>Generation Options</div>
+      <div class="flex-col">
+        <label class="checkbox-row"><input type="checkbox" id="set-avoid-used" checked onchange="saveSettings()"> <label for="set-avoid-used">Avoid previously used questions</label></label>
+        <label class="checkbox-row"><input type="checkbox" id="set-fallback" onchange="saveSettings()"> <label for="set-fallback">Allow fallback to another category if needed</label></label>
+        <label class="checkbox-row"><input type="checkbox" id="set-include-answers" checked onchange="saveSettings()"> <label for="set-include-answers">Include answers in export</label></label>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="ct-icon">💾</span>Data Management</div>
+      <div class="flex-col">
+        <button class="btn btn-secondary btn-sm" onclick="saveAllToLocalStorage()">💾 Save All to Browser Storage</button>
+        <button class="btn btn-danger btn-sm" onclick="confirmClearAll()">⚠️ Clear All Data</button>
+      </div>
+      <div class="mt-8 text-small text-dim">Last saved: <span id="last-saved-label">Never</span></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="ct-icon">📋</span>About</div>
+      <div class="text-small text-dim flex-col" style="gap:4px">
+        <div>SCQ Match Generator v1.0</div>
+        <div>School's Challenge Quiz — Jamaica</div>
+        <div>Static GitHub Pages app — no server required</div>
+        <div class="mt-8">Questions in bank: <span class="text-gold" id="about-q-count">0</span></div>
+        <div>Subjects loaded: <span class="text-gold" id="about-s-count">0</span></div>
+        <div>Usage records: <span class="text-gold" id="about-u-count">0</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Row 2: per-section subject order -->
+  <div class="card" style="margin-bottom:16px">
+    <div class="card-title"><span class="ct-icon">🔀</span>Subject Order per Section</div>
+    <p class="text-small text-dim" style="margin-bottom:12px">
+      Drag to reorder subjects within each section. Each section can have its own independent order.
+      Click <strong>↑ From Generator</strong> to pull in the subjects currently selected on the Generate tab.
+      The section order overrides alphabetical order when generating a match.
+    </p>
+    <div class="section-order-grid">
+      <!-- Alternate -->
+      <div>
+        <div class="order-col-title">
+          <span style="color:var(--alt-col)">▮</span> Alternate
+        </div>
+        <div class="order-list" id="order-list-alternate"
+          ondragover="orderDragOver(event,'alternate')"
+          ondragleave="orderDragLeave(event,'alternate')"
+          ondrop="orderDrop(event,'alternate')">
+        </div>
+        <div class="order-actions">
+          <button class="btn btn-secondary btn-xs" onclick="pullFromGenerator('alternate')">↑ From Generator</button>
+          <button class="btn btn-secondary btn-xs" onclick="clearOrderList('alternate')">✕ Clear</button>
+        </div>
+      </div>
+      <!-- Minute -->
+      <div>
+        <div class="order-col-title">
+          <span style="color:var(--min-col)">▮</span> Minute
+        </div>
+        <div class="order-list" id="order-list-minute"
+          ondragover="orderDragOver(event,'minute')"
+          ondragleave="orderDragLeave(event,'minute')"
+          ondrop="orderDrop(event,'minute')">
+        </div>
+        <div class="order-actions">
+          <button class="btn btn-secondary btn-xs" onclick="pullFromGenerator('minute')">↑ From Generator</button>
+          <button class="btn btn-secondary btn-xs" onclick="clearOrderList('minute')">✕ Clear</button>
+          <button class="btn btn-secondary btn-xs" onclick="copyOrderList('alternate','minute')">← Copy Alt</button>
+        </div>
+      </div>
+      <!-- Buzzer -->
+      <div>
+        <div class="order-col-title">
+          <span style="color:var(--buz-col)">▮</span> Buzzer
+        </div>
+        <div class="order-list" id="order-list-buzzer"
+          ondragover="orderDragOver(event,'buzzer')"
+          ondragleave="orderDragLeave(event,'buzzer')"
+          ondrop="orderDrop(event,'buzzer')">
+        </div>
+        <div class="order-actions">
+          <button class="btn btn-secondary btn-xs" onclick="pullFromGenerator('buzzer')">↑ From Generator</button>
+          <button class="btn btn-secondary btn-xs" onclick="clearOrderList('buzzer')">✕ Clear</button>
+          <button class="btn btn-secondary btn-xs" onclick="copyOrderList('alternate','buzzer')">← Copy Alt</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Row 3: template management -->
+  <div class="card">
+    <div class="card-title"><span class="ct-icon">📋</span>Manage Templates</div>
+    <p class="text-small text-dim" style="margin-bottom:10px">Templates are created from the Generate tab using the "Save Current as Template" button. They capture the match name, selected sections, and subject list.</p>
+    <div class="tpl-manage-list" id="tpl-manage-list">
+      <div class="text-dim text-small">No templates saved yet.</div>
+    </div>
+  </div>
+
+</div>
+
+</div><!-- /main-content -->
+
+<!-- ══════════════════════════════════ SAVE TEMPLATE MODAL -->
+<div class="modal-overlay hidden" id="modal-template">
+  <div class="modal">
+    <div class="modal-title">
+      Save Template
+      <button class="modal-close" onclick="closeModal('modal-template')">✕</button>
+    </div>
+    <div class="form-group">
+      <label>Template Name</label>
+      <input type="text" id="tpl-name-input" placeholder="e.g. Full Practice Match" class="w-full">
+    </div>
+    <div class="mt-12 text-small text-dim">Will save currently selected sections and subjects.</div>
+    <div class="flex-row mt-12">
+      <button class="btn btn-primary" onclick="saveTemplate()">Save Template</button>
+      <button class="btn btn-secondary" onclick="closeModal('modal-template')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════ MAIN SCRIPT -->
+<script>
+// ═══════════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════════
+let DB = {
+  questions: [],
+  catalog: {},
+  usageLog: [],   // array of {questionId, usedOn, section, subject, category, matchName}
+  usedIds: new Set(),
+  settings: {
+    alternateQuestionsPerSubject: 2,
+    minuteQuestionsPerSubject: 2,
+    buzzerQuestionsPerSubject: 1,
+    avoidPreviouslyUsed: true,
+    allowFallbackCategory: false,
+    includeAnswersInExport: true,
+    sectionOrder: { alternate: [], minute: [], buzzer: [] }
+  },
+  templates: [],
+  lastGenerated: null // {sections: {alternate:[], minute:[], buzzer:[]}, matchName, timestamp}
+};
+
+let importWorkbook = null;
+let importRows = [];
+let answersVisible = false;
+
+// ═══════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+  loadFromLocalStorage();
+  initNavTabs();
+  initDefaultTemplates();
+  renderSubjectGrid();
+  updateStats();
+  updateUsageTab();
+  renderTemplates();
+  document.getElementById('cb-alt').checked = true;
+  document.getElementById('cb-min').checked = true;
+  document.getElementById('cb-buz').checked = true;
+  updateAboutTab();
+});
+
+function initNavTabs() {
+  document.querySelectorAll('.nav-tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+    });
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SAMPLE DATA
+// ═══════════════════════════════════════════════════════════════
+function loadSampleData() {
+  const subjects = [
+    { name: 'Chemistry', cats: ['Organic Chemistry', 'Inorganic Chemistry', 'Physical Chemistry'] },
+    { name: 'Physics', cats: ['Mechanics', 'Electricity', 'Waves & Optics'] },
+    { name: 'Biology', cats: ['Cell Biology', 'Genetics', 'Ecology'] },
+    { name: 'Mathematics', cats: ['Algebra', 'Calculus', 'Statistics'] },
+    { name: 'English Language', cats: ['Grammar', 'Comprehension', 'Literature'] },
+    { name: 'History', cats: ['Caribbean History', 'World History', 'Jamaican History'] },
+    { name: 'Geography', cats: ['Physical Geography', 'Human Geography', 'Map Skills'] },
+    { name: 'Bible Knowledge', cats: ['Old Testament', 'New Testament', 'General'] },
+    { name: 'Music', cats: ['Reggae', 'Classical', 'Caribbean Music'] },
+    { name: 'Sports', cats: ['Football', 'Athletics', 'Cricket'] },
+    { name: 'Information Technology', cats: ['Hardware', 'Software', 'Networks'] },
+    { name: 'General Knowledge', cats: ['Science & Nature', 'Arts & Culture', 'Current Affairs'] },
+    { name: 'Spanish', cats: ['Vocabulary', 'Grammar', 'Culture'] },
+    { name: 'French', cats: ['Vocabulary', 'Grammar', 'Culture'] },
+    { name: 'Jamaican Heritage', cats: ['Culture', 'History', 'People'] },
+    { name: 'Principles of Business', cats: ['Management', 'Marketing', 'Finance'] },
+    { name: 'Literature', cats: ['Poetry', 'Drama', 'Prose'] },
+    { name: 'Art', cats: ['Caribbean Art', 'World Art', 'Art Techniques'] },
+    { name: 'Local & International Affairs', cats: ['Regional', 'Global', 'Politics'] },
+    { name: 'Theatre & Cinema', cats: ['Caribbean Theatre', 'World Cinema', 'Drama'] }
+  ];
+
+  const diffs = ['Easy', 'Medium', 'Hard'];
+  const questions = [];
+  let counter = 1;
+
+  const sampleQs = {
+    'Chemistry': {
+      'Organic Chemistry': [
+        ['Name the functional group in ethanol.', 'Hydroxyl group (–OH)'],
+        ['What type of reaction converts an alkene to an alkane?', 'Hydrogenation (addition reaction)'],
+        ['Name the monomer used to make polyethylene.', 'Ethylene (ethene)'],
+        ['What is the general formula for alkanes?', 'CₙH₂ₙ₊₂'],
+        ['Which organic acid is found in vinegar?', 'Ethanoic acid (acetic acid)'],
+        ['What is the product of esterification between ethanol and ethanoic acid?', 'Ethyl ethanoate (ethyl acetate)'],
+      ],
+      'Inorganic Chemistry': [
+        ['What is the chemical symbol for gold?', 'Au'],
+        ['Name the process by which iron is extracted from its ore.', 'The blast furnace process'],
+        ['What is the pH of a neutral solution at 25°C?', '7'],
+        ['Name the gas produced when zinc reacts with dilute hydrochloric acid.', 'Hydrogen'],
+        ['What type of bond exists between sodium and chlorine in NaCl?', 'Ionic bond'],
+        ['Which element has the highest electronegativity?', 'Fluorine'],
+      ],
+      'Physical Chemistry': [
+        ['State Le Chatelier\'s Principle.', 'A system at equilibrium will shift to oppose any applied change'],
+        ['What does the rate constant k depend on?', 'Temperature (and the catalyst)'],
+        ['Define Hess\'s Law.', 'The enthalpy change of a reaction is independent of the route taken'],
+        ['What is the unit of the equilibrium constant Kc when the reaction produces 2 moles of gas from 1?', 'mol dm⁻³'],
+        ['Define activation energy.', 'The minimum energy required for a reaction to occur'],
+        ['What is the effect of a catalyst on activation energy?', 'It lowers the activation energy'],
+      ]
+    },
+    'Physics': {
+      'Mechanics': [
+        ['State Newton\'s Second Law of Motion.', 'F = ma (Force equals mass times acceleration)'],
+        ['What is the SI unit of force?', 'Newton (N)'],
+        ['Define velocity.', 'The rate of change of displacement (vector quantity)'],
+        ['What is the formula for kinetic energy?', 'KE = ½mv²'],
+        ['A ball is thrown upward. At its highest point, what is its velocity?', 'Zero'],
+        ['Define momentum.', 'The product of mass and velocity (p = mv)'],
+      ],
+      'Electricity': [
+        ['State Ohm\'s Law.', 'V = IR (Voltage equals current times resistance)'],
+        ['What is the SI unit of electric charge?', 'Coulomb (C)'],
+        ['Name the device used to measure electric current.', 'Ammeter'],
+        ['What is the formula for electrical power?', 'P = IV'],
+        ['In a parallel circuit, what is the same across all components?', 'Voltage'],
+        ['What is the resistance of two 4Ω resistors in parallel?', '2Ω'],
+      ],
+      'Waves & Optics': [
+        ['What is the speed of light in a vacuum?', '3 × 10⁸ m/s'],
+        ['Define frequency of a wave.', 'The number of complete oscillations per second (measured in Hz)'],
+        ['What type of wave is sound?', 'Longitudinal wave'],
+        ['State Snell\'s Law.', 'n₁ sin θ₁ = n₂ sin θ₂'],
+        ['What happens to the frequency of light when it enters a denser medium?', 'It stays the same'],
+        ['Name the phenomenon that causes a straw to appear bent in water.', 'Refraction'],
+      ]
+    },
+    'Mathematics': {
+      'Algebra': [
+        ['Solve: 2x + 5 = 13', 'x = 4'],
+        ['What is the quadratic formula?', 'x = (−b ± √(b²−4ac)) / 2a'],
+        ['Expand: (x + 3)²', 'x² + 6x + 9'],
+        ['Factorise: x² − 9', '(x + 3)(x − 3)'],
+        ['If f(x) = 2x² − 3, find f(−2)', '5'],
+        ['Solve the inequality: 3x − 7 > 2', 'x > 3'],
+      ],
+      'Calculus': [
+        ['Differentiate y = x³ with respect to x', 'dy/dx = 3x²'],
+        ['What is ∫x² dx?', 'x³/3 + C'],
+        ['Find the gradient of y = 2x² at x = 3', '12'],
+        ['What does a stationary point have for dy/dx?', 'dy/dx = 0'],
+        ['Integrate ∫3x² dx', 'x³ + C'],
+        ['What is the derivative of sin x?', 'cos x'],
+      ],
+      'Statistics': [
+        ['Define the mean of a data set.', 'The sum of all values divided by the number of values'],
+        ['What is the median?', 'The middle value when data is arranged in order'],
+        ['In a normal distribution, what percentage of data falls within 1 standard deviation?', 'Approximately 68%'],
+        ['What is the range of a data set?', 'Maximum value minus minimum value'],
+        ['Define mode.', 'The value that appears most frequently'],
+        ['What is a cumulative frequency curve called?', 'An ogive'],
+      ]
+    },
+    'Biology': {
+      'Cell Biology': [
+        ['Name the powerhouse of the cell.', 'Mitochondria'],
+        ['What is osmosis?', 'The movement of water from a region of higher to lower concentration through a semi-permeable membrane'],
+        ['What is the function of the ribosome?', 'Protein synthesis'],
+        ['Name the organelle where photosynthesis occurs.', 'Chloroplast'],
+        ['What type of cell lacks a nucleus?', 'Prokaryotic cell'],
+        ['What is the role of the cell membrane?', 'Controls what enters and leaves the cell'],
+      ],
+      'Genetics': [
+        ['What is the full name of DNA?', 'Deoxyribonucleic acid'],
+        ['Define phenotype.', 'The observable physical characteristics of an organism'],
+        ['What is a dominant allele?', 'An allele that is expressed even when only one copy is present'],
+        ['What is the ratio of phenotypes in a monohybrid cross between two heterozygotes?', '3:1'],
+        ['Who is considered the father of genetics?', 'Gregor Mendel'],
+        ['Define mutation.', 'A permanent change in the DNA sequence of an organism'],
+      ],
+      'Ecology': [
+        ['What is a food chain?', 'A sequence showing how energy is transferred from one organism to another'],
+        ['Define biodiversity.', 'The variety of living organisms in a given area'],
+        ['What is a producer in an ecosystem?', 'An organism that makes its own food through photosynthesis'],
+        ['Name the process by which dead organic matter is broken down.', 'Decomposition'],
+        ['What is carrying capacity?', 'The maximum population size an environment can sustainably support'],
+        ['Define a niche.', 'The role and position of an organism in its environment'],
+      ]
+    },
+    'English Language': {
+      'Grammar': [
+        ['What is an adverb?', 'A word that modifies a verb, adjective, or another adverb'],
+        ['Define a clause.', 'A group of words containing a subject and a verb'],
+        ['What is the passive voice?', 'When the subject receives the action of the verb'],
+        ['Name the three degrees of comparison for adjectives.', 'Positive, comparative, superlative'],
+        ['What punctuation mark is used to join two independent clauses?', 'Semicolon'],
+        ['Define an idiom.', 'A phrase whose meaning cannot be deduced from its literal words'],
+      ],
+      'Comprehension': [
+        ['What is an inference?', 'A conclusion drawn from evidence and reasoning, not stated directly'],
+        ['Define the tone of a passage.', 'The writer\'s attitude toward the subject or audience'],
+        ['What is a synonym?', 'A word with the same or similar meaning as another'],
+        ['Define context clues.', 'Information in the surrounding text that helps determine word meaning'],
+        ['What is the main idea of a passage?', 'The central point or most important idea the writer wants to convey'],
+        ['What does "explicit" information mean in a text?', 'Information that is directly stated in the text'],
+      ],
+      'Literature': [
+        ['What is a metaphor?', 'A figure of speech that directly compares two unlike things without using "like" or "as"'],
+        ['Define alliteration.', 'The repetition of the same initial consonant sound in nearby words'],
+        ['What is a sonnet?', 'A poem of 14 lines, typically with a specific rhyme scheme'],
+        ['Define irony.', 'A contrast between what is expected and what actually happens or is said'],
+        ['What is the protagonist?', 'The main character of a story'],
+        ['Define foreshadowing.', 'Hints or clues about what will happen later in the narrative'],
+      ]
+    },
+    'History': {
+      'Caribbean History': [
+        ['When did Jamaica gain independence?', '6th August 1962'],
+        ['Name the system of forced labour on plantations.', 'Slavery'],
+        ['Who was the first Prime Minister of Jamaica?', 'Sir Alexander Bustamante'],
+        ['What was the Middle Passage?', 'The transatlantic journey enslaved Africans were forced to make to the Americas'],
+        ['When was the abolition of slavery in the British colonies?', '1834 (full freedom in 1838)'],
+        ['Name the Caribbean federation that existed from 1958 to 1962.', 'The West Indies Federation'],
+      ],
+      'World History': [
+        ['In what year did World War II end?', '1945'],
+        ['Who was the first man to walk on the moon?', 'Neil Armstrong'],
+        ['What was the Cold War?', 'A period of geopolitical tension between the USA and USSR after WWII'],
+        ['Name the treaty that ended World War I.', 'The Treaty of Versailles'],
+        ['Who led the Cuban Revolution?', 'Fidel Castro'],
+        ['In what year did the Berlin Wall fall?', '1989'],
+      ],
+      'Jamaican History': [
+        ['What does "Xaymaca" mean, the original Taino name for Jamaica?', 'Land of wood and water'],
+        ['Who was Marcus Garvey?', 'A Jamaican political leader, publisher and Black nationalist'],
+        ['Name Jamaica\'s national motto.', '"Out of Many, One People"'],
+        ['What is the Morant Bay Rebellion of 1865 associated with?', 'Paul Bogle and George William Gordon'],
+        ['When did the Emancipation of slaves occur in Jamaica?', '1838'],
+        ['Who is Jamaica\'s national hero known as the "Right Excellent" Nanny?', 'Nanny of the Maroons'],
+      ]
+    },
+    'General Knowledge': {
+      'Science & Nature': [
+        ['What is the chemical formula for water?', 'H₂O'],
+        ['How many bones are in the adult human body?', '206'],
+        ['What planet is known as the Red Planet?', 'Mars'],
+        ['What is the largest organ in the human body?', 'The skin'],
+        ['What gas do plants absorb during photosynthesis?', 'Carbon dioxide (CO₂)'],
+        ['How many chromosomes does a human cell normally have?', '46'],
+      ],
+      'Arts & Culture': [
+        ['Who painted the Mona Lisa?', 'Leonardo da Vinci'],
+        ['In which country did the Olympic Games originate?', 'Greece'],
+        ['Who wrote "Romeo and Juliet"?', 'William Shakespeare'],
+        ['What is the largest religion in the world by number of followers?', 'Christianity'],
+        ['In music, what does "forte" mean?', 'Loud'],
+        ['Who composed the "Four Seasons"?', 'Antonio Vivaldi'],
+      ],
+      'Current Affairs': [
+        ['What is the currency of Jamaica?', 'Jamaican Dollar (JMD)'],
+        ['Name the largest country in the world by area.', 'Russia'],
+        ['What is the capital of Brazil?', 'Brasília'],
+        ['Name the international organization that promotes world peace and cooperation.', 'The United Nations (UN)'],
+        ['What does UNESCO stand for?', 'United Nations Educational, Scientific and Cultural Organization'],
+        ['What is the CARICOM?', 'The Caribbean Community and Common Market — a regional organization'],
+      ]
+    },
+    'Music': {
+      'Reggae': [
+        ['Who is known as the King of Reggae?', 'Bob Marley'],
+        ['In what decade did reggae music emerge in Jamaica?', 'The 1960s'],
+        ['What music style preceded reggae?', 'Rocksteady'],
+        ['Name the Rastafarian symbol strongly associated with reggae music.', 'The Lion of Judah'],
+        ['Who sang "Many Rivers to Cross"?', 'Jimmy Cliff'],
+        ['What is a "riddim" in reggae music?', 'The rhythm or instrumental backing track'],
+      ],
+      'Classical': [
+        ['How many symphonies did Beethoven compose?', 'Nine'],
+        ['What is a symphony?', 'A large-scale musical composition for orchestra, usually in four movements'],
+        ['Name the era of music associated with Bach and Handel.', 'Baroque period'],
+        ['What does "piano" mean as a musical instruction?', 'Soft or quietly'],
+        ['Who composed the "Magic Flute"?', 'Wolfgang Amadeus Mozart'],
+        ['What is an oratorio?', 'A large-scale musical work for orchestra, choir, and soloists, usually on a sacred theme'],
+      ],
+      'Caribbean Music': [
+        ['What is calypso?', 'A style of Afro-Caribbean music originating in Trinidad and Tobago'],
+        ['Name the national instrument of Jamaica.', 'The acoustic guitar (though some say the steelpan is Caribbean-wide)'],
+        ['What is soca music a fusion of?', 'Soul and calypso'],
+        ['Who is known as the "Calypso King of the World"?', 'The Mighty Sparrow'],
+        ['What is a steelpan made from?', 'Steel oil drums'],
+        ['In what country did steelpan music originate?', 'Trinidad and Tobago'],
+      ]
+    },
+    'Sports': {
+      'Athletics': [
+        ['Who won the 100m gold medal at the 2008 Beijing Olympics?', 'Usain Bolt'],
+        ['What is the standard distance of a marathon?', '42.195 kilometres'],
+        ['Name the Jamaican who holds the world record for the 100m sprint.', 'Usain Bolt (9.58 seconds)'],
+        ['How many hurdles are in a standard 110m hurdles race?', '10'],
+        ['What is the relay race where each runner carries a baton?', 'The 4 × 100m relay'],
+        ['Who is known as "The Lightning Bolt"?', 'Usain Bolt'],
+      ],
+      'Cricket': [
+        ['How many players are on a cricket team?', '11'],
+        ['What is the highest individual score in Test cricket?', '400 not out (Brian Lara, 2004)'],
+        ['Who holds the record for the most Test cricket wickets?', 'Muttiah Muralitharan (800 wickets)'],
+        ['What is a "duck" in cricket?', 'When a batsman is dismissed without scoring any runs'],
+        ['Name the format of cricket played over 20 overs per side.', 'T20 (Twenty20)'],
+        ['What is LBW in cricket?', 'Leg Before Wicket — when the ball hits the batsman\'s leg in line with the stumps'],
+      ],
+      'Football': [
+        ['How many players are on a football team on the field?', '11'],
+        ['What is the standard duration of a football match?', '90 minutes (two 45-minute halves)'],
+        ['Which country has won the most FIFA World Cup titles?', 'Brazil (5 times)'],
+        ['Who is the all-time leading scorer in World Cup history?', 'Miroslav Klose (16 goals)'],
+        ['What is the offside rule in football?', 'A player is offside if they are closer to the opponent\'s goal than both the ball and the second-to-last defender'],
+        ['What trophy is awarded to the winners of the FIFA World Cup?', 'The FIFA World Cup Trophy'],
+      ]
+    },
+    'Information Technology': {
+      'Hardware': [
+        ['What does CPU stand for?', 'Central Processing Unit'],
+        ['Name the primary storage device in most modern computers.', 'Solid State Drive (SSD) or Hard Disk Drive (HDD)'],
+        ['What is RAM?', 'Random Access Memory — temporary memory used while a computer is running'],
+        ['What does GPU stand for?', 'Graphics Processing Unit'],
+        ['Name the hardware component that converts AC to DC power.', 'Power Supply Unit (PSU)'],
+        ['What is the function of the motherboard?', 'It connects all components of a computer together'],
+      ],
+      'Software': [
+        ['What is an operating system?', 'Software that manages computer hardware and software resources'],
+        ['Name an example of open-source software.', 'Linux / LibreOffice / Firefox (any valid example)'],
+        ['What is a compiler?', 'A program that translates high-level code into machine code'],
+        ['Define a bug in software.', 'An error or flaw in a program that causes it to behave incorrectly'],
+        ['What does GUI stand for?', 'Graphical User Interface'],
+        ['What is the difference between a virus and a worm?', 'A virus needs a host file; a worm can replicate and spread on its own'],
+      ],
+      'Networks': [
+        ['What does LAN stand for?', 'Local Area Network'],
+        ['What is the function of a router?', 'To direct data packets between networks and connect devices to the internet'],
+        ['What protocol assigns IP addresses automatically?', 'DHCP (Dynamic Host Configuration Protocol)'],
+        ['What does HTTP stand for?', 'Hypertext Transfer Protocol'],
+        ['What is bandwidth?', 'The maximum rate of data transfer across a network'],
+        ['What is a firewall?', 'A security system that monitors and controls incoming and outgoing network traffic'],
+      ]
+    }
+  };
+
+  // Fill in remaining subjects with generated questions
+  const remaining = ['Geography','Bible Knowledge','Spanish','French','Jamaican Heritage',
+    'Principles of Business','Literature','Art','Local & International Affairs','Theatre & Cinema'];
+
+  remaining.forEach(subj => {
+    const s = subjects.find(x => x.name === subj);
+    if (!s) return;
+    s.cats.forEach(cat => {
+      if (!sampleQs[subj]) sampleQs[subj] = {};
+      if (!sampleQs[subj][cat]) {
+        sampleQs[subj][cat] = [];
+        for (let i = 0; i < 6; i++) {
+          sampleQs[subj][cat].push([`Sample question ${i+1} for ${subj} — ${cat}?`, `Sample answer ${i+1}`]);
+        }
+      }
+    });
+  });
+
+  const qs = [];
+  subjects.forEach(s => {
+    s.cats.forEach(cat => {
+      const pairs = (sampleQs[s.name] || {})[cat] || [];
+      pairs.forEach((pair, idx) => {
+        const prefix = s.name.toUpperCase().replace(/[^A-Z]/g,'').slice(0,4);
+        qs.push({
+          id: `${prefix}-${String(counter++).padStart(4,'0')}`,
+          subject: s.name,
+          category: cat,
+          question: pair[0],
+          answer: pair[1],
+          difficulty: diffs[Math.floor(Math.random()*3)],
+          media: null
+        });
+      });
+    });
+  });
+
+  DB.questions = qs;
+  buildCatalog(true);
+  renderSubjectGrid();
+  updateStats();
+  renderQuestionBank();
+  saveAllToLocalStorage();
+  showAlert('catalog-status', `✅ Loaded ${qs.length} sample questions across ${subjects.length} subjects.`, 'ok');
+  switchTab('import');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// CATALOG BUILDER
+// ═══════════════════════════════════════════════════════════════
+function buildCatalog(silent) {
+  const map = {};
+  DB.questions.forEach(q => {
+    if (!map[q.subject]) map[q.subject] = {};
+    if (!map[q.subject][q.category]) map[q.subject][q.category] = 0;
+    map[q.subject][q.category]++;
+  });
+
+  const altN = DB.settings.alternateQuestionsPerSubject;
+  const minN = DB.settings.minuteQuestionsPerSubject;
+
+  DB.catalog = {
+    generated: new Date().toISOString(),
+    subjects: Object.entries(map).map(([name, cats]) => ({
+      name,
+      categories: Object.entries(cats).map(([catName, count]) => ({
+        name: catName,
+        count,
+        eligibleForAlternate: count >= altN,
+        eligibleForMinute: count >= minN,
+        eligibleForBuzzer: count >= 1
+      }))
+    }))
+  };
+
+  if (!silent) {
+    showAlert('catalog-status', `✅ Catalog rebuilt: ${DB.catalog.subjects.length} subjects, ${Object.values(map).reduce((a,c)=>a+Object.keys(c).length,0)} categories.`, 'ok');
+  }
+  updateStats();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// STATS
+// ═══════════════════════════════════════════════════════════════
+function updateStats() {
+  const total = DB.questions.length;
+  const subjects = new Set(DB.questions.map(q=>q.subject)).size;
+  const categories = new Set(DB.questions.map(q=>q.category)).size;
+  const used = DB.usedIds.size;
+  const unused = total - used;
+  const media = DB.questions.filter(q=>q.media).length;
+
+  el('stat-total').textContent = total;
+  el('stat-subjects').textContent = subjects;
+  el('stat-categories').textContent = categories;
+  el('stat-used').textContent = used;
+  el('stat-unused').textContent = unused;
+  el('stat-media').textContent = media;
+
+  const dot = el('status-dot');
+  const txt = el('status-text');
+  if (total > 0) {
+    dot.className = 'status-dot ok';
+    txt.textContent = `${total} questions loaded`;
+  } else {
+    dot.className = 'status-dot';
+    txt.textContent = 'No data loaded';
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SUBJECT GRID — with per-subject category control
+// ═══════════════════════════════════════════════════════════════
+
+// catMode: 'auto' | 'manual'
+let catMode = 'auto';
+// pinnedCats[subject] = Set of category names the user has pinned
+// empty Set = all categories allowed for that subject
+const pinnedCats = {};
+
+function setCatMode(mode) {
+  catMode = mode;
+  el('mode-auto').classList.toggle('active', mode === 'auto');
+  el('mode-manual').classList.toggle('active', mode === 'manual');
+  el('cat-mode-hint').textContent = mode === 'auto' ? 'app picks' : 'you choose';
+  el('subject-grid').classList.toggle('manual-mode', mode === 'manual');
+  // Close all open cat panels when switching to auto
+  if (mode === 'auto') {
+    document.querySelectorAll('.cat-panel.open').forEach(p => p.classList.remove('open'));
+    document.querySelectorAll('.subject-chip.cat-open').forEach(c => {
+      c.classList.remove('cat-open');
+      const btn = c.querySelector('.chip-expand-btn');
+      if (btn) btn.textContent = '▶';
+    });
+  }
+}
+
+function renderSubjectGrid() {
+  const grid = el('subject-grid');
+  const subjects = [...new Set(DB.questions.map(q=>q.subject))].sort();
+
+  if (subjects.length === 0) {
+    grid.innerHTML = `<div class="empty-state" style="padding:20px"><div class="es-icon">📭</div><div class="es-sub">Load a question bank first</div></div>`;
+    return;
+  }
+
+  const counts = {};
+  const catsBySubj = {};
+  DB.questions.forEach(q => {
+    counts[q.subject] = (counts[q.subject]||0)+1;
+    if (!catsBySubj[q.subject]) catsBySubj[q.subject] = new Set();
+    catsBySubj[q.subject].add(q.category);
+  });
+
+  const search = (el('subj-search')||{value:''}).value.toLowerCase();
+  const filtered = search ? subjects.filter(s => s.toLowerCase().includes(search)) : subjects;
+
+  // Preserve current selection state from DOM before re-render
+  const currentSelected = new Set(
+    [...(grid.querySelectorAll('.subject-chip.selected')||[])].map(c => c.dataset.subject)
+  );
+
+  grid.innerHTML = filtered.map(s => {
+    const isSelected = currentSelected.has(s);
+    const cats = [...(catsBySubj[s] || [])].sort();
+    const pinned = pinnedCats[s] || new Set();
+
+    const catChips = cats.map(cat => {
+      const isPinned = pinned.has(cat);
+      const qCount = DB.questions.filter(q => q.subject===s && q.category===cat).length;
+      return `<button type="button" class="cat-chip ${isPinned?'selected':''}" data-subject="${esc(s)}" data-cat="${esc(cat)}" onclick="toggleCat(this)">
+        <input type="checkbox" ${isPinned?'checked':''} tabindex="-1">
+        ${esc(cat)} <span style="opacity:.6;font-size:10px">(${qCount})</span>
+      </button>`;
+    }).join('');
+
+    return `<div class="subject-row">
+      <button type="button" class="subject-chip ${isSelected?'selected':''}" data-subject="${esc(s)}" onclick="toggleSubject(this)">
+        <input type="checkbox" ${isSelected?'checked':''} tabindex="-1">
+        <span class="chip-name">${esc(s)}</span>
+        <span class="chip-count">${counts[s]||0}</span>
+        <span class="chip-expand-btn" onclick="expandCats(event, this)" title="Choose categories">▶</span>
+      </button>
+      <div class="cat-panel" id="cats-${esc(s).replace(/[^a-zA-Z0-9]/g,'-')}">
+        <div class="cat-panel-hint">Select categories to restrict to (none selected = all allowed):</div>
+        ${catChips}
+      </div>
+    </div>`;
+  }).join('');
+
+  // Restore manual-mode class
+  grid.classList.toggle('manual-mode', catMode === 'manual');
+
+  updateSubjCountLabel();
+
+  // populate QB filter
+  const qbFilter = el('qb-filter-subj');
+  if (qbFilter) {
+    const cur = qbFilter.value;
+    qbFilter.innerHTML = '<option value="">All Subjects</option>' + subjects.map(s=>`<option${cur===s?' selected':''}>${esc(s)}</option>`).join('');
+  }
+}
+
+function filterSubjects() {
+  renderSubjectGrid();
+}
+
+function toggleSubject(chip) {
+  chip.classList.toggle('selected');
+  chip.querySelector('input[type=checkbox]').checked = chip.classList.contains('selected');
+  updateSubjCountLabel();
+}
+
+function expandCats(event, btn) {
+  event.stopPropagation(); // don't fire toggleSubject
+  const chip = btn.closest('.subject-chip');
+  const subj = chip.dataset.subject;
+  const panelId = 'cats-' + subj.replace(/[^a-zA-Z0-9]/g, '-');
+  const panel = document.getElementById(panelId);
+  if (!panel) return;
+  const isOpen = panel.classList.contains('open');
+  // Close all others first
+  document.querySelectorAll('.cat-panel.open').forEach(p => {
+    p.classList.remove('open');
+    const sib = p.previousElementSibling;
+    if (sib) {
+      sib.classList.remove('cat-open');
+      const b = sib.querySelector('.chip-expand-btn');
+      if (b) b.textContent = '▶';
+    }
+  });
+  if (!isOpen) {
+    panel.classList.add('open');
+    chip.classList.add('cat-open');
+    btn.textContent = '▼';
+  }
+}
+
+function toggleCat(catChip) {
+  catChip.classList.toggle('selected');
+  catChip.querySelector('input[type=checkbox]').checked = catChip.classList.contains('selected');
+  const subj = catChip.dataset.subject;
+  const cat = catChip.dataset.cat;
+  if (!pinnedCats[subj]) pinnedCats[subj] = new Set();
+  if (catChip.classList.contains('selected')) {
+    pinnedCats[subj].add(cat);
+  } else {
+    pinnedCats[subj].delete(cat);
+  }
+}
+
+function selectAllSubjects() {
+  el('subject-grid').querySelectorAll('.subject-chip').forEach(c => {
+    c.classList.add('selected');
+    c.querySelector('input[type=checkbox]').checked = true;
+  });
+  updateSubjCountLabel();
+}
+
+function deselectAllSubjects() {
+  el('subject-grid').querySelectorAll('.subject-chip').forEach(c => {
+    c.classList.remove('selected');
+    c.querySelector('input[type=checkbox]').checked = false;
+  });
+  updateSubjCountLabel();
+}
+
+function getSelectedSubjects() {
+  return [...el('subject-grid').querySelectorAll('.subject-chip.selected')].map(c => c.dataset.subject);
+}
+
+// Returns the allowed category Set for a subject (null = all allowed)
+function getAllowedCats(subj) {
+  if (catMode !== 'manual') return null;
+  const pinned = pinnedCats[subj];
+  if (!pinned || pinned.size === 0) return null; // none pinned = all allowed
+  return pinned;
+}
+
+function updateSubjCountLabel() {
+  const n = el('subject-grid').querySelectorAll('.subject-chip.selected').length;
+  el('subj-count-label').textContent = `${n} selected`;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// QUESTION BANK VIEW
+// ═══════════════════════════════════════════════════════════════
+function renderQuestionBank(qs) {
+  const tbody = el('qb-tbody');
+  const empty = el('qb-empty');
+  qs = qs || DB.questions;
+
+  if (qs.length === 0) {
+    tbody.innerHTML = '';
+    empty.style.display = 'block';
+    el('qb-count-label').textContent = '';
+    return;
+  }
+  empty.style.display = 'none';
+
+  const shown = qs.slice(0, 300); // performance limit
+  el('qb-count-label').textContent = `Showing ${shown.length} of ${qs.length}`;
+
+  tbody.innerHTML = shown.map(q => `
+    <tr>
+      <td><span class="q-id">${esc(q.id||'')}</span></td>
+      <td class="q-subj">${esc(q.subject||'')}</td>
+      <td class="q-cat">${esc(q.category||'')}</td>
+      <td class="q-text q-question">${esc(q.question||'')}</td>
+      <td class="q-ans">${esc(q.answer||'')}</td>
+      <td><span class="q-diff diff-${q.difficulty||'Medium'}">${q.difficulty||'—'}</span></td>
+      <td>${q.media ? `<span class="badge badge-alt">${q.media.type}</span>` : '<span class="text-dim">—</span>'}</td>
+    </tr>
+  `).join('');
+}
+
+function filterQuestionBank() {
+  const search = (el('qb-search').value||'').toLowerCase();
+  const subj = el('qb-filter-subj').value;
+  const diff = el('qb-filter-diff').value;
+
+  let qs = DB.questions;
+  if (subj) qs = qs.filter(q => q.subject === subj);
+  if (diff) qs = qs.filter(q => q.difficulty === diff);
+  if (search) qs = qs.filter(q =>
+    (q.question||'').toLowerCase().includes(search) ||
+    (q.answer||'').toLowerCase().includes(search) ||
+    (q.subject||'').toLowerCase().includes(search) ||
+    (q.category||'').toLowerCase().includes(search) ||
+    (q.id||'').toLowerCase().includes(search)
+  );
+  renderQuestionBank(qs);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// MATCH GENERATION
+// ═══════════════════════════════════════════════════════════════
+function generateMatch() {
+  if (DB.questions.length === 0) {
+    showAlert('match-output', 'No questions loaded. Import a question bank first.', 'error');
+    return;
+  }
+
+  const selectedSubjects = getSelectedSubjects();
+  if (selectedSubjects.length === 0) {
+    showAlert('match-output', 'Please select at least one subject.', 'warn');
+    return;
+  }
+
+  const doAlt = el('cb-alt').checked;
+  const doMin = el('cb-min').checked;
+  const doBuz = el('cb-buz').checked;
+
+  if (!doAlt && !doMin && !doBuz) {
+    showAlert('match-output', 'Please select at least one section (Alternate, Minute, Buzzer).', 'warn');
+    return;
+  }
+
+  const matchName = el('match-name').value || `Match ${new Date().toLocaleDateString()}`;
+  const avoidUsed = DB.settings.avoidPreviouslyUsed;
+  const fallback = DB.settings.allowFallbackCategory;
+
+  // Build question pools indexed by subject → category → questions[]
+  const pool = {};
+  DB.questions.forEach(q => {
+    if (!pool[q.subject]) pool[q.subject] = {};
+    if (!pool[q.subject][q.category]) pool[q.subject][q.category] = [];
+    pool[q.subject][q.category].push(q);
+  });
+
+  // Per-section subject order: use saved order filtered to selected subjects,
+  // then append any selected subjects not yet in the saved order.
+  function buildSectionSubjects(sectionKey) {
+    const savedOrder = (DB.settings.sectionOrder || {})[sectionKey] || [];
+    // Only keep subjects that are actually selected in the generator
+    const inOrder = savedOrder.filter(s => selectedSubjects.includes(s));
+    // Append any selected subjects that have no saved position yet
+    const extra = selectedSubjects.filter(s => !savedOrder.includes(s));
+    return [...inOrder, ...extra];
+  }
+
+  const usedInMatch = new Set();
+  const warnings = [];
+  const newUsageLog = [];
+
+  // Generate a paired section (Alternate or Minute)
+  function generatePairedSection(sectionName, nPerSubject, sectionSubjects) {
+    const rows = [];
+    let qNum = 1;
+
+    sectionSubjects.forEach(subj => {
+      if (!pool[subj]) { warnings.push(`No questions found for subject: ${subj}`); return; }
+
+      // Find categories with enough available questions
+      const allowedCats = getAllowedCats(subj); // null = all, Set = restricted
+      const cats = Object.entries(pool[subj])
+        .filter(([cat]) => !allowedCats || allowedCats.has(cat))
+        .map(([cat, qs]) => {
+          const available = qs.filter(q =>
+            !usedInMatch.has(q.id) &&
+            (!avoidUsed || !DB.usedIds.has(q.id))
+          );
+          return { cat, available };
+        })
+        .filter(c => c.available.length >= nPerSubject);
+
+      if (cats.length === 0) {
+        // Try fallback: relax used restriction (still respect allowed cats)
+        if (fallback) {
+          const catsFallback = Object.entries(pool[subj])
+            .filter(([cat]) => !allowedCats || allowedCats.has(cat))
+            .map(([cat, qs]) => {
+              const available = qs.filter(q => !usedInMatch.has(q.id));
+              return { cat, available };
+            })
+            .filter(c => c.available.length >= nPerSubject);
+
+          if (catsFallback.length === 0) {
+            warnings.push(`⚠️ ${subj}: Not enough questions for ${sectionName} (skipped)`);
+            return;
+          }
+          warnings.push(`ℹ️ ${subj}: Used previously-used questions as fallback for ${sectionName}`);
+          const chosen = catsFallback[Math.floor(Math.random()*catsFallback.length)];
+          const picked = pickRandom(chosen.available, nPerSubject);
+          picked.forEach(q => {
+            rows.push({ num: qNum++, q, subject: subj, category: chosen.cat, section: sectionName });
+            usedInMatch.add(q.id);
+            newUsageLog.push({ questionId: q.id, usedOn: new Date().toISOString(), section: sectionName, subject: subj, category: chosen.cat, matchName });
+          });
+        } else {
+          warnings.push(`⚠️ ${subj}: Not enough unused questions for ${sectionName} (skipped). Enable fallback in Settings.`);
+        }
+        return;
+      }
+
+      const chosen = cats[Math.floor(Math.random()*cats.length)];
+      const picked = pickRandom(chosen.available, nPerSubject);
+      picked.forEach(q => {
+        rows.push({ num: qNum++, q, subject: subj, category: chosen.cat, section: sectionName });
+        usedInMatch.add(q.id);
+        newUsageLog.push({ questionId: q.id, usedOn: new Date().toISOString(), section: sectionName, subject: subj, category: chosen.cat, matchName });
+      });
+    });
+
+    return rows;
+  }
+
+  // Generate Buzzer section
+  function generateBuzzerSection(nPerSubject, sectionSubjects) {
+    const rows = [];
+    let qNum = 1;
+
+    sectionSubjects.forEach(subj => {
+      if (!pool[subj]) return;
+      const allowedCats = getAllowedCats(subj);
+      const allQs = Object.entries(pool[subj])
+        .filter(([cat]) => !allowedCats || allowedCats.has(cat))
+        .flatMap(([, qs]) => qs);
+      const available = allQs.filter(q =>
+        !usedInMatch.has(q.id) && (!avoidUsed || !DB.usedIds.has(q.id))
+      );
+
+      let toUse = available;
+      if (toUse.length === 0) {
+        if (fallback) {
+          toUse = allQs.filter(q => !usedInMatch.has(q.id));
+        }
+        if (toUse.length === 0) {
+          warnings.push(`⚠️ ${subj}: No questions available for Buzzer`);
+          return;
+        }
+      }
+
+      const picked = pickRandom(toUse, Math.min(nPerSubject, toUse.length));
+      picked.forEach(q => {
+        rows.push({ num: qNum++, q, subject: subj, category: q.category, section: 'Buzzer' });
+        usedInMatch.add(q.id);
+        newUsageLog.push({ questionId: q.id, usedOn: new Date().toISOString(), section: 'Buzzer', subject: subj, category: q.category, matchName });
+      });
+    });
+
+    return rows;
+  }
+
+  const sections = {};
+  if (doAlt) sections.alternate = generatePairedSection('Alternate', DB.settings.alternateQuestionsPerSubject, buildSectionSubjects('alternate'));
+  if (doMin) sections.minute = generatePairedSection('Minute', DB.settings.minuteQuestionsPerSubject, buildSectionSubjects('minute'));
+  if (doBuz) sections.buzzer = generateBuzzerSection(DB.settings.buzzerQuestionsPerSubject, buildSectionSubjects('buzzer'));
+
+  // Save to state
+  DB.lastGenerated = { sections, matchName, timestamp: new Date().toISOString(), warnings };
+  newUsageLog.forEach(u => { DB.usageLog.push(u); DB.usedIds.add(u.questionId); });
+  saveAllToLocalStorage();
+
+  // Render
+  renderMatch(sections, matchName, warnings);
+  el('btn-export-html').disabled = false;
+  el('btn-export-json').disabled = false;
+  updateStats();
+  updateUsageTab();
+  updateAboutTab();
+
+  // Post-gen stats
+  const totalGen = Object.values(sections).flat().length;
+  const subjSet = new Set(Object.values(sections).flat().map(r=>r.subject));
+  const catSet = new Set(Object.values(sections).flat().map(r=>r.category));
+  el('post-gen-stats').classList.remove('hidden');
+  el('gen-summary-stats').innerHTML = `
+    <div class="stat-card"><div class="stat-value">${totalGen}</div><div class="stat-label">Generated</div></div>
+    <div class="stat-card"><div class="stat-value">${Object.keys(sections).length}</div><div class="stat-label">Sections</div></div>
+    <div class="stat-card"><div class="stat-value">${subjSet.size}</div><div class="stat-label">Subjects</div></div>
+    <div class="stat-card"><div class="stat-value">${catSet.size}</div><div class="stat-label">Categories</div></div>
+    <div class="stat-card"><div class="stat-value">${warnings.length}</div><div class="stat-label">Warnings</div></div>
+  `;
+}
+
+function renderMatch(sections, matchName, warnings) {
+  const out = el('match-output');
+  answersVisible = false;
+  el('btn-reveal-all').textContent = '👁 Show Answers';
+
+  let html = `<div class="card" style="margin-bottom:16px">
+    <div style="font-size:18px; font-weight:700; color:var(--gold); margin-bottom:4px">${esc(matchName)}</div>
+    <div class="text-small text-dim">Generated ${new Date().toLocaleString()}</div>
+  </div>`;
+
+  if (warnings && warnings.length) {
+    html += warnings.map(w => `<div class="alert ${w.startsWith('⚠️')?'alert-warn':'alert-info'}">${esc(w)}</div>`).join('');
+  }
+
+  const sectionDefs = [
+    { key: 'alternate', label: 'Alternate Section', pillClass: 'pill-alt', color: 'var(--alt-col)' },
+    { key: 'minute',    label: 'Minute Section',    pillClass: 'pill-min', color: 'var(--min-col)' },
+    { key: 'buzzer',    label: 'Buzzer Section',    pillClass: 'pill-buz', color: 'var(--buz-col)' }
+  ];
+
+  sectionDefs.forEach(def => {
+    const rows = sections[def.key];
+    if (!rows || rows.length === 0) return;
+
+    html += `<div class="match-section">
+      <div class="match-section-title">
+        <span class="section-pill ${def.pillClass}">${def.label}</span>
+        <span class="text-small text-dim">${rows.length} question${rows.length!==1?'s':''}</span>
+      </div>`;
+
+    rows.forEach(row => {
+      const q = row.q;
+      const mediaHtml = q.media ? `<div class="mt-8">
+        ${q.media.type==='image'
+          ? `<img src="${esc(q.media.src)}" alt="${esc(q.media.caption||'')}" style="max-height:120px;border-radius:4px;cursor:pointer" onclick="this.style.maxHeight=this.style.maxHeight==='none'?'120px':'none'">`
+          : `<audio controls style="height:32px;width:200px"><source src="${esc(q.media.src)}"></audio>`
+        }
+        ${q.media.caption ? `<div class="text-small text-dim" style="margin-top:4px">${esc(q.media.caption)}</div>` : ''}
+      </div>` : '';
+
+      html += `<div class="q-row">
+        <div class="q-num">${row.num}</div>
+        <div class="q-body">
+          <div class="q-meta">
+            <span class="meta-subj">${esc(q.subject)}</span>
+            <span class="text-dim">›</span>
+            <span class="meta-cat">${esc(q.category)}</span>
+            <span class="meta-id">#${esc(q.id||'')}</span>
+          </div>
+          <div class="q-question">${esc(q.question)}</div>
+          ${mediaHtml}
+          <div class="q-answer-wrap">
+            <span class="text-dim text-small">A:</span>
+            <span class="q-answer hidden" onclick="revealAnswer(this)">${esc(q.answer)}</span>
+            <button class="reveal-btn" onclick="revealAnswer(this.previousElementSibling)">reveal</button>
+          </div>
+        </div>
+      </div>`;
+    });
+
+    html += '</div>';
+  });
+
+  out.innerHTML = html;
+}
+
+function clearMatch() {
+  el('match-output').innerHTML = '';
+  el('post-gen-stats').classList.add('hidden');
+  el('btn-export-html').disabled = true;
+  el('btn-export-json').disabled = true;
+  DB.lastGenerated = null;
+  answersVisible = false;
+  el('btn-reveal-all').textContent = '👁 Show Answers';
+}
+
+function revealAnswer(span) {
+  span.classList.remove('hidden');
+}
+
+function toggleAllAnswers() {
+  answersVisible = !answersVisible;
+  document.querySelectorAll('.q-answer').forEach(span => {
+    span.classList.toggle('hidden', !answersVisible);
+  });
+  el('btn-reveal-all').textContent = answersVisible ? '🙈 Hide Answers' : '👁 Show Answers';
+}
+
+// ═══════════════════════════════════════════════════════════════
+// EXPORT HTML REPORT (AG Grid + print-safe static table)
+// ═══════════════════════════════════════════════════════════════
+function exportMatchHTML() {
+  if (!DB.lastGenerated) return;
+  const { sections, matchName, timestamp, warnings } = DB.lastGenerated;
+  const includeAnswers = DB.settings.includeAnswersInExport;
+
+  const allRows = [];
+  let globalNum = 1;
+  Object.entries(sections).forEach(([sectionKey, rows]) => {
+    rows.forEach(row => {
+      allRows.push({
+        num: globalNum++,
+        section: row.section,
+        subject: row.subject,
+        category: row.category,
+        id: row.q.id || '',
+        question: row.q.question,
+        answer: includeAnswers ? row.q.answer : '***',
+        difficulty: row.q.difficulty || '',
+        hasMedia: row.q.media ? row.q.media.type : '',
+        mediaSrc: row.q.media ? (row.q.media.src || '') : '',
+        mediaCaption: row.q.media ? (row.q.media.caption || '') : '',
+        mediaType: row.q.media ? (row.q.media.type || '') : ''
+      });
+    });
+  });
+
+  const rowsJSON = JSON.stringify(allRows);
+  const matchNameSafe = escAttr(matchName);
+  const matchNameJS = escJS(matchName);
+
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>${matchNameSafe} — SCQ Match Report</title>
+<script src="https://cdn.jsdelivr.net/npm/ag-grid-community@31.0.3/dist/ag-grid-community.min.js"><\/script>
+<style>
+  :root{
+    --bg:#0d1117;--bg2:#161b22;--bg3:#1c2230;--border:#2a3547;--border2:#3d4f6a;
+    --gold:#e8b84b;--gold2:#f5d27a;--teal:#3ecfba;--text:#cdd5e0;--text2:#8b9db5;--text3:#5a6f8a;
+    --alt:#3e78d4;--min:#d46b3e;--buz:#a855f7;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+
+  /* ── Header ── */
+  .header{background:var(--bg2);border-bottom:2px solid var(--gold);padding:18px 28px;display:flex;align-items:center;gap:16px;}
+  .header-icon{width:42px;height:42px;background:linear-gradient(135deg,var(--gold),#7a5f22);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:900;color:#0d1117;flex-shrink:0;}
+  .header h1{color:var(--gold);font-size:20px;margin-bottom:2px;}
+  .header .meta{font-size:12px;color:var(--text2);}
+  .content{padding:20px 28px;}
+
+  /* ── Stats ── */
+  .stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px;margin-bottom:20px;}
+  .stat{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:14px;text-align:center;}
+  .stat-v{font-size:26px;font-weight:700;color:var(--gold);font-family:monospace;}
+  .stat-l{font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:.8px;margin-top:4px;}
+
+  /* ── Toolbar ── */
+  .toolbar{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;}
+  .toolbar input[type=text]{background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:6px 10px;border-radius:6px;font-size:13px;outline:none;width:220px;}
+  .toolbar input[type=text]:focus{border-color:var(--gold);}
+  .toolbar-sep{width:1px;background:var(--border);height:28px;margin:0 4px;}
+  button{background:var(--bg3);border:1px solid var(--border2);color:var(--text);padding:6px 13px;border-radius:6px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;}
+  button:hover{border-color:var(--gold);color:var(--gold);}
+  button.active-btn{background:rgba(232,184,75,.15);border-color:var(--gold);color:var(--gold);}
+
+  /* ── Column toggle panel ── */
+  .col-toggle-panel{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:12px 16px;margin-bottom:12px;display:none;}
+  .col-toggle-panel.open{display:block;}
+  .col-toggle-panel h4{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--text2);margin-bottom:10px;}
+  .col-toggles{display:flex;flex-wrap:wrap;gap:8px;}
+  .col-toggle-item{display:flex;align-items:center;gap:6px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:5px 10px;cursor:pointer;user-select:none;font-size:13px;transition:all .15s;}
+  .col-toggle-item:hover{border-color:var(--border2);}
+  .col-toggle-item.col-hidden{opacity:.45;}
+  .col-toggle-item input[type=checkbox]{accent-color:var(--gold);width:13px;height:13px;pointer-events:none;}
+
+  /* ── AG Grid ── */
+  .grid-wrap{width:100%;border-radius:8px;overflow:hidden;border:1px solid var(--border);}
+  .ag-theme-alpine-dark{
+    --ag-background-color:var(--bg2);
+    --ag-header-background-color:var(--bg3);
+    --ag-border-color:var(--border);
+    --ag-row-hover-color:var(--bg3);
+    --ag-selected-row-background-color:rgba(232,184,75,.08);
+    --ag-font-size:13px;
+    --ag-font-family:'Segoe UI',system-ui,sans-serif;
+    --ag-cell-horizontal-padding:12px;
+  }
+  .answer-cell{color:var(--teal);font-weight:600;}
+  .section-badge{padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;display:inline-block;}
+
+  /* ── Media cells ── */
+  .media-cell{display:flex;flex-direction:column;gap:4px;align-items:flex-start;}
+  .media-img{max-width:160px;max-height:120px;border-radius:4px;cursor:zoom-in;border:1px solid var(--border);transition:transform .15s;}
+  .media-img:hover{transform:scale(1.04);}
+  .media-img-full{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9999;display:flex;align-items:center;justify-content:center;cursor:zoom-out;}
+  .media-img-full img{max-width:90vw;max-height:90vh;border-radius:8px;box-shadow:0 8px 40px rgba(0,0,0,.8);}
+  .media-audio{height:28px;max-width:220px;accent-color:var(--gold);}
+  .media-caption{font-size:10px;color:var(--text3);font-style:italic;}
+  .media-badge{display:inline-block;padding:1px 7px;border-radius:10px;font-size:10px;font-weight:700;}
+  .media-badge-image{background:rgba(62,120,212,.2);color:#7db3ff;}
+  .media-badge-audio{background:rgba(168,85,247,.2);color:#cf9fff;}
+
+  /* ── Print-safe static table (hidden on screen, shown on print) ── */
+  #print-table{display:none;}
+
+  @media print{
+    body{background:#fff;color:#000;}
+    .toolbar,.col-toggle-panel,.grid-wrap{display:none!important;}
+    .header{background:#fff;border-bottom:2px solid #c8960e;padding:12px 0;}
+    .header-icon{display:none;}
+    .header h1{color:#c8960e;font-size:18px;}
+    .header .meta{color:#666;}
+    .content{padding:12px 0;}
+    .stats-grid{display:none;}
+    #print-table{display:table!important;width:100%;border-collapse:collapse;font-size:12px;margin-top:8px;}
+    #print-table th{background:#f0f0f0;border:1px solid #ccc;padding:7px 10px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:#444;}
+    #print-table td{border:1px solid #ddd;padding:7px 10px;vertical-align:top;}
+    #print-table tr:nth-child(even) td{background:#fafafa;}
+    #print-table .pt-num{font-weight:700;color:#333;text-align:center;width:36px;}
+    #print-table .pt-section{font-size:10px;font-weight:700;text-transform:uppercase;border-radius:4px;padding:2px 6px;white-space:nowrap;}
+    #print-table .pt-section-Alternate{color:#1d4fa6;background:#dde9ff;}
+    #print-table .pt-section-Minute{color:#8b3a10;background:#ffe6d5;}
+    #print-table .pt-section-Buzzer{color:#5b1d99;background:#eedeff;}
+    #print-table .pt-question{min-width:240px;}
+    #print-table .pt-answer{color:#0a7c64;font-weight:600;}
+    #print-table .pt-id{font-family:monospace;font-size:10px;color:#888;}
+    #print-table .pt-media img{max-width:120px;max-height:80px;border-radius:3px;border:1px solid #ccc;}
+    #print-table .pt-media audio{display:none;}
+    #print-table .pt-media .media-print-note{font-size:10px;color:#888;font-style:italic;}
+    .warn{background:#fff8e0;border:1px solid #e8b84b;color:#7a5500;padding:6px 10px;border-radius:4px;font-size:11px;margin-bottom:6px;}
+  }
+  .warn{background:rgba(232,184,75,.1);border:1px solid rgba(232,184,75,.3);color:var(--gold);padding:8px 12px;border-radius:6px;font-size:12px;margin-bottom:8px;}
+
+/* ─── Section Order (Settings) ──────────────────────────────── */
+.section-order-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 14px;
+}
+@media (max-width: 800px) { .section-order-grid { grid-template-columns: 1fr; } }
+.order-col-title {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.order-list {
+  min-height: 60px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.order-list.drag-over-list { border-color: var(--gold); background: rgba(232,184,75,0.06); }
+.order-item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 10px;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 13px;
+  cursor: grab;
+  user-select: none;
+  transition: border-color 0.12s, background 0.12s;
+}
+.order-item:active { cursor: grabbing; }
+.order-item.dragging { opacity: 0.4; border-style: dashed; }
+.order-item.drag-over { border-color: var(--gold); background: rgba(232,184,75,0.1); }
+.order-item .drag-handle { color: var(--text3); font-size: 12px; flex-shrink: 0; }
+.order-item .item-num {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--gold);
+  min-width: 18px;
+}
+.order-item .item-name { flex: 1; }
+.order-item .rm-btn {
+  background: none; border: none;
+  color: var(--text3); cursor: pointer;
+  font-size: 12px; padding: 0 2px; line-height: 1;
+  flex-shrink: 0;
+}
+.order-item .rm-btn:hover { color: var(--red); }
+.order-empty {
+  font-size: 12px;
+  color: var(--text3);
+  text-align: center;
+  padding: 10px 0;
+  font-style: italic;
+}
+.order-actions { display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
+/* ─── Template management (Settings) ────────────────────────── */
+.tpl-manage-list { display: flex; flex-direction: column; gap: 6px; }
+.tpl-manage-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.tpl-manage-item .tmi-name { flex: 1; font-size: 13px; font-weight: 600; }
+.tpl-manage-item .tmi-meta { font-size: 11px; color: var(--text3); }
+.tpl-manage-item .tmi-del {
+  background: none; border: 1px solid var(--red-dim);
+  color: var(--red); border-radius: var(--radius);
+  padding: 3px 8px; font-size: 11px; cursor: pointer;
+}
+.tpl-manage-item .tmi-del:hover { background: var(--red); color: #fff; }
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="header-icon">SCQ</div>
+  <div>
+    <h1>${matchNameSafe}</h1>
+    <div class="meta">SCQ Match Generator &middot; Generated ${new Date(timestamp).toLocaleString()} &middot; ${allRows.length} questions total</div>
+  </div>
+</div>
+<div class="content">
+  ${(warnings||[]).map(w=>`<div class="warn">${escAttr(w)}</div>`).join('')}
+
+  <div class="stats-grid">
+    <div class="stat"><div class="stat-v">${allRows.length}</div><div class="stat-l">Total Questions</div></div>
+    ${sections.alternate ? `<div class="stat"><div class="stat-v" style="color:var(--alt)">${sections.alternate.length}</div><div class="stat-l">Alternate</div></div>` : ''}
+    ${sections.minute    ? `<div class="stat"><div class="stat-v" style="color:var(--min)">${sections.minute.length}</div><div class="stat-l">Minute</div></div>` : ''}
+    ${sections.buzzer    ? `<div class="stat"><div class="stat-v" style="color:var(--buz)">${sections.buzzer.length}</div><div class="stat-l">Buzzer</div></div>` : ''}
+    <div class="stat"><div class="stat-v">${new Set(allRows.map(r=>r.subject)).size}</div><div class="stat-l">Subjects</div></div>
+    <div class="stat"><div class="stat-v">${new Set(allRows.map(r=>r.category)).size}</div><div class="stat-l">Categories</div></div>
+  </div>
+
+  <div class="toolbar">
+    <input type="text" id="search-input" placeholder="Search questions, subjects, categories…" oninput="onSearch(this.value)">
+    <div class="toolbar-sep"></div>
+    <button onclick="toggleColPanel()" id="btn-col-toggle">⚙️ Columns</button>
+    <button onclick="toggleAnswers()" id="toggle-ans-btn">🙈 Hide Answers</button>
+    <div class="toolbar-sep"></div>
+    <button onclick="exportCSV()">📥 Export CSV</button>
+    <button onclick="exportJSON()">{ } Export JSON</button>
+    <div class="toolbar-sep"></div>
+    <button onclick="doPrint()">🖨 Print</button>
+  </div>
+
+  <!-- Column visibility panel -->
+  <div class="col-toggle-panel" id="col-panel">
+    <h4>Show / Hide Columns</h4>
+    <div class="col-toggles" id="col-toggles"></div>
+  </div>
+
+  <!-- AG Grid interactive table -->
+  <div class="grid-wrap">
+    <div id="main-grid" class="ag-theme-alpine-dark" style="height:520px;width:100%;"></div>
+  </div>
+
+  <!-- Static print table (rendered from data, never hidden by AG Grid pagination) -->
+  <table id="print-table">
+    <thead id="print-thead"></thead>
+    <tbody id="print-tbody"></tbody>
+  </table>
+</div>
+
+<script>
+const allRows = ${rowsJSON};
+let gridApi;
+let answersHidden = false;
+let colPanelOpen = false;
+
+const COLS = [
+  {field:'num',      label:'#',        width:60,  pinned:'left'},
+  {field:'section',  label:'Section',  width:110},
+  {field:'subject',  label:'Subject',  width:160},
+  {field:'category', label:'Category', width:160},
+  {field:'id',       label:'ID',       width:110},
+  {field:'question', label:'Question', flex:2,    wrapText:true, autoHeight:true},
+  {field:'answer',   label:'Answer',   flex:1,    wrapText:true, autoHeight:true},
+  {field:'difficulty',label:'Diff',    width:80},
+  {field:'hasMedia', label:'Media',    width:180, wrapText:true, autoHeight:true}
+];
+
+// Track visibility state per column
+const colVisible = {};
+COLS.forEach(c => { colVisible[c.field] = true; });
+
+const sectionColors = {Alternate:'#3e78d4',Minute:'#d46b3e',Buzzer:'#a855f7'};
+
+// ── Build AG Grid ──────────────────────────────────────────────
+function buildColDefs() {
+  return COLS.map(c => {
+    const def = {
+      field: c.field,
+      headerName: c.label,
+      hide: !colVisible[c.field],
+      sortable: true,
+      filter: true,
+      resizable: true
+    };
+    if (c.width)  def.width  = c.width;
+    if (c.flex)   def.flex   = c.flex;
+    if (c.pinned) def.pinned = c.pinned;
+    if (c.wrapText)    def.wrapText   = true;
+    if (c.autoHeight)  def.autoHeight = true;
+
+    if (c.field === 'section') {
+      def.cellRenderer = p => {
+        const col = sectionColors[p.value] || '#555';
+        return \`<span class="section-badge" style="background:\${col}33;color:\${col}">\${p.value||''}</span>\`;
+      };
+    }
+    if (c.field === 'id') {
+      def.cellStyle = {fontFamily:'monospace', fontSize:'11px', color:'#e8b84b'};
+    }
+    if (c.field === 'answer') {
+      def.cellRenderer = p => {
+        const v = String(p.value||'');
+        return \`<span class="answer-cell ans-val" style="filter:\${answersHidden?'blur(5px)':'none'};transition:filter .2s">\${v}</span>\`;
+      };
+    }
+    if (c.field === 'hasMedia') {
+      def.cellRenderer = p => {
+        const row = p.data;
+        if (!row.mediaType) return '';
+        return renderMediaCell(row.mediaType, row.mediaSrc, row.mediaCaption);
+      };
+    }
+    return def;
+  });
+}
+
+function renderMediaCell(type, src, caption) {
+  if (!type || !src) return '';
+  if (type === 'image') {
+    return \`<div class="media-cell">
+      <img class="media-img" src="\${escH(src)}" alt="\${escH(caption||'')}" onclick="openLightbox('\${escH(src)}','\${escH(caption||'')}')">
+      \${caption ? \`<div class="media-caption">\${escH(caption)}</div>\` : ''}
+    </div>\`;
+  }
+  if (type === 'audio') {
+    return \`<div class="media-cell">
+      <span class="media-badge media-badge-audio">🎵 Audio</span>
+      <audio class="media-audio" controls preload="none">
+        <source src="\${escH(src)}">
+      </audio>
+      \${caption ? \`<div class="media-caption">\${escH(caption)}</div>\` : ''}
+    </div>\`;
+  }
+  return \`<span class="media-badge media-badge-\${escH(type)}">\${escH(type)}</span>\`;
+}
+
+function openLightbox(src, caption) {
+  const existing = document.querySelector('.media-img-full');
+  if (existing) { existing.remove(); return; }
+  const div = document.createElement('div');
+  div.className = 'media-img-full';
+  div.onclick = () => div.remove();
+  div.innerHTML = \`<img src="\${escH(src)}" alt="\${escH(caption)}">\`;
+  document.body.appendChild(div);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  // Init AG Grid
+  const gridOptions = {
+    columnDefs: buildColDefs(),
+    rowData: allRows,
+    defaultColDef: {resizable:true, sortable:true, filter:true},
+    pagination: true,
+    paginationPageSize: 20,
+    headerHeight: 38,
+    theme: 'legacy'
+  };
+  gridApi = agGrid.createGrid(document.getElementById('main-grid'), gridOptions);
+
+  // Build column toggle panel
+  buildColTogglePanel();
+
+  // Build static print table (built once from full data, not affected by pagination)
+  buildPrintTable();
+});
+
+// ── Column toggle panel ────────────────────────────────────────
+function buildColTogglePanel() {
+  const wrap = document.getElementById('col-toggles');
+  wrap.innerHTML = COLS.map(c => \`
+    <button type="button" class="col-toggle-item \${colVisible[c.field]?'':'col-hidden'}" id="ct-\${c.field}" onclick="toggleCol('\${c.field}')">
+      <input type="checkbox" \${colVisible[c.field]?'checked':''} tabindex="-1">
+      \${c.label}
+    </button>
+  \`).join('');
+}
+
+function toggleCol(field) {
+  colVisible[field] = !colVisible[field];
+  // AG Grid v31 correct singular API
+  if (gridApi) gridApi.setColumnVisible(field, colVisible[field]);
+  // Update button appearance
+  const item = document.getElementById('ct-' + field);
+  if (item) {
+    item.classList.toggle('col-hidden', !colVisible[field]);
+    item.querySelector('input').checked = colVisible[field];
+  }
+  // Rebuild print table to reflect hidden columns
+  buildPrintTable();
+}
+
+function toggleColPanel() {
+  colPanelOpen = !colPanelOpen;
+  document.getElementById('col-panel').classList.toggle('open', colPanelOpen);
+  document.getElementById('btn-col-toggle').classList.toggle('active-btn', colPanelOpen);
+}
+
+// ── Static print table ─────────────────────────────────────────
+// Built from full allRows (not limited by AG Grid pagination).
+// Only visible columns are included. Updated whenever column visibility changes.
+function buildPrintTable() {
+  const visibleCols = COLS.filter(c => colVisible[c.field]);
+
+  // Header
+  document.getElementById('print-thead').innerHTML =
+    '<tr>' + visibleCols.map(c => \`<th>\${c.label}</th>\`).join('') + '</tr>';
+
+  // Rows — use the CURRENT grid sort/filter if available, otherwise allRows
+  let rows = allRows;
+  if (gridApi) {
+    const filtered = [];
+    gridApi.forEachNodeAfterFilterAndSort(node => { if (node.data) filtered.push(node.data); });
+    if (filtered.length > 0) rows = filtered;
+  }
+
+  document.getElementById('print-tbody').innerHTML = rows.map(row => {
+    return '<tr>' + visibleCols.map(c => {
+      let val = String(row[c.field] != null ? row[c.field] : '');
+      let cls = '';
+      if (c.field === 'num')      cls = 'pt-num';
+      if (c.field === 'section')  return \`<td><span class="pt-section pt-section-\${val}">\${val}</span></td>\`;
+      if (c.field === 'answer')   cls = 'pt-answer';
+      if (c.field === 'id')       cls = 'pt-id';
+      if (c.field === 'question') cls = 'pt-question';
+      if (c.field === 'hasMedia') {
+        // In print: show image inline; audio gets a note (can't print audio)
+        if (!row.mediaType) return '<td></td>';
+        if (row.mediaType === 'image' && row.mediaSrc) {
+          return \`<td class="pt-media"><img src="\${escH(row.mediaSrc)}" alt="\${escH(row.mediaCaption||'')}">
+            \${row.mediaCaption ? \`<div class="media-print-note">\${escH(row.mediaCaption)}</div>\` : ''}</td>\`;
+        }
+        if (row.mediaType === 'audio') {
+          return \`<td class="pt-media"><div class="media-print-note">🎵 Audio: \${escH(row.mediaSrc)}</div></td>\`;
+        }
+        return \`<td>\${escH(row.mediaType)}</td>\`;
+      }
+      return \`<td\${cls ? \` class="\${cls}"\`:''} >\${escH(val)}</td>\`;
+    }).join('') + '</tr>';
+  }).join('');
+}
+
+// ── Answers toggle ─────────────────────────────────────────────
+function toggleAnswers() {
+  answersHidden = !answersHidden;
+  document.getElementById('toggle-ans-btn').textContent = answersHidden ? '👁 Show Answers' : '🙈 Hide Answers';
+  // Refresh AG Grid cell rendering
+  if (gridApi) gridApi.refreshCells({force:true});
+}
+
+// ── Search ─────────────────────────────────────────────────────
+function onSearch(v) {
+  if (gridApi) {
+    gridApi.setGridOption('quickFilterText', v);
+    // After filter settles, rebuild print table with filtered rows
+    setTimeout(buildPrintTable, 100);
+  }
+}
+
+// ── Print ──────────────────────────────────────────────────────
+function doPrint() {
+  // Rebuild print table with current filter/sort state immediately before printing
+  buildPrintTable();
+  window.print();
+}
+
+// ── Exports ────────────────────────────────────────────────────
+function exportCSV() {
+  if (gridApi) {
+    gridApi.exportDataAsCsv({
+      fileName: '${matchNameJS}.csv',
+      columnKeys: COLS.filter(c => colVisible[c.field]).map(c => c.field)
+    });
+  }
+}
+
+function exportJSON() {
+  const visibleFields = COLS.filter(c => colVisible[c.field]).map(c => c.field);
+  const out = allRows.map(r => {
+    const obj = {};
+    visibleFields.forEach(f => { obj[f] = r[f]; });
+    return obj;
+  });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([JSON.stringify(out,null,2)],{type:'application/json'}));
+  a.download = '${matchNameJS}.json';
+  a.click();
+}
+
+// ── Util ───────────────────────────────────────────────────────
+function escH(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+<\/script>
+</body>
+</html>`;
+
+  downloadFile(`${matchName.replace(/[^a-zA-Z0-9]/g,'_')}_report.html`, html, 'text/html');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// JSON EXPORTS
+// ═══════════════════════════════════════════════════════════════
+function exportMatchJSON() {
+  if (!DB.lastGenerated) return;
+  const { sections, matchName, timestamp } = DB.lastGenerated;
+  const fullMatch = { matchName, generated: timestamp, sections: {} };
+  Object.entries(sections).forEach(([k,rows]) => {
+    fullMatch.sections[k] = rows.map(r => ({
+      num: r.num, subject: r.subject, category: r.category,
+      id: r.q.id, question: r.q.question,
+      answer: DB.settings.includeAnswersInExport ? r.q.answer : null,
+      difficulty: r.q.difficulty, media: r.q.media
+    }));
+  });
+  downloadFile(`${matchName.replace(/[^a-zA-Z0-9]/g,'_')}_match.json`, JSON.stringify(fullMatch,null,2), 'application/json');
+}
+
+function exportQuestionsJSON() {
+  downloadFile('questions.json', JSON.stringify(DB.questions,null,2), 'application/json');
+}
+
+function exportCatalogJSON() {
+  buildCatalog(true);
+  downloadFile('catalog.json', JSON.stringify(DB.catalog,null,2), 'application/json');
+}
+
+function exportUsageJSON() {
+  const data = {
+    usedQuestions: [...DB.usedIds],
+    usageLog: DB.usageLog,
+    exported: new Date().toISOString()
+  };
+  downloadFile('used_questions.json', JSON.stringify(data,null,2), 'application/json');
+}
+
+function exportSettingsJSON() {
+  downloadFile('settings.json', JSON.stringify(DB.settings,null,2), 'application/json');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// EXCEL IMPORT
+// ═══════════════════════════════════════════════════════════════
+function handleExcelDrop(e) {
+  e.preventDefault();
+  el('excel-drop').classList.remove('drag-over');
+  const file = e.dataTransfer.files[0];
+  if (file) processExcelFile(file);
+}
+
+function handleExcelFile(e) {
+  const file = e.target.files[0];
+  if (file) processExcelFile(file);
+}
+
+function processExcelFile(file) {
+  const reader = new FileReader();
+  reader.onload = evt => {
+    try {
+      importWorkbook = XLSX.read(evt.target.result, { type: 'binary' });
+      const sheets = importWorkbook.SheetNames;
+      const sel = el('sheet-select');
+      sel.innerHTML = sheets.map(s => `<option>${esc(s)}</option>`).join('');
+      el('step-sheet').style.display = 'flex';
+      loadSheet();
+    } catch(err) {
+      alert('Error reading Excel file: ' + err.message);
+    }
+  };
+  reader.readAsBinaryString(file);
+}
+
+function loadSheet() {
+  if (!importWorkbook) return;
+  const sheetName = el('sheet-select').value;
+  const ws = importWorkbook.Sheets[sheetName];
+  importRows = XLSX.utils.sheet_to_json(ws, { header: 1 });
+
+  if (importRows.length < 2) {
+    alert('Sheet appears to be empty or has only a header row.');
+    return;
+  }
+
+  const headers = importRows[0].map((h, i) => ({ idx: i, name: String(h || `Column ${i+1}`) }));
+
+  const requiredCols = [
+    { id: 'subject',    label: 'Subject *' },
+    { id: 'category',   label: 'Category *' },
+    { id: 'question',   label: 'Question *' },
+    { id: 'answer',     label: 'Answer *' },
+    { id: 'difficulty', label: 'Difficulty' },
+    { id: 'id',         label: 'ID' },
+    { id: 'media_type', label: 'Media Type (image/audio)' },
+    { id: 'media_path', label: 'Media Path / URL' },
+    { id: 'media_caption', label: 'Media Caption' }
+  ];
+
+  const mapGrid = el('col-map-grid');
+  mapGrid.innerHTML = requiredCols.map(rc => {
+    const guess = headers.findIndex(h => h.name.toLowerCase().includes(rc.id.toLowerCase()));
+    return `<div class="form-group">
+      <label>${rc.label}</label>
+      <select id="map-${rc.id}" style="width:100%">
+        <option value="">— not mapped —</option>
+        ${headers.map((h,i) => `<option value="${i}" ${i===guess?'selected':''}>${esc(h.name)}</option>`).join('')}
+      </select>
+    </div>`;
+  }).join('');
+
+  el('step-map').style.display = 'flex';
+  previewImport();
+}
+
+function previewImport() {
+  const getMap = id => {
+    const v = el('map-' + id);
+    return v ? parseInt(v.value) : NaN;
+  };
+
+  const subjIdx      = getMap('subject');
+  const catIdx       = getMap('category');
+  const qIdx         = getMap('question');
+  const aIdx         = getMap('answer');
+  const dIdx         = getMap('difficulty');
+  const idIdx        = getMap('id');
+  const mTypeIdx     = getMap('media_type');
+  const mPathIdx     = getMap('media_path');
+  const mCaptionIdx  = getMap('media_caption');
+
+  if (isNaN(subjIdx) || isNaN(catIdx) || isNaN(qIdx) || isNaN(aIdx)) {
+    el('import-preview-wrap').style.display = 'none';
+    return;
+  }
+
+  const preview = [];
+  for (let i = 1; i < Math.min(importRows.length, 1001); i++) {
+    const row = importRows[i];
+    if (!row || row.length === 0) continue;
+    const q = String(row[qIdx] || '').trim();
+    const a = String(row[aIdx] || '').trim();
+    const s = String(row[subjIdx] || '').trim();
+    const c = String(row[catIdx] || '').trim();
+    if (!q || !a || !s || !c) continue;
+    const mType    = !isNaN(mTypeIdx)    ? String(row[mTypeIdx]    || '').trim().toLowerCase() : '';
+    const mPath    = !isNaN(mPathIdx)    ? String(row[mPathIdx]    || '').trim() : '';
+    const mCaption = !isNaN(mCaptionIdx) ? String(row[mCaptionIdx] || '').trim() : '';
+    const media = (mType && mPath) ? { type: mType, src: mPath, caption: mCaption } : null;
+    preview.push({
+      subject: s, category: c, question: q, answer: a,
+      difficulty: isNaN(dIdx) ? 'Medium' : (String(row[dIdx]||'Medium').trim()||'Medium'),
+      id: isNaN(idIdx) ? null : String(row[idIdx]||'').trim(),
+      media
+    });
+  }
+
+  el('preview-count').textContent = `(${preview.length} valid rows of ${importRows.length-1} total)`;
+  el('import-preview-tbody').innerHTML = preview.slice(0,15).map(r => `
+    <tr>
+      <td>${esc(r.subject)}</td>
+      <td>${esc(r.category)}</td>
+      <td>${esc(r.question.substring(0,80))}${r.question.length>80?'…':''}</td>
+      <td class="q-ans">${esc(r.answer)}</td>
+      <td><span class="q-diff diff-${r.difficulty}">${r.difficulty}</span></td>
+      <td>${r.media ? `<span class="badge badge-alt">${esc(r.media.type)}</span> <span class="text-dim text-small">${esc(r.media.src.substring(0,30))}</span>` : '<span class="text-dim">—</span>'}</td>
+    </tr>
+  `).join('');
+
+  el('import-validation-msg').innerHTML = '';
+  el('import-preview-wrap').style.display = 'block';
+
+  // Store full preview
+  el('import-preview-wrap').dataset.rows = JSON.stringify(preview);
+}
+
+function finalizeImport() {
+  const rows = JSON.parse(el('import-preview-wrap').dataset.rows || '[]');
+  if (rows.length === 0) { showAlert('import-validation-msg', 'No valid rows to import.', 'error'); return; }
+
+  // Generate IDs
+  const existingIds = new Set(DB.questions.map(q=>q.id));
+  let counter = DB.questions.length + 1;
+  const newQuestions = rows.map(r => {
+    let id = r.id;
+    if (!id) {
+      const prefix = r.subject.toUpperCase().replace(/[^A-Z]/g,'').slice(0,4);
+      id = `${prefix}-${String(counter++).padStart(4,'0')}`;
+      while (existingIds.has(id)) { id = `${prefix}-${String(counter++).padStart(4,'0')}`; }
+    }
+    existingIds.add(id);
+    // Build media object from import if present
+    let media = null;
+    if (r.media && r.media.type && r.media.src) {
+      media = { type: r.media.type, src: r.media.src, caption: r.media.caption || '' };
+    }
+    return { id, subject: r.subject, category: r.category, question: r.question, answer: r.answer, difficulty: r.difficulty || 'Medium', media };
+  });
+
+  DB.questions = [...DB.questions, ...newQuestions];
+  buildCatalog(true);
+  renderSubjectGrid();
+  updateStats();
+  renderQuestionBank();
+  saveAllToLocalStorage();
+  showAlert('import-validation-msg', `✅ Imported ${newQuestions.length} questions successfully.`, 'ok');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// JSON FILE IMPORT
+// ═══════════════════════════════════════════════════════════════
+function handleJSONDrop(e) {
+  e.preventDefault();
+  e.currentTarget.classList.remove('drag-over');
+  const file = e.dataTransfer.files[0];
+  if (file) processJSONFile(file);
+}
+
+function handleJSONFile(e) {
+  const file = e.target.files[0];
+  if (file) processJSONFile(file);
+}
+
+function processJSONFile(file) {
+  const reader = new FileReader();
+  reader.onload = evt => {
+    try {
+      let data = JSON.parse(evt.target.result);
+      if (Array.isArray(data)) {
+        DB.questions = data;
+      } else if (data.questions) {
+        DB.questions = data.questions;
+      } else {
+        throw new Error('Unrecognized format. Expected an array or {questions:[…]}');
+      }
+      buildCatalog(true);
+      renderSubjectGrid();
+      updateStats();
+      renderQuestionBank();
+      saveAllToLocalStorage();
+      showAlert('catalog-status', `✅ Loaded ${DB.questions.length} questions from JSON.`, 'ok');
+    } catch (err) {
+      alert('Error loading JSON: ' + err.message);
+    }
+  };
+  reader.readAsText(file);
+}
+
+function handleUsageFile(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = evt => {
+    try {
+      const data = JSON.parse(evt.target.result);
+      const ids = data.usedQuestions || [];
+      const log = data.usageLog || [];
+      ids.forEach(id => DB.usedIds.add(id));
+      DB.usageLog = [...DB.usageLog, ...log.filter(l => !DB.usageLog.find(x=>x.questionId===l.questionId&&x.usedOn===l.usedOn))];
+      saveAllToLocalStorage();
+      updateStats();
+      updateUsageTab();
+      alert(`Loaded usage data: ${ids.length} used question IDs merged.`);
+    } catch (err) {
+      alert('Error loading usage file: ' + err.message);
+    }
+  };
+  reader.readAsText(file);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// TEMPLATES
+// ═══════════════════════════════════════════════════════════════
+function initDefaultTemplates() {
+  // No built-in defaults — user creates their own
+  if (!Array.isArray(DB.templates)) DB.templates = [];
+}
+
+function renderTemplates() {
+  const list = el('template-list');
+  if (DB.templates.length === 0) {
+    list.innerHTML = '<div class="text-dim text-small" style="padding:4px">No templates yet. Save one below.</div>';
+    return;
+  }
+  list.innerHTML = DB.templates.map((t, i) => `
+    <div class="template-card" onclick="loadTemplate(${i})" style="position:relative">
+      <button type="button" style="position:absolute;top:6px;right:6px;background:none;border:none;color:var(--text3);cursor:pointer;font-size:14px;padding:0 3px;line-height:1"
+        onclick="deleteTemplate(event,${i})" title="Delete template">✕</button>
+      <div class="tc-name">${esc(t.name)}</div>
+      <div class="tc-subjects">${t.subjects.length} subjects · ${t.sections.join(', ')}</div>
+    </div>
+  `).join('');
+}
+
+function renderTemplateManager() {
+  const list = el('tpl-manage-list');
+  if (!list) return;
+  if (DB.templates.length === 0) {
+    list.innerHTML = '<div class="text-dim text-small">No templates saved yet.</div>';
+    return;
+  }
+  list.innerHTML = DB.templates.map((t, i) => `
+    <div class="tpl-manage-item">
+      <div>
+        <div class="tmi-name">${esc(t.name)}</div>
+        <div class="tmi-meta">${t.subjects.length} subjects · ${t.sections.join(', ')}</div>
+      </div>
+      <button class="tmi-del" onclick="deleteTemplate(null,${i})">Delete</button>
+    </div>
+  `).join('');
+}
+
+function loadTemplate(idx) {
+  const t = DB.templates[idx];
+  if (!t) return;
+  el('match-name').value = t.name;
+  el('cb-alt').checked = t.sections.includes('alternate');
+  el('cb-min').checked = t.sections.includes('minute');
+  el('cb-buz').checked = t.sections.includes('buzzer');
+
+  // Select subjects
+  el('subject-grid').querySelectorAll('.subject-chip').forEach(chip => {
+    const sel = t.subjects.includes(chip.dataset.subject);
+    chip.classList.toggle('selected', sel);
+    chip.querySelector('input[type=checkbox]').checked = sel;
+  });
+  updateSubjCountLabel();
+}
+
+function deleteTemplate(event, idx) {
+  if (event) event.stopPropagation();
+  if (!confirm(`Delete template "${DB.templates[idx]?.name}"?`)) return;
+  DB.templates.splice(idx, 1);
+  saveAllToLocalStorage();
+  renderTemplates();
+  renderTemplateManager();
+}
+
+function showSaveTemplateModal() {
+  el('tpl-name-input').value = el('match-name').value || '';
+  el('modal-template').classList.remove('hidden');
+}
+
+function saveTemplate() {
+  const name = el('tpl-name-input').value.trim();
+  if (!name) { alert('Enter a template name.'); return; }
+  const sections = [];
+  if (el('cb-alt').checked) sections.push('alternate');
+  if (el('cb-min').checked) sections.push('minute');
+  if (el('cb-buz').checked) sections.push('buzzer');
+  const subjects = getSelectedSubjects();
+  DB.templates.push({ name, sections, subjects });
+  saveAllToLocalStorage();
+  renderTemplates();
+  renderTemplateManager();
+  closeModal('modal-template');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SECTION ORDER (drag & drop)
+// ═══════════════════════════════════════════════════════════════
+let dragSrcSection = null;
+let dragSrcIdx = null;
+
+function renderOrderLists() {
+  ['alternate','minute','buzzer'].forEach(sec => {
+    const list = el('order-list-' + sec);
+    if (!list) return;
+    const order = (DB.settings.sectionOrder || {})[sec] || [];
+    if (order.length === 0) {
+      list.innerHTML = '<div class="order-empty">No subjects configured. Click "↑ From Generator" to add.</div>';
+      return;
+    }
+    list.innerHTML = order.map((subj, idx) => `
+      <div class="order-item" draggable="true"
+        data-section="${sec}" data-idx="${idx}" data-subj="${esc(subj)}"
+        ondragstart="orderDragStart(event,'${sec}',${idx})"
+        ondragover="orderItemDragOver(event)"
+        ondragleave="orderItemDragLeave(event)"
+        ondrop="orderItemDrop(event,'${sec}',${idx})">
+        <span class="drag-handle">⠿</span>
+        <span class="item-num">${idx+1}</span>
+        <span class="item-name">${esc(subj)}</span>
+        <button type="button" class="rm-btn" onclick="removeFromOrder('${sec}',${idx})" title="Remove">✕</button>
+      </div>
+    `).join('');
+  });
+}
+
+function orderDragStart(event, section, idx) {
+  dragSrcSection = section;
+  dragSrcIdx = idx;
+  event.dataTransfer.effectAllowed = 'move';
+  event.currentTarget.classList.add('dragging');
+}
+
+function orderItemDragOver(event) {
+  event.preventDefault();
+  event.dataTransfer.dropEffect = 'move';
+  event.currentTarget.classList.add('drag-over');
+}
+
+function orderItemDragLeave(event) {
+  event.currentTarget.classList.remove('drag-over');
+}
+
+function orderItemDrop(event, section, targetIdx) {
+  event.preventDefault();
+  event.stopPropagation();
+  event.currentTarget.classList.remove('drag-over');
+  // Only allow reordering within same section
+  if (dragSrcSection !== section || dragSrcIdx === null || dragSrcIdx === targetIdx) return;
+  const order = DB.settings.sectionOrder[section];
+  const [moved] = order.splice(dragSrcIdx, 1);
+  order.splice(targetIdx, 0, moved);
+  dragSrcSection = null; dragSrcIdx = null;
+  saveAllToLocalStorage();
+  renderOrderLists();
+}
+
+function orderDragOver(event, section) {
+  event.preventDefault();
+  el('order-list-' + section).classList.add('drag-over-list');
+}
+
+function orderDragLeave(event, section) {
+  el('order-list-' + section).classList.remove('drag-over-list');
+}
+
+function orderDrop(event, section) {
+  event.preventDefault();
+  el('order-list-' + section).classList.remove('drag-over-list');
+}
+
+function removeFromOrder(section, idx) {
+  DB.settings.sectionOrder[section].splice(idx, 1);
+  saveAllToLocalStorage();
+  renderOrderLists();
+}
+
+function clearOrderList(section) {
+  DB.settings.sectionOrder[section] = [];
+  saveAllToLocalStorage();
+  renderOrderLists();
+}
+
+function pullFromGenerator(section) {
+  const selected = getSelectedSubjects();
+  if (selected.length === 0) { alert('No subjects selected on the Generate tab.'); return; }
+  // Merge: keep existing order for subjects already present, append new ones at end
+  const existing = DB.settings.sectionOrder[section] || [];
+  const merged = [...existing.filter(s => selected.includes(s))];
+  selected.forEach(s => { if (!merged.includes(s)) merged.push(s); });
+  DB.settings.sectionOrder[section] = merged;
+  saveAllToLocalStorage();
+  renderOrderLists();
+}
+
+function copyOrderList(fromSection, toSection) {
+  const src = [...(DB.settings.sectionOrder[fromSection] || [])];
+  if (src.length === 0) { alert('Source section has no subjects configured.'); return; }
+  DB.settings.sectionOrder[toSection] = src;
+  saveAllToLocalStorage();
+  renderOrderLists();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// USAGE TAB
+// ═══════════════════════════════════════════════════════════════
+function updateUsageTab() {
+  // By subject
+  const bySub = {};
+  const subTotals = {};
+  DB.questions.forEach(q => { subTotals[q.subject] = (subTotals[q.subject]||0)+1; });
+  DB.usageLog.forEach(u => { bySub[u.subject] = (bySub[u.subject]||0)+1; });
+
+  const subDiv = el('usage-by-subject');
+  const subjects = Object.keys(subTotals).sort();
+  if (subjects.length === 0) {
+    subDiv.innerHTML = '<div class="text-dim text-small">No data yet.</div>';
+  } else {
+    subDiv.innerHTML = subjects.map(s => {
+      const used = bySub[s] || 0;
+      const total = subTotals[s];
+      const pct = total ? Math.min(100, Math.round(used/total*100)) : 0;
+      return `<div class="usage-bar-row">
+        <div class="usage-bar-label" title="${esc(s)}">${esc(s)}</div>
+        <div class="usage-bar-track"><div class="usage-bar-fill" style="width:${pct}%"></div></div>
+        <div class="usage-bar-count">${used}/${total}</div>
+      </div>`;
+    }).join('');
+  }
+
+  // Recent
+  const recentDiv = el('usage-recent');
+  const recent = DB.usageLog.slice(-20).reverse();
+  if (recent.length === 0) {
+    recentDiv.innerHTML = '<div class="text-dim text-small">No usage history yet.</div>';
+  } else {
+    recentDiv.innerHTML = `<div class="data-table-wrap" style="max-height:400px;overflow-y:auto">
+      <table class="data-table" style="font-size:12px">
+        <thead><tr><th>ID</th><th>Subject</th><th>Section</th><th>Match</th><th>Date</th></tr></thead>
+        <tbody>${recent.map(u=>`<tr>
+          <td><span class="q-id">${esc(u.questionId)}</span></td>
+          <td>${esc(u.subject||'')}</td>
+          <td><span class="badge badge-${(u.section||'').toLowerCase().slice(0,3)}">${esc(u.section||'')}</span></td>
+          <td class="text-dim">${esc(u.matchName||'')}</td>
+          <td class="text-dim">${u.usedOn ? new Date(u.usedOn).toLocaleDateString() : ''}</td>
+        </tr>`).join('')}</tbody>
+      </table>
+    </div>`;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SETTINGS
+// ═══════════════════════════════════════════════════════════════
+function saveSettings() {
+  DB.settings.alternateQuestionsPerSubject = parseInt(el('set-alt-count').value)||2;
+  DB.settings.minuteQuestionsPerSubject = parseInt(el('set-min-count').value)||2;
+  DB.settings.buzzerQuestionsPerSubject = parseInt(el('set-buz-count').value)||1;
+  DB.settings.avoidPreviouslyUsed = el('set-avoid-used').checked;
+  DB.settings.allowFallbackCategory = el('set-fallback').checked;
+  DB.settings.includeAnswersInExport = el('set-include-answers').checked;
+  // sectionOrder is saved directly by the drag-drop functions
+  saveAllToLocalStorage();
+}
+
+function loadSettingsToUI() {
+  el('set-alt-count').value = DB.settings.alternateQuestionsPerSubject;
+  el('set-min-count').value = DB.settings.minuteQuestionsPerSubject;
+  el('set-buz-count').value = DB.settings.buzzerQuestionsPerSubject;
+  el('set-avoid-used').checked = DB.settings.avoidPreviouslyUsed;
+  el('set-fallback').checked = DB.settings.allowFallbackCategory;
+  el('set-include-answers').checked = DB.settings.includeAnswersInExport;
+  if (!DB.settings.sectionOrder) DB.settings.sectionOrder = { alternate: [], minute: [], buzzer: [] };
+  renderOrderLists();
+  renderTemplateManager();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// LOCAL STORAGE
+// ═══════════════════════════════════════════════════════════════
+function saveAllToLocalStorage() {
+  try {
+    localStorage.setItem('scq_questions', JSON.stringify(DB.questions));
+    localStorage.setItem('scq_usedIds', JSON.stringify([...DB.usedIds]));
+    localStorage.setItem('scq_usageLog', JSON.stringify(DB.usageLog));
+    localStorage.setItem('scq_settings', JSON.stringify(DB.settings));
+    localStorage.setItem('scq_templates', JSON.stringify(DB.templates));
+    localStorage.setItem('scq_savedAt', new Date().toISOString());
+    const ts = new Date().toLocaleTimeString();
+    const label = el('last-saved-label');
+    if (label) label.textContent = ts;
+  } catch(e) {
+    console.warn('localStorage save failed:', e);
+  }
+}
+
+function loadFromLocalStorage() {
+  try {
+    const qs = localStorage.getItem('scq_questions');
+    if (qs) DB.questions = JSON.parse(qs);
+    const ids = localStorage.getItem('scq_usedIds');
+    if (ids) DB.usedIds = new Set(JSON.parse(ids));
+    const log = localStorage.getItem('scq_usageLog');
+    if (log) DB.usageLog = JSON.parse(log);
+    const sets = localStorage.getItem('scq_settings');
+    if (sets) {
+      const parsed = JSON.parse(sets);
+      DB.settings = { ...DB.settings, ...parsed };
+      // Ensure sectionOrder always exists with all three keys
+      if (!DB.settings.sectionOrder) DB.settings.sectionOrder = { alternate: [], minute: [], buzzer: [] };
+      DB.settings.sectionOrder.alternate = DB.settings.sectionOrder.alternate || [];
+      DB.settings.sectionOrder.minute    = DB.settings.sectionOrder.minute    || [];
+      DB.settings.sectionOrder.buzzer    = DB.settings.sectionOrder.buzzer    || [];
+    }
+    const tpls = localStorage.getItem('scq_templates');
+    if (tpls) DB.templates = JSON.parse(tpls);
+    const savedAt = localStorage.getItem('scq_savedAt');
+    if (savedAt && el('last-saved-label')) {
+      el('last-saved-label').textContent = new Date(savedAt).toLocaleString();
+    }
+    loadSettingsToUI();
+    if (DB.questions.length > 0) buildCatalog(true);
+  } catch(e) {
+    console.warn('localStorage load failed:', e);
+  }
+}
+
+function confirmClearUsage() {
+  if (confirm('Clear all usage history? This cannot be undone.')) {
+    DB.usedIds = new Set();
+    DB.usageLog = [];
+    saveAllToLocalStorage();
+    updateStats();
+    updateUsageTab();
+  }
+}
+
+function confirmClearAll() {
+  if (confirm('This will clear ALL question bank data, usage history, and settings. Are you sure?')) {
+    localStorage.clear();
+    DB = { questions:[], catalog:{}, usageLog:[], usedIds:new Set(),
+      settings:{alternateQuestionsPerSubject:2,minuteQuestionsPerSubject:2,buzzerQuestionsPerSubject:1,
+        avoidPreviouslyUsed:true,allowFallbackCategory:false,randomizeSubjectOrder:false,includeAnswersInExport:true},
+      templates:[], lastGenerated:null };
+    initDefaultTemplates();
+    renderSubjectGrid();
+    renderTemplates();
+    updateStats();
+    updateUsageTab();
+    loadSettingsToUI();
+    clearMatch();
+    renderQuestionBank();
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ABOUT TAB
+// ═══════════════════════════════════════════════════════════════
+function updateAboutTab() {
+  const aqc = el('about-q-count');
+  const asc = el('about-s-count');
+  const auc = el('about-u-count');
+  if (aqc) aqc.textContent = DB.questions.length;
+  if (asc) asc.textContent = new Set(DB.questions.map(q=>q.subject)).size;
+  if (auc) auc.textContent = DB.usedIds.size;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════════════════════════
+function el(id) { return document.getElementById(id); }
+
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function escAttr(s) { return String(s||'').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
+function escJS(s) { return String(s||'').replace(/'/g,"\\'").replace(/\\/g,'\\\\'); }
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length-1; i>0; i--) {
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+
+function pickRandom(arr, n) {
+  return shuffle(arr).slice(0, n);
+}
+
+function downloadFile(filename, content, type) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([content], { type }));
+  a.download = filename;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+
+function showAlert(containerId, msg, type) {
+  const c = el(containerId);
+  if (!c) return;
+  const cls = { ok:'alert-ok', error:'alert-error', warn:'alert-warn', info:'alert-info' }[type] || 'alert-info';
+  c.innerHTML = `<div class="alert ${cls}">${esc(msg)}</div>`;
+  setTimeout(() => { if(c) c.innerHTML = ''; }, 6000);
+}
+
+function closeModal(id) { el(id).classList.add('hidden'); }
+
+function switchTab(tabName) {
+  document.querySelectorAll('.nav-tab').forEach(b => b.classList.toggle('active', b.dataset.tab === tabName));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === 'tab-'+tabName));
+}
+
+// Make previewImport available to select changes in col map
+document.addEventListener('change', e => {
+  if (e.target.id && e.target.id.startsWith('map-')) previewImport();
+});
+</script>
+</body>
+</html>
