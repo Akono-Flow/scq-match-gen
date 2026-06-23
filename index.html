@@ -2795,7 +2795,7 @@ function buildPrintTable() {
       }
       if (c.field === 'info') {
         // Strip markdown for print — plain readable text
-        const plain = String(row.info||'').replace(/#{1,6}\s?/g,'').replace(/\*\*([^*]+)\*\*/g,'$1').replace(/\*([^*]+)\*/g,'$1').replace(/`([^`]+)`/g,'$1').replace(/\n/g,' ').trim();
+        const plain = String(row.info||'').replace(/#{1,6}\\s?/g,'').replace(/\\*\\*([^*]+)\\*\\*/g,'$1').replace(/\\*([^*]+)\\*/g,'$1').replace(new RegExp(String.fromCharCode(96)+'([^'+String.fromCharCode(96)+']+)'+String.fromCharCode(96),'g'),'$1').replace(/\\n/g,' ').trim();
         return plain ? \`<td class="pt-info">\${escH(plain)}</td>\` : '<td></td>';
       }
       return \`<td\${cls ? \` class="\${cls}"\`:''} >\${escH(val)}</td>\`;
