@@ -2802,7 +2802,7 @@ function previewImport() {
   }
 
   const preview = [];
-  for (let i = 1; i < Math.min(importRows.length, 1001); i++) {
+  for (let i = 1; i < importRows.length; i++) {
     const row = importRows[i];
     if (!row || row.length === 0) continue;
     const q = String(row[qIdx] || '').trim();
