@@ -1329,6 +1329,26 @@ hr.divider { border: none; border-top: 1px solid var(--border); margin: 14px 0; 
 </div>
 
 <!-- ══════════════════════════════════ MAIN SCRIPT -->
+
+
+
+<!-- ══════════════════════════════════ INFO POPUP (shared singleton) -->
+<div id="info-popup" role="dialog" aria-label="Additional Information">
+  <!-- Resize corners -->
+  <div class="resize-handle nw" data-dir="nw"></div>
+  <div class="resize-handle ne" data-dir="ne"></div>
+  <div class="resize-handle sw" data-dir="sw"></div>
+  <div class="resize-handle se" data-dir="se"></div>
+  <!-- Header / drag bar -->
+  <div id="info-popup-header">
+    <span id="info-popup-title">Additional Info</span>
+    <button id="info-popup-pin" title="Pin open">📌 Pin</button>
+    <button id="info-popup-close" title="Close">✕</button>
+  </div>
+  <!-- Markdown body -->
+  <div id="info-popup-body"></div>
+</div>
+
 <script>
 // ═══════════════════════════════════════════════════════════════
 // STATE
@@ -2856,85 +2876,8 @@ function escH(s) {
 }
 <\/script>
 
-<!-- ══════════════════════════════════ INFO POPUP (shared singleton) -->
-<div id="info-popup" role="dialog" aria-label="Additional Information">
-  <!-- Resize corners -->
-  <div class="resize-handle nw" data-dir="nw"></div>
-  <div class="resize-handle ne" data-dir="ne"></div>
-  <div class="resize-handle sw" data-dir="sw"></div>
-  <div class="resize-handle se" data-dir="se"></div>
-  <!-- Header / drag bar -->
-  <div id="info-popup-header">
-    <span id="info-popup-title">Additional Info</span>
-    <button id="info-popup-pin" title="Pin open">📌 Pin</button>
-    <button id="info-popup-close" title="Close">✕</button>
-  </div>
-  <!-- Markdown body -->
-  <div id="info-popup-body"></div>
-</div>
-
-<!-- Exported report info popup -->
-<div id="exp-info-popup">
-  <div class="exp-resize nw" data-dir="nw"></div>
-  <div class="exp-resize ne" data-dir="ne"></div>
-  <div class="exp-resize sw" data-dir="sw"></div>
-  <div class="exp-resize se" data-dir="se"></div>
-  <div id="exp-info-hdr">
-    <span id="exp-info-title">Additional Info</span>
-    <button id="exp-info-pin">📌 Pin</button>
-    <button id="exp-info-close">✕</button>
-  </div>
-  <div id="exp-info-body"></div>
-</div>
-<script>
-(function(){
-  const popup=document.getElementById('exp-info-popup');
-  const body=document.getElementById('exp-info-body');
-  const pin=document.getElementById('exp-info-pin');
-  const close2=document.getElementById('exp-info-close');
-  const hdr=document.getElementById('exp-info-hdr');
-  let pinned=false,cur=null,htimer=null;
-
-  function md(t){ return window.marked?window.marked.parse(String(t||''),{breaks:true}):String(t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/\n/g,'<br>'); }
-  function show(el,text){
-    if(pinned&&cur!==el)return;
-    clearTimeout(htimer);
-    const r=el.getBoundingClientRect();
-    let l=r.right+12,t2=r.top-8;
-    const pw=popup.offsetWidth||320,ph=popup.offsetHeight||200;
-    if(l+pw>window.innerWidth-10) l=r.left-pw-12;
-    if(t2+ph>window.innerHeight-10) t2=window.innerHeight-ph-10;
-    popup.style.left=Math.max(10,l)+'px';
-    popup.style.top=Math.max(10,t2)+'px';
-    body.innerHTML=md(text);
-    popup.classList.add('visible');
-    cur=el;
-  }
-  function hide(){ if(pinned)return; popup.classList.remove('visible'); if(cur){cur.classList.remove('pinned');cur=null;} }
-  function forceClose(){ pinned=false;pin.classList.remove('active');pin.textContent='📌 Pin';popup.classList.remove('visible');if(cur){cur.classList.remove('pinned');cur=null;} }
-  pin.onclick=()=>{ pinned=!pinned;pin.classList.toggle('active',pinned);pin.textContent=pinned?'📌 Pinned':'📌 Pin';if(cur)cur.classList.toggle('pinned',pinned); };
-  close2.onclick=forceClose;
-  popup.addEventListener('mouseenter',()=>clearTimeout(htimer));
-  popup.addEventListener('mouseleave',()=>{ if(!pinned)htimer=setTimeout(hide,200); });
-
-  let dg=false,dx,dy,lx,ly;
-  hdr.addEventListener('mousedown',e=>{ if(e.target===pin||e.target===close2)return; dg=true;dx=e.clientX;dy=e.clientY;lx=parseInt(popup.style.left)||0;ly=parseInt(popup.style.top)||0;e.preventDefault(); });
-  let rs=false,rdir=null,rx2,ry2,rw,rh,rl,rt;
-  popup.querySelectorAll('.exp-resize').forEach(h=>{ h.addEventListener('mousedown',e=>{ rs=true;rdir=h.dataset.dir;rx2=e.clientX;ry2=e.clientY;rw=popup.offsetWidth;rh=popup.offsetHeight;rl=parseInt(popup.style.left)||0;rt=parseInt(popup.style.top)||0;document.body.style.cursor=getComputedStyle(h).cursor;document.body.style.userSelect='none';e.preventDefault();e.stopPropagation(); }); });
-  document.addEventListener('mousemove',e=>{
-    if(dg){let nx=lx+(e.clientX-dx),ny=ly+(e.clientY-dy);nx=Math.max(0,Math.min(nx,window.innerWidth-popup.offsetWidth));ny=Math.max(0,Math.min(ny,window.innerHeight-popup.offsetHeight));popup.style.left=nx+'px';popup.style.top=ny+'px';}
-    if(rs){const ddx=e.clientX-rx2,ddy=e.clientY-ry2;let w=rw,h=rh,l=rl,t2=rt;if(rdir.includes('e'))w=Math.max(220,rw+ddx);if(rdir.includes('s'))h=Math.max(100,rh+ddy);if(rdir.includes('w')){w=Math.max(220,rw-ddx);l=rl+(rw-w);}if(rdir.includes('n')){h=Math.max(100,rh-ddy);t2=rt+(rh-h);}popup.style.width=w+'px';popup.style.height=h+'px';popup.style.left=l+'px';popup.style.top=t2+'px';}
-  });
-  document.addEventListener('mouseup',()=>{ dg=false;rs=false;rdir=null;document.body.style.cursor='';document.body.style.userSelect=''; });
-
-  window.expInfoShow=(el)=>show(el,el.dataset.info);
-  window.expInfoHide=()=>{ if(!pinned)htimer=setTimeout(hide,200); };
-  window.expInfoClick=(el)=>{ if(popup.classList.contains('visible')&&cur===el){pin.click();}else if(!pinned){show(el,el.dataset.info);pin.click();} };
-})();
-<\/script>
-
 </body>
-</html>\`;
+</html>`;
 
   downloadFile(matchName.replace(/[^a-zA-Z0-9]/g,'_') + '_report.html', html, 'text/html');
 }
@@ -2954,7 +2897,7 @@ function exportMatchJSON() {
       difficulty: r.q.difficulty, media: r.q.media
     }));
   });
-  downloadFile(`${matchName.replace(/[^a-zA-Z0-9]/g,'_')}_match.json`, JSON.stringify(fullMatch,null,2), 'application/json');
+  downloadFile(matchName.replace(/[^a-zA-Z0-9]/g,'_') + '_match.json', JSON.stringify(fullMatch,null,2), 'application/json');
 }
 
 function exportQuestionsJSON() {
@@ -3642,8 +3585,7 @@ document.addEventListener('change', e => {
     if (window.marked) {
       return window.marked.parse(String(text || ''), { breaks: true });
     }
-    return String(text || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/
-/g,'<br>');
+    return String(text || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/\n/g,'<br>');
   }
 
   function showPopup(iconEl, infoText) {
@@ -3756,17 +3698,18 @@ document.addEventListener('change', e => {
 })();
 
 function makeInfoIcon(infoText) {
-  const safe = String(infoText).replace(/\/g,'\\').replace(/"/g,'&quot;').replace(/
-/g,'&#10;').replace(/
-/g,'');
-  return `<button type="button" class="info-icon"
-    data-info="${safe}"
-    onmouseenter="window.infoPopup&&window.infoPopup.show(this,this.dataset.info)"
-    onmouseleave="window.infoPopup&&window.infoPopup.hide()"
-    onclick="handleInfoClick(this)"
-    title="Additional info">i</button>`;
+  var safe = String(infoText)
+    .replace(/\\/g, "\\\\")
+    .replace(/"/g, "&quot;")
+    .replace(/\n/g, "&#10;")
+    .replace(/\r/g, "");
+  return '<button type="button" class="info-icon"'
+    + ' data-info="' + safe + '"'
+    + ' onmouseenter="window.infoPopup&&window.infoPopup.show(this,this.dataset.info)"'
+    + ' onmouseleave="window.infoPopup&&window.infoPopup.hide()"'
+    + ' onclick="handleInfoClick(this)"'
+    + ' title="Additional info">i</button>';
 }
-
 function handleInfoClick(btn) {
   if (!window.infoPopup) return;
   if (window.infoPopup.isOpenFor(btn)) {
