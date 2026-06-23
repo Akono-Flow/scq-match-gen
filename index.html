@@ -2551,13 +2551,13 @@ function exportMatchHTML() {
   </div>
 </div>
 <div class="content">
-  ${(warnings||[]).map(w=>`<div class="warn">${escAttr(w)}</div>`).join('')}
+  ${(warnings||[]).map(w=>'<div class="warn">'+escAttr(w)+'</div>').join('')}
 
   <div class="stats-grid">
     <div class="stat"><div class="stat-v">${allRows.length}</div><div class="stat-l">Total Questions</div></div>
-    ${sections.alternate ? `<div class="stat"><div class="stat-v" style="color:var(--alt)">${sections.alternate.length}</div><div class="stat-l">Alternate</div></div>` : ''}
-    ${sections.minute    ? `<div class="stat"><div class="stat-v" style="color:var(--min)">${sections.minute.length}</div><div class="stat-l">Minute</div></div>` : ''}
-    ${sections.buzzer    ? `<div class="stat"><div class="stat-v" style="color:var(--buz)">${sections.buzzer.length}</div><div class="stat-l">Buzzer</div></div>` : ''}
+    ${sections.alternate ? '<div class="stat"><div class="stat-v" style="color:var(--alt)">'+sections.alternate.length+'</div><div class="stat-l">Alternate</div></div>' : ''}
+    ${sections.minute    ? '<div class="stat"><div class="stat-v" style="color:var(--min)">'+sections.minute.length+'</div><div class="stat-l">Minute</div></div>' : ''}
+    ${sections.buzzer    ? '<div class="stat"><div class="stat-v" style="color:var(--buz)">'+sections.buzzer.length+'</div><div class="stat-l">Buzzer</div></div>' : ''}
     <div class="stat"><div class="stat-v">${new Set(allRows.map(r=>r.subject)).size}</div><div class="stat-l">Subjects</div></div>
     <div class="stat"><div class="stat-v">${new Set(allRows.map(r=>r.category)).size}</div><div class="stat-l">Categories</div></div>
   </div>
@@ -2831,7 +2831,7 @@ function doPrint() {
 function exportCSV() {
   if (gridApi) {
     gridApi.exportDataAsCsv({
-      fileName: '${matchNameJS}.csv',
+      fileName: matchNameJS + '.csv',
       columnKeys: COLS.filter(c => colVisible[c.field]).map(c => c.field)
     });
   }
@@ -2846,7 +2846,7 @@ function exportJSON() {
   });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([JSON.stringify(out,null,2)],{type:'application/json'}));
-  a.download = '${matchNameJS}.json';
+  a.download = matchNameJS + '.json';
   a.click();
 }
 
@@ -2936,7 +2936,7 @@ function escH(s) {
 </body>
 </html>\`;
 
-  downloadFile(`${matchName.replace(/[^a-zA-Z0-9]/g,'_')}_report.html`, html, 'text/html');
+  downloadFile(matchName.replace(/[^a-zA-Z0-9]/g,'_') + '_report.html', html, 'text/html');
 }
 
 // ═══════════════════════════════════════════════════════════════
