@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SCQ Match Generator</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked@9.1.6/marked.min.js"></script>
 <style>
 /* ─── Design Tokens ─────────────────────────────────────────── */
 :root {
@@ -726,6 +727,144 @@ hr.divider { border: none; border-top: 1px solid var(--border); margin: 14px 0; 
   overflow-x: auto;
   white-space: pre;
 }
+
+/* ─── Info Popup (floating, draggable, resizable) ───────────── */
+.info-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #3e78d4, #7db3ff);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 900;
+  cursor: pointer;
+  flex-shrink: 0;
+  border: none;
+  vertical-align: middle;
+  margin-left: 6px;
+  transition: transform 0.15s, box-shadow 0.15s;
+  font-family: var(--font-ui);
+  user-select: none;
+}
+.info-icon:hover { transform: scale(1.2); box-shadow: 0 0 8px rgba(62,120,212,0.6); }
+.info-icon.pinned {
+  background: linear-gradient(135deg, var(--gold), var(--gold-dim));
+  box-shadow: 0 0 8px rgba(232,184,75,0.5);
+}
+
+/* The floating popup panel */
+#info-popup {
+  display: none;
+  position: fixed;
+  z-index: 9000;
+  background: var(--bg2);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius2);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.7);
+  min-width: 260px;
+  min-height: 120px;
+  width: 340px;
+  max-width: 90vw;
+  max-height: 80vh;
+  overflow: hidden;
+  display: none;
+  flex-direction: column;
+  /* resize via corner handles, not CSS resize (gives more control) */
+}
+#info-popup.visible { display: flex; }
+
+/* Drag handle / title bar */
+#info-popup-header {
+  background: var(--bg3);
+  border-bottom: 1px solid var(--border);
+  padding: 8px 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: grab;
+  user-select: none;
+  flex-shrink: 0;
+  border-radius: var(--radius2) var(--radius2) 0 0;
+}
+#info-popup-header:active { cursor: grabbing; }
+#info-popup-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text2);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  flex: 1;
+}
+#info-popup-pin {
+  background: none; border: 1px solid var(--border2);
+  border-radius: 4px; color: var(--text3);
+  padding: 2px 7px; font-size: 11px; cursor: pointer;
+  transition: all 0.15s;
+}
+#info-popup-pin:hover, #info-popup-pin.active { border-color: var(--gold); color: var(--gold); }
+#info-popup-close {
+  background: none; border: none;
+  color: var(--text3); font-size: 16px; cursor: pointer;
+  padding: 0 3px; line-height: 1;
+  transition: color 0.15s;
+}
+#info-popup-close:hover { color: var(--red); }
+
+/* Scrollable content area */
+#info-popup-body {
+  padding: 14px 16px;
+  overflow-y: auto;
+  flex: 1;
+  font-size: 13px;
+  line-height: 1.65;
+  color: var(--text);
+}
+/* Markdown content styling inside popup */
+#info-popup-body h1,#info-popup-body h2,#info-popup-body h3 {
+  color: var(--gold); margin: 8px 0 4px; font-size: 14px;
+}
+#info-popup-body p { margin-bottom: 8px; }
+#info-popup-body ul,#info-popup-body ol { padding-left: 18px; margin-bottom: 8px; }
+#info-popup-body li { margin-bottom: 3px; }
+#info-popup-body strong { color: var(--gold2); }
+#info-popup-body em { color: var(--text2); }
+#info-popup-body code {
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 3px; padding: 1px 5px;
+  font-family: var(--font-mono); font-size: 11px;
+}
+#info-popup-body a { color: var(--teal); }
+#info-popup-body hr { border: none; border-top: 1px solid var(--border); margin: 8px 0; }
+#info-popup-body blockquote {
+  border-left: 3px solid var(--gold-dim);
+  margin: 0; padding: 4px 10px;
+  color: var(--text2); font-style: italic;
+}
+
+/* Corner resize handles */
+.resize-handle {
+  position: absolute;
+  width: 14px; height: 14px;
+  z-index: 10;
+}
+.resize-handle.nw { top: 0; left: 0; cursor: nw-resize; }
+.resize-handle.ne { top: 0; right: 0; cursor: ne-resize; }
+.resize-handle.sw { bottom: 0; left: 0; cursor: sw-resize; }
+.resize-handle.se { bottom: 0; right: 0; cursor: se-resize; }
+/* Visual indicator dots on corners */
+.resize-handle::after {
+  content: '';
+  position: absolute;
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--border2);
+}
+.resize-handle.nw::after { top: 3px; left: 3px; }
+.resize-handle.ne::after { top: 3px; right: 3px; }
+.resize-handle.sw::after { bottom: 3px; left: 3px; }
+.resize-handle.se::after { bottom: 3px; right: 3px; }
 </style>
 </head>
 <body>
@@ -879,6 +1018,7 @@ hr.divider { border: none; border-top: 1px solid var(--border); margin: 14px 0; 
             <th>Answer</th>
             <th>Diff</th>
             <th>Media</th>
+            <th>Info</th>
           </tr>
         </thead>
         <tbody id="qb-tbody"></tbody>
@@ -941,7 +1081,7 @@ hr.divider { border: none; border-top: 1px solid var(--border); margin: 14px 0; 
                 <table class="data-table">
                   <thead>
                     <tr>
-                      <th>Subject</th><th>Category</th><th>Question</th><th>Answer</th><th>Diff</th><th>Media</th>
+                      <th>Subject</th><th>Category</th><th>Question</th><th>Answer</th><th>Diff</th><th>Media</th><th>Info</th>
                     </tr>
                   </thead>
                   <tbody id="import-preview-tbody"></tbody>
@@ -1849,6 +1989,7 @@ function renderQuestionBank(qs) {
       <td class="q-ans">${esc(q.answer||'')}</td>
       <td><span class="q-diff diff-${q.difficulty||'Medium'}">${q.difficulty||'—'}</span></td>
       <td>${q.media ? `<span class="badge badge-alt">${q.media.type}</span>` : '<span class="text-dim">—</span>'}</td>
+      <td class="text-dim" style="font-size:12px;max-width:160px">${q.info ? `<span title="${esc(q.info)}">${esc(q.info.substring(0,60))}${q.info.length>60?'…':''}</span>` : '—'}</td>
     </tr>
   `).join('');
 }
@@ -2108,6 +2249,7 @@ function renderMatch(sections, matchName, warnings) {
             <span class="text-dim text-small">A:</span>
             <span class="q-answer hidden" onclick="revealAnswer(this)">${esc(q.answer)}</span>
             <button class="reveal-btn" onclick="revealAnswer(this.previousElementSibling)">reveal</button>
+            ${q.info ? makeInfoIcon(q.info) : ''}
           </div>
         </div>
       </div>`;
@@ -2165,7 +2307,8 @@ function exportMatchHTML() {
         hasMedia: row.q.media ? row.q.media.type : '',
         mediaSrc: row.q.media ? (row.q.media.src || '') : '',
         mediaCaption: row.q.media ? (row.q.media.caption || '') : '',
-        mediaType: row.q.media ? (row.q.media.type || '') : ''
+        mediaType: row.q.media ? (row.q.media.type || '') : '',
+        info: row.q.info || ''
       });
     });
   });
@@ -2180,6 +2323,7 @@ function exportMatchHTML() {
 <meta charset="UTF-8">
 <title>${matchNameSafe} — SCQ Match Report</title>
 <script src="https://cdn.jsdelivr.net/npm/ag-grid-community@31.0.3/dist/ag-grid-community.min.js"><\/script>
+<script src="https://cdn.jsdelivr.net/npm/marked@9.1.6/marked.min.js"><\/script>
 <style>
   :root{
     --bg:#0d1117;--bg2:#161b22;--bg3:#1c2230;--border:#2a3547;--border2:#3d4f6a;
@@ -2248,6 +2392,34 @@ function exportMatchHTML() {
   .media-badge-image{background:rgba(62,120,212,.2);color:#7db3ff;}
   .media-badge-audio{background:rgba(168,85,247,.2);color:#cf9fff;}
 
+  /* ── Info popup (exported report) ── */
+  .info-icon-exp{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;background:linear-gradient(135deg,#3e78d4,#7db3ff);color:#fff;font-size:10px;font-weight:900;cursor:pointer;border:none;vertical-align:middle;margin-left:6px;transition:transform .15s;font-family:inherit;}
+  .info-icon-exp:hover{transform:scale(1.2);}
+  .info-icon-exp.pinned{background:linear-gradient(135deg,#e8b84b,#7a5f22);}
+  #exp-info-popup{display:none;position:fixed;z-index:9000;background:var(--bg2);border:1px solid var(--border2);border-radius:10px;box-shadow:0 8px 32px rgba(0,0,0,.7);min-width:240px;min-height:100px;width:320px;max-width:90vw;max-height:80vh;overflow:hidden;flex-direction:column;}
+  #exp-info-popup.visible{display:flex;}
+  #exp-info-hdr{background:var(--bg3);border-bottom:1px solid var(--border);padding:8px 10px;display:flex;align-items:center;gap:8px;cursor:grab;user-select:none;flex-shrink:0;border-radius:10px 10px 0 0;}
+  #exp-info-hdr:active{cursor:grabbing;}
+  #exp-info-title{font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.8px;flex:1;}
+  #exp-info-pin{background:none;border:1px solid var(--border2);border-radius:4px;color:var(--text3);padding:2px 7px;font-size:11px;cursor:pointer;}
+  #exp-info-pin:hover,#exp-info-pin.active{border-color:var(--gold);color:var(--gold);}
+  #exp-info-close{background:none;border:none;color:var(--text3);font-size:16px;cursor:pointer;padding:0 3px;line-height:1;}
+  #exp-info-close:hover{color:#e05252;}
+  #exp-info-body{padding:14px 16px;overflow-y:auto;flex:1;font-size:13px;line-height:1.65;color:var(--text);}
+  #exp-info-body h1,#exp-info-body h2,#exp-info-body h3{color:var(--gold);margin:8px 0 4px;font-size:14px;}
+  #exp-info-body p{margin-bottom:8px;}
+  #exp-info-body ul,#exp-info-body ol{padding-left:18px;margin-bottom:8px;}
+  #exp-info-body strong{color:#f5d27a;}
+  #exp-info-body em{color:var(--text2);}
+  #exp-info-body code{background:var(--bg3);border:1px solid var(--border);border-radius:3px;padding:1px 5px;font-family:monospace;font-size:11px;}
+  #exp-info-body blockquote{border-left:3px solid #7a5f22;margin:0;padding:4px 10px;color:var(--text2);font-style:italic;}
+  .exp-resize{position:absolute;width:14px;height:14px;z-index:10;}
+  .exp-resize.nw{top:0;left:0;cursor:nw-resize;} .exp-resize.ne{top:0;right:0;cursor:ne-resize;}
+  .exp-resize.sw{bottom:0;left:0;cursor:sw-resize;} .exp-resize.se{bottom:0;right:0;cursor:se-resize;}
+  .exp-resize::after{content:'';position:absolute;width:5px;height:5px;border-radius:50%;background:var(--border2);}
+  .exp-resize.nw::after{top:3px;left:3px;} .exp-resize.ne::after{top:3px;right:3px;}
+  .exp-resize.sw::after{bottom:3px;left:3px;} .exp-resize.se::after{bottom:3px;right:3px;}
+
   /* ── Print-safe static table (hidden on screen, shown on print) ── */
   #print-table{display:none;}
 
@@ -2275,6 +2447,9 @@ function exportMatchHTML() {
     #print-table .pt-media img{max-width:120px;max-height:80px;border-radius:3px;border:1px solid #ccc;}
     #print-table .pt-media audio{display:none;}
     #print-table .pt-media .media-print-note{font-size:10px;color:#888;font-style:italic;}
+    #print-table .pt-info{font-size:11px;color:#444;max-width:180px;}
+    #exp-info-popup,#exp-info-popup.visible{display:none!important;}
+    .info-icon-exp{display:none!important;}
     .warn{background:#fff8e0;border:1px solid #e8b84b;color:#7a5500;padding:6px 10px;border-radius:4px;font-size:11px;margin-bottom:6px;}
   }
   .warn{background:rgba(232,184,75,.1);border:1px solid rgba(232,184,75,.3);color:var(--gold);padding:8px 12px;border-radius:6px;font-size:12px;margin-bottom:8px;}
@@ -2431,13 +2606,14 @@ const COLS = [
   {field:'id',       label:'ID',       width:110},
   {field:'question', label:'Question', flex:2,    wrapText:true, autoHeight:true},
   {field:'answer',   label:'Answer',   flex:1,    wrapText:true, autoHeight:true},
+  {field:'info',     label:'Info',     flex:1,    wrapText:true, autoHeight:true, hide:true},
   {field:'difficulty',label:'Diff',    width:80},
   {field:'hasMedia', label:'Media',    width:180, wrapText:true, autoHeight:true}
 ];
 
 // Track visibility state per column
 const colVisible = {};
-COLS.forEach(c => { colVisible[c.field] = true; });
+COLS.forEach(c => { colVisible[c.field] = c.hide ? false : true; });
 
 const sectionColors = {Alternate:'#3e78d4',Minute:'#d46b3e',Buzzer:'#a855f7'};
 
@@ -2470,7 +2646,21 @@ function buildColDefs() {
     if (c.field === 'answer') {
       def.cellRenderer = p => {
         const v = String(p.value||'');
-        return \`<span class="answer-cell ans-val" style="filter:\${answersHidden?'blur(5px)':'none'};transition:filter .2s">\${v}</span>\`;
+        const info = p.data ? (p.data.info || '') : '';
+        const icon = info ? \`<button type="button" class="info-icon-exp"
+          data-info="\${escH(info).replace(/"/g,'&quot;')}"
+          onmouseenter="expInfoShow(this)"
+          onmouseleave="expInfoHide()"
+          onclick="expInfoClick(this)"
+          title="Additional info">i</button>\` : '';
+        return \`<span class="answer-cell ans-val" style="filter:\${answersHidden?'blur(5px)':'none'};transition:filter .2s">\${escH(v)}</span>\${icon}\`;
+      };
+    }
+    if (c.field === 'info') {
+      def.cellRenderer = p => {
+        const v = String(p.value||'');
+        if (!v) return '';
+        return \`<div style="font-size:12px;color:var(--text2);line-height:1.5">\${escH(v)}</div>\`;
       };
     }
     if (c.field === 'hasMedia') {
@@ -2593,7 +2783,6 @@ function buildPrintTable() {
       if (c.field === 'id')       cls = 'pt-id';
       if (c.field === 'question') cls = 'pt-question';
       if (c.field === 'hasMedia') {
-        // In print: show image inline; audio gets a note (can't print audio)
         if (!row.mediaType) return '<td></td>';
         if (row.mediaType === 'image' && row.mediaSrc) {
           return \`<td class="pt-media"><img src="\${escH(row.mediaSrc)}" alt="\${escH(row.mediaCaption||'')}">
@@ -2603,6 +2792,11 @@ function buildPrintTable() {
           return \`<td class="pt-media"><div class="media-print-note">🎵 Audio: \${escH(row.mediaSrc)}</div></td>\`;
         }
         return \`<td>\${escH(row.mediaType)}</td>\`;
+      }
+      if (c.field === 'info') {
+        // Strip markdown for print — plain readable text
+        const plain = String(row.info||'').replace(/#{1,6}\s?/g,'').replace(/\*\*([^*]+)\*\*/g,'$1').replace(/\*([^*]+)\*/g,'$1').replace(/`([^`]+)`/g,'$1').replace(/\n/g,' ').trim();
+        return plain ? \`<td class="pt-info">\${escH(plain)}</td>\` : '<td></td>';
       }
       return \`<td\${cls ? \` class="\${cls}"\`:''} >\${escH(val)}</td>\`;
     }).join('') + '</tr>';
@@ -2661,8 +2855,86 @@ function escH(s) {
   return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 <\/script>
+
+<!-- ══════════════════════════════════ INFO POPUP (shared singleton) -->
+<div id="info-popup" role="dialog" aria-label="Additional Information">
+  <!-- Resize corners -->
+  <div class="resize-handle nw" data-dir="nw"></div>
+  <div class="resize-handle ne" data-dir="ne"></div>
+  <div class="resize-handle sw" data-dir="sw"></div>
+  <div class="resize-handle se" data-dir="se"></div>
+  <!-- Header / drag bar -->
+  <div id="info-popup-header">
+    <span id="info-popup-title">Additional Info</span>
+    <button id="info-popup-pin" title="Pin open">📌 Pin</button>
+    <button id="info-popup-close" title="Close">✕</button>
+  </div>
+  <!-- Markdown body -->
+  <div id="info-popup-body"></div>
+</div>
+
+<!-- Exported report info popup -->
+<div id="exp-info-popup">
+  <div class="exp-resize nw" data-dir="nw"></div>
+  <div class="exp-resize ne" data-dir="ne"></div>
+  <div class="exp-resize sw" data-dir="sw"></div>
+  <div class="exp-resize se" data-dir="se"></div>
+  <div id="exp-info-hdr">
+    <span id="exp-info-title">Additional Info</span>
+    <button id="exp-info-pin">📌 Pin</button>
+    <button id="exp-info-close">✕</button>
+  </div>
+  <div id="exp-info-body"></div>
+</div>
+<script>
+(function(){
+  const popup=document.getElementById('exp-info-popup');
+  const body=document.getElementById('exp-info-body');
+  const pin=document.getElementById('exp-info-pin');
+  const close2=document.getElementById('exp-info-close');
+  const hdr=document.getElementById('exp-info-hdr');
+  let pinned=false,cur=null,htimer=null;
+
+  function md(t){ return window.marked?window.marked.parse(String(t||''),{breaks:true}):String(t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/\n/g,'<br>'); }
+  function show(el,text){
+    if(pinned&&cur!==el)return;
+    clearTimeout(htimer);
+    const r=el.getBoundingClientRect();
+    let l=r.right+12,t2=r.top-8;
+    const pw=popup.offsetWidth||320,ph=popup.offsetHeight||200;
+    if(l+pw>window.innerWidth-10) l=r.left-pw-12;
+    if(t2+ph>window.innerHeight-10) t2=window.innerHeight-ph-10;
+    popup.style.left=Math.max(10,l)+'px';
+    popup.style.top=Math.max(10,t2)+'px';
+    body.innerHTML=md(text);
+    popup.classList.add('visible');
+    cur=el;
+  }
+  function hide(){ if(pinned)return; popup.classList.remove('visible'); if(cur){cur.classList.remove('pinned');cur=null;} }
+  function forceClose(){ pinned=false;pin.classList.remove('active');pin.textContent='📌 Pin';popup.classList.remove('visible');if(cur){cur.classList.remove('pinned');cur=null;} }
+  pin.onclick=()=>{ pinned=!pinned;pin.classList.toggle('active',pinned);pin.textContent=pinned?'📌 Pinned':'📌 Pin';if(cur)cur.classList.toggle('pinned',pinned); };
+  close2.onclick=forceClose;
+  popup.addEventListener('mouseenter',()=>clearTimeout(htimer));
+  popup.addEventListener('mouseleave',()=>{ if(!pinned)htimer=setTimeout(hide,200); });
+
+  let dg=false,dx,dy,lx,ly;
+  hdr.addEventListener('mousedown',e=>{ if(e.target===pin||e.target===close2)return; dg=true;dx=e.clientX;dy=e.clientY;lx=parseInt(popup.style.left)||0;ly=parseInt(popup.style.top)||0;e.preventDefault(); });
+  let rs=false,rdir=null,rx2,ry2,rw,rh,rl,rt;
+  popup.querySelectorAll('.exp-resize').forEach(h=>{ h.addEventListener('mousedown',e=>{ rs=true;rdir=h.dataset.dir;rx2=e.clientX;ry2=e.clientY;rw=popup.offsetWidth;rh=popup.offsetHeight;rl=parseInt(popup.style.left)||0;rt=parseInt(popup.style.top)||0;document.body.style.cursor=getComputedStyle(h).cursor;document.body.style.userSelect='none';e.preventDefault();e.stopPropagation(); }); });
+  document.addEventListener('mousemove',e=>{
+    if(dg){let nx=lx+(e.clientX-dx),ny=ly+(e.clientY-dy);nx=Math.max(0,Math.min(nx,window.innerWidth-popup.offsetWidth));ny=Math.max(0,Math.min(ny,window.innerHeight-popup.offsetHeight));popup.style.left=nx+'px';popup.style.top=ny+'px';}
+    if(rs){const ddx=e.clientX-rx2,ddy=e.clientY-ry2;let w=rw,h=rh,l=rl,t2=rt;if(rdir.includes('e'))w=Math.max(220,rw+ddx);if(rdir.includes('s'))h=Math.max(100,rh+ddy);if(rdir.includes('w')){w=Math.max(220,rw-ddx);l=rl+(rw-w);}if(rdir.includes('n')){h=Math.max(100,rh-ddy);t2=rt+(rh-h);}popup.style.width=w+'px';popup.style.height=h+'px';popup.style.left=l+'px';popup.style.top=t2+'px';}
+  });
+  document.addEventListener('mouseup',()=>{ dg=false;rs=false;rdir=null;document.body.style.cursor='';document.body.style.userSelect=''; });
+
+  window.expInfoShow=(el)=>show(el,el.dataset.info);
+  window.expInfoHide=()=>{ if(!pinned)htimer=setTimeout(hide,200); };
+  window.expInfoClick=(el)=>{ if(popup.classList.contains('visible')&&cur===el){pin.click();}else if(!pinned){show(el,el.dataset.info);pin.click();} };
+})();
+<\/script>
+
 </body>
-</html>`;
+</html>\`;
 
   downloadFile(`${matchName.replace(/[^a-zA-Z0-9]/g,'_')}_report.html`, html, 'text/html');
 }
@@ -2759,6 +3031,7 @@ function loadSheet() {
     { id: 'answer',     label: 'Answer *' },
     { id: 'difficulty', label: 'Difficulty' },
     { id: 'id',         label: 'ID' },
+    { id: 'info',       label: 'Info (additional details)' },
     { id: 'media_type', label: 'Media Type (image/audio)' },
     { id: 'media_path', label: 'Media Path / URL' },
     { id: 'media_caption', label: 'Media Caption' }
@@ -2792,6 +3065,7 @@ function previewImport() {
   const aIdx         = getMap('answer');
   const dIdx         = getMap('difficulty');
   const idIdx        = getMap('id');
+  const infoIdx      = getMap('info');
   const mTypeIdx     = getMap('media_type');
   const mPathIdx     = getMap('media_path');
   const mCaptionIdx  = getMap('media_caption');
@@ -2810,6 +3084,7 @@ function previewImport() {
     const s = String(row[subjIdx] || '').trim();
     const c = String(row[catIdx] || '').trim();
     if (!q || !a || !s || !c) continue;
+    const info     = !isNaN(infoIdx)      ? String(row[infoIdx]      || '').trim() : '';
     const mType    = !isNaN(mTypeIdx)    ? String(row[mTypeIdx]    || '').trim().toLowerCase() : '';
     const mPath    = !isNaN(mPathIdx)    ? String(row[mPathIdx]    || '').trim() : '';
     const mCaption = !isNaN(mCaptionIdx) ? String(row[mCaptionIdx] || '').trim() : '';
@@ -2818,7 +3093,7 @@ function previewImport() {
       subject: s, category: c, question: q, answer: a,
       difficulty: isNaN(dIdx) ? 'Medium' : (String(row[dIdx]||'Medium').trim()||'Medium'),
       id: isNaN(idIdx) ? null : String(row[idIdx]||'').trim(),
-      media
+      info, media
     });
   }
 
@@ -2831,6 +3106,7 @@ function previewImport() {
       <td class="q-ans">${esc(r.answer)}</td>
       <td><span class="q-diff diff-${r.difficulty}">${r.difficulty}</span></td>
       <td>${r.media ? `<span class="badge badge-alt">${esc(r.media.type)}</span> <span class="text-dim text-small">${esc(r.media.src.substring(0,30))}</span>` : '<span class="text-dim">—</span>'}</td>
+      <td class="text-dim text-small">${r.info ? esc(r.info.substring(0,50)) + (r.info.length>50?'…':'') : '—'}</td>
     </tr>
   `).join('');
 
@@ -2861,7 +3137,7 @@ function finalizeImport() {
     if (r.media && r.media.type && r.media.src) {
       media = { type: r.media.type, src: r.media.src, caption: r.media.caption || '' };
     }
-    return { id, subject: r.subject, category: r.category, question: r.question, answer: r.answer, difficulty: r.difficulty || 'Medium', media };
+    return { id, subject: r.subject, category: r.category, question: r.question, answer: r.answer, difficulty: r.difficulty || 'Medium', info: r.info || '', media };
   });
 
   DB.questions = [...DB.questions, ...newQuestions];
@@ -3346,6 +3622,160 @@ function switchTab(tabName) {
 document.addEventListener('change', e => {
   if (e.target.id && e.target.id.startsWith('map-')) previewImport();
 });
+
+
+// ═══════════════════════════════════════════════════════════════
+// INFO POPUP — draggable, resizable, pinnable, markdown
+// ═══════════════════════════════════════════════════════════════
+(function() {
+  const popup   = document.getElementById('info-popup');
+  const body    = document.getElementById('info-popup-body');
+  const pinBtn  = document.getElementById('info-popup-pin');
+  const closeBtn= document.getElementById('info-popup-close');
+  const header  = document.getElementById('info-popup-header');
+
+  let pinned = false;
+  let currentIcon = null;
+  let hideTimer = null;
+
+  function renderMd(text) {
+    if (window.marked) {
+      return window.marked.parse(String(text || ''), { breaks: true });
+    }
+    return String(text || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/
+/g,'<br>');
+  }
+
+  function showPopup(iconEl, infoText) {
+    if (pinned && currentIcon !== iconEl) return;
+    clearTimeout(hideTimer);
+    const rect = iconEl.getBoundingClientRect();
+    let left = rect.right + 12;
+    let top  = rect.top - 8;
+    const pw = popup.offsetWidth  || 340;
+    const ph = popup.offsetHeight || 200;
+    if (left + pw > window.innerWidth  - 10) left = rect.left - pw - 12;
+    if (top  + ph > window.innerHeight - 10) top  = window.innerHeight - ph - 10;
+    if (left < 10) left = 10;
+    if (top  < 10) top  = 10;
+    popup.style.left = left + 'px';
+    popup.style.top  = top  + 'px';
+    body.innerHTML   = renderMd(infoText);
+    popup.classList.add('visible');
+    currentIcon = iconEl;
+  }
+
+  function hidePopup() {
+    if (pinned) return;
+    popup.classList.remove('visible');
+    if (currentIcon) { currentIcon.classList.remove('pinned'); currentIcon = null; }
+  }
+
+  function forceClose() {
+    pinned = false;
+    pinBtn.classList.remove('active');
+    pinBtn.textContent = '📌 Pin';
+    popup.classList.remove('visible');
+    if (currentIcon) { currentIcon.classList.remove('pinned'); currentIcon = null; }
+  }
+
+  pinBtn.addEventListener('click', () => {
+    pinned = !pinned;
+    pinBtn.classList.toggle('active', pinned);
+    pinBtn.textContent = pinned ? '📌 Pinned' : '📌 Pin';
+    if (currentIcon) currentIcon.classList.toggle('pinned', pinned);
+  });
+
+  closeBtn.addEventListener('click', forceClose);
+
+  popup.addEventListener('mouseenter', () => clearTimeout(hideTimer));
+  popup.addEventListener('mouseleave', () => {
+    if (!pinned) hideTimer = setTimeout(hidePopup, 200);
+  });
+
+  // Drag
+  let dragging = false, dragStartX, dragStartY, popStartX, popStartY;
+  header.addEventListener('mousedown', e => {
+    if (e.target === pinBtn || e.target === closeBtn) return;
+    dragging = true;
+    dragStartX = e.clientX; dragStartY = e.clientY;
+    popStartX  = parseInt(popup.style.left) || 0;
+    popStartY  = parseInt(popup.style.top)  || 0;
+    e.preventDefault();
+  });
+
+  // Resize
+  let resizing = false, resizeDir = null;
+  let resStartX, resStartY, resStartW, resStartH, resStartL, resStartT;
+  popup.querySelectorAll('.resize-handle').forEach(handle => {
+    handle.addEventListener('mousedown', e => {
+      resizing  = true; resizeDir = handle.dataset.dir;
+      resStartX = e.clientX; resStartY = e.clientY;
+      resStartW = popup.offsetWidth; resStartH = popup.offsetHeight;
+      resStartL = parseInt(popup.style.left) || 0;
+      resStartT = parseInt(popup.style.top)  || 0;
+      document.body.style.cursor = getComputedStyle(handle).cursor;
+      document.body.style.userSelect = 'none';
+      e.preventDefault(); e.stopPropagation();
+    });
+  });
+
+  document.addEventListener('mousemove', e => {
+    if (dragging) {
+      let nx = popStartX + (e.clientX - dragStartX);
+      let ny = popStartY + (e.clientY - dragStartY);
+      nx = Math.max(0, Math.min(nx, window.innerWidth  - popup.offsetWidth));
+      ny = Math.max(0, Math.min(ny, window.innerHeight - popup.offsetHeight));
+      popup.style.left = nx + 'px'; popup.style.top = ny + 'px';
+    }
+    if (resizing) {
+      const dx = e.clientX - resStartX, dy = e.clientY - resStartY;
+      let w = resStartW, h = resStartH, l = resStartL, t = resStartT;
+      const minW = 220, minH = 100;
+      if (resizeDir.includes('e')) w = Math.max(minW, resStartW + dx);
+      if (resizeDir.includes('s')) h = Math.max(minH, resStartH + dy);
+      if (resizeDir.includes('w')) { w = Math.max(minW, resStartW - dx); l = resStartL + (resStartW - w); }
+      if (resizeDir.includes('n')) { h = Math.max(minH, resStartH - dy); t = resStartT + (resStartH - h); }
+      popup.style.width  = w + 'px'; popup.style.height = h + 'px';
+      popup.style.left   = l + 'px'; popup.style.top    = t + 'px';
+    }
+  });
+
+  document.addEventListener('mouseup', () => {
+    dragging = false; resizing = false; resizeDir = null;
+    document.body.style.cursor = ''; document.body.style.userSelect = '';
+  });
+
+  window.infoPopup = {
+    show(iconEl, text) { showPopup(iconEl, text); },
+    hide()             { if (!pinned) hideTimer = setTimeout(hidePopup, 200); },
+    forceClose,
+    isPinned()         { return pinned; },
+    isOpenFor(el)      { return currentIcon === el && popup.classList.contains('visible'); }
+  };
+})();
+
+function makeInfoIcon(infoText) {
+  const safe = String(infoText).replace(/\/g,'\\').replace(/"/g,'&quot;').replace(/
+/g,'&#10;').replace(/
+/g,'');
+  return `<button type="button" class="info-icon"
+    data-info="${safe}"
+    onmouseenter="window.infoPopup&&window.infoPopup.show(this,this.dataset.info)"
+    onmouseleave="window.infoPopup&&window.infoPopup.hide()"
+    onclick="handleInfoClick(this)"
+    title="Additional info">i</button>`;
+}
+
+function handleInfoClick(btn) {
+  if (!window.infoPopup) return;
+  if (window.infoPopup.isOpenFor(btn)) {
+    document.getElementById('info-popup-pin').click();
+  } else if (!window.infoPopup.isPinned()) {
+    window.infoPopup.show(btn, btn.dataset.info);
+    document.getElementById('info-popup-pin').click();
+  }
+}
 </script>
 </body>
 </html>
