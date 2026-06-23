@@ -1,5 +1,5 @@
 {
-  "generated": "2026-06-23T17:22:56.530Z",
+  "generated": "2026-06-23T23:48:45.248Z",
   "subjects": [
     {
       "name": "Geography",
@@ -192,6 +192,153 @@
           "count": 14,
           "eligibleForAlternate": true,
           "eligibleForMinute": true,
+          "eligibleForBuzzer": true
+        },
+        {
+          "name": "World-Current-President",
+          "count": 21,
+          "eligibleForAlternate": true,
+          "eligibleForMinute": true,
+          "eligibleForBuzzer": true
+        },
+        {
+          "name": "World-Current-PM",
+          "count": 13,
+          "eligibleForAlternate": true,
+          "eligibleForMinute": true,
+          "eligibleForBuzzer": true
+        },
+        {
+          "name": "World-Current-Leader",
+          "count": 12,
+          "eligibleForAlternate": true,
+          "eligibleForMinute": true,
+          "eligibleForBuzzer": true
+        },
+        {
+          "name": "Local-Current-Ambassador",
+          "count": 2,
+          "eligibleForAlternate": true,
+          "eligibleForMinute": true,
+          "eligibleForBuzzer": true
+        },
+        {
+          "name": "Local-Current-MP",
+          "count": 8,
+          "eligibleForAlternate": true,
+          "eligibleForMinute": true,
+          "eligibleForBuzzer": true
+        },
+        {
+          "name": "World-Current-Flag",
+          "count": 20,
+          "eligibleForAlternate": true,
+          "eligibleForMinute": true,
+          "eligibleForBuzzer": true
+        },
+        {
+          "name": "Local-Current-Government",
+          "count": 2,
+          "eligibleForAlternate": true,
+          "eligibleForMinute": true,
+          "eligibleForBuzzer": true
+        },
+        {
+          "name": "Local-Current-Private",
+          "count": 12,
+          "eligibleForAlternate": true,
+          "eligibleForMinute": true,
+          "eligibleForBuzzer": true
+        },
+        {
+          "name": "World-Current-Politician",
+          "count": 14,
+          "eligibleForAlternate": true,
+          "eligibleForMinute": true,
+          "eligibleForBuzzer": true
+        },
+        {
+          "name": "Local-Current-Custos",
+          "count": 1,
+          "eligibleForAlternate": false,
+          "eligibleForMinute": false,
+          "eligibleForBuzzer": true
+        },
+        {
+          "name": "Local-Current-Public",
+          "count": 1,
+          "eligibleForAlternate": false,
+          "eligibleForMinute": false,
+          "eligibleForBuzzer": true
+        },
+        {
+          "name": "Local-Former-Private",
+          "count": 1,
+          "eligibleForAlternate": false,
+          "eligibleForMinute": false,
+          "eligibleForBuzzer": true
+        },
+        {
+          "name": "Local-Current-Senator",
+          "count": 2,
+          "eligibleForAlternate": true,
+          "eligibleForMinute": true,
+          "eligibleForBuzzer": true
+        },
+        {
+          "name": "Local-Former-Custos",
+          "count": 1,
+          "eligibleForAlternate": false,
+          "eligibleForMinute": false,
+          "eligibleForBuzzer": true
+        },
+        {
+          "name": "Local-Current-Mayor",
+          "count": 4,
+          "eligibleForAlternate": true,
+          "eligibleForMinute": true,
+          "eligibleForBuzzer": true
+        },
+        {
+          "name": "World-Current-Environmentalist",
+          "count": 1,
+          "eligibleForAlternate": false,
+          "eligibleForMinute": false,
+          "eligibleForBuzzer": true
+        },
+        {
+          "name": "Local-Current-Leader",
+          "count": 2,
+          "eligibleForAlternate": true,
+          "eligibleForMinute": true,
+          "eligibleForBuzzer": true
+        },
+        {
+          "name": "World-Current-Royalty",
+          "count": 1,
+          "eligibleForAlternate": false,
+          "eligibleForMinute": false,
+          "eligibleForBuzzer": true
+        },
+        {
+          "name": "World-Current-Diplomat",
+          "count": 1,
+          "eligibleForAlternate": false,
+          "eligibleForMinute": false,
+          "eligibleForBuzzer": true
+        },
+        {
+          "name": "World-Former-PM",
+          "count": 2,
+          "eligibleForAlternate": true,
+          "eligibleForMinute": true,
+          "eligibleForBuzzer": true
+        },
+        {
+          "name": "Local-Current-Educator",
+          "count": 1,
+          "eligibleForAlternate": false,
+          "eligibleForMinute": false,
           "eligibleForBuzzer": true
         }
       ]
@@ -429,6 +576,195 @@
           "eligibleForAlternate": true,
           "eligibleForMinute": true,
           "eligibleForBuzzer": true
+        },
+        {
+          "name": "Cricket-World-Current-Player",
+          "count": 11,
+          "eligibleForAlternate": true,
+          "eligibleForMinute": true,
+          "eligibleForBuzzer": true
+        },
+        {
+          "name": "Football-World-Current-Player",
+          "count": 26,
+          "eligibleForAlternate": true,
+          "eligibleForMinute": true,
+          "eligibleForBuzzer": true
+        },
+        {
+          "name": "Tennis-World-Current-Player",
+          "count": 6,
+          "eligibleForAlternate": true,
+          "eligibleForMinute": true,
+          "eligibleForBuzzer": true
+        },
+        {
+          "name": "Basketball-World-Current-Player",
+          "count": 4,
+          "eligibleForAlternate": true,
+          "eligibleForMinute": true,
+          "eligibleForBuzzer": true
+        },
+        {
+          "name": "Athletics-Local-Current-Athlete",
+          "count": 1,
+          "eligibleForAlternate": false,
+          "eligibleForMinute": false,
+          "eligibleForBuzzer": true
+        },
+        {
+          "name": "Tennis-World-Former-Player",
+          "count": 4,
+          "eligibleForAlternate": true,
+          "eligibleForMinute": true,
+          "eligibleForBuzzer": true
+        },
+        {
+          "name": "Athletics-World-Former-Athlete",
+          "count": 8,
+          "eligibleForAlternate": true,
+          "eligibleForMinute": true,
+          "eligibleForBuzzer": true
+        },
+        {
+          "name": "Cricket-World-Former-Player",
+          "count": 5,
+          "eligibleForAlternate": true,
+          "eligibleForMinute": true,
+          "eligibleForBuzzer": true
+        },
+        {
+          "name": "American Football-World-Current-Player",
+          "count": 1,
+          "eligibleForAlternate": false,
+          "eligibleForMinute": false,
+          "eligibleForBuzzer": true
+        },
+        {
+          "name": "Cricket-World-Current-Cricketer",
+          "count": 3,
+          "eligibleForAlternate": true,
+          "eligibleForMinute": true,
+          "eligibleForBuzzer": true
+        },
+        {
+          "name": "Motor Racing-World-Current-Racer",
+          "count": 2,
+          "eligibleForAlternate": true,
+          "eligibleForMinute": true,
+          "eligibleForBuzzer": true
+        },
+        {
+          "name": "Athletics-World-Current-Athlete",
+          "count": 11,
+          "eligibleForAlternate": true,
+          "eligibleForMinute": true,
+          "eligibleForBuzzer": true
+        },
+        {
+          "name": "Athletics-Local-Current-Executive",
+          "count": 2,
+          "eligibleForAlternate": true,
+          "eligibleForMinute": true,
+          "eligibleForBuzzer": true
+        },
+        {
+          "name": "Cycling-World-Former-Cyclist",
+          "count": 1,
+          "eligibleForAlternate": false,
+          "eligibleForMinute": false,
+          "eligibleForBuzzer": true
+        },
+        {
+          "name": "Football-World-Former-Player",
+          "count": 2,
+          "eligibleForAlternate": true,
+          "eligibleForMinute": true,
+          "eligibleForBuzzer": true
+        },
+        {
+          "name": "Motor Racing-Local-Current-Racer",
+          "count": 1,
+          "eligibleForAlternate": false,
+          "eligibleForMinute": false,
+          "eligibleForBuzzer": true
+        },
+        {
+          "name": "Netball-World-Current-Player",
+          "count": 2,
+          "eligibleForAlternate": true,
+          "eligibleForMinute": true,
+          "eligibleForBuzzer": true
+        },
+        {
+          "name": "Cycling-World-Current-Cyclist",
+          "count": 1,
+          "eligibleForAlternate": false,
+          "eligibleForMinute": false,
+          "eligibleForBuzzer": true
+        },
+        {
+          "name": "Football-World-Former-Executive",
+          "count": 1,
+          "eligibleForAlternate": false,
+          "eligibleForMinute": false,
+          "eligibleForBuzzer": true
+        },
+        {
+          "name": "Motor Racing-World-Current-Driver",
+          "count": 1,
+          "eligibleForAlternate": false,
+          "eligibleForMinute": false,
+          "eligibleForBuzzer": true
+        },
+        {
+          "name": "Skiing-World-Current-Ski Racer",
+          "count": 1,
+          "eligibleForAlternate": false,
+          "eligibleForMinute": false,
+          "eligibleForBuzzer": true
+        },
+        {
+          "name": "Football-World-Current-Manager",
+          "count": 4,
+          "eligibleForAlternate": true,
+          "eligibleForMinute": true,
+          "eligibleForBuzzer": true
+        },
+        {
+          "name": "Boxing-World-Current-Boxer",
+          "count": 1,
+          "eligibleForAlternate": false,
+          "eligibleForMinute": false,
+          "eligibleForBuzzer": true
+        },
+        {
+          "name": "Boxing-World-Former-Player",
+          "count": 1,
+          "eligibleForAlternate": false,
+          "eligibleForMinute": false,
+          "eligibleForBuzzer": true
+        },
+        {
+          "name": "Basketball-World-Current-Manager",
+          "count": 1,
+          "eligibleForAlternate": false,
+          "eligibleForMinute": false,
+          "eligibleForBuzzer": true
+        },
+        {
+          "name": "American Football-World-Former-Player",
+          "count": 1,
+          "eligibleForAlternate": false,
+          "eligibleForMinute": false,
+          "eligibleForBuzzer": true
+        },
+        {
+          "name": "Local-Current-Executive",
+          "count": 1,
+          "eligibleForAlternate": false,
+          "eligibleForMinute": false,
+          "eligibleForBuzzer": true
         }
       ]
     },
@@ -524,6 +860,60 @@
         },
         {
           "name": "Festival",
+          "count": 2,
+          "eligibleForAlternate": true,
+          "eligibleForMinute": true,
+          "eligibleForBuzzer": true
+        }
+      ]
+    },
+    {
+      "name": "Theatre and Cinema",
+      "categories": [
+        {
+          "name": "World-Current-Actor",
+          "count": 58,
+          "eligibleForAlternate": true,
+          "eligibleForMinute": true,
+          "eligibleForBuzzer": true
+        },
+        {
+          "name": "World-Current-Actress",
+          "count": 47,
+          "eligibleForAlternate": true,
+          "eligibleForMinute": true,
+          "eligibleForBuzzer": true
+        },
+        {
+          "name": "Local-Current-Actress",
+          "count": 4,
+          "eligibleForAlternate": true,
+          "eligibleForMinute": true,
+          "eligibleForBuzzer": true
+        },
+        {
+          "name": "Local-Current-Actor",
+          "count": 6,
+          "eligibleForAlternate": true,
+          "eligibleForMinute": true,
+          "eligibleForBuzzer": true
+        },
+        {
+          "name": "World-Former-Actor",
+          "count": 4,
+          "eligibleForAlternate": true,
+          "eligibleForMinute": true,
+          "eligibleForBuzzer": true
+        },
+        {
+          "name": "World-Former-Actress",
+          "count": 2,
+          "eligibleForAlternate": true,
+          "eligibleForMinute": true,
+          "eligibleForBuzzer": true
+        },
+        {
+          "name": "Local-Former-Actor",
           "count": 2,
           "eligibleForAlternate": true,
           "eligibleForMinute": true,
