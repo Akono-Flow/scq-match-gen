@@ -4,6 +4,7 @@
   "buzzerQuestionsPerSubject": 1,
   "avoidPreviouslyUsed": true,
   "allowFallbackCategory": false,
+  "randomizeSubjectOrder": false,
   "includeAnswersInExport": true,
   "sectionOrder": {
     "alternate": [],
