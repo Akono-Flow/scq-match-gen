@@ -1,0 +1,535 @@
+{
+  "generated": "2026-06-23T17:22:56.530Z",
+  "subjects": [
+    {
+      "name": "Geography",
+      "categories": [
+        {
+          "name": "Canadian-Provinces-Territories",
+          "count": 13,
+          "eligibleForAlternate": true,
+          "eligibleForMinute": true,
+          "eligibleForBuzzer": true
+        },
+        {
+          "name": "Parishes-Caribbean Countries",
+          "count": 11,
+          "eligibleForAlternate": true,
+          "eligibleForMinute": true,
+          "eligibleForBuzzer": true
+        },
+        {
+          "name": "Continental River Systems",
+          "count": 7,
+          "eligibleForAlternate": true,
+          "eligibleForMinute": true,
+          "eligibleForBuzzer": true
+        },
+        {
+          "name": "Island-Trivia",
+          "count": 6,
+          "eligibleForAlternate": true,
+          "eligibleForMinute": true,
+          "eligibleForBuzzer": true
+        },
+        {
+          "name": "Straits",
+          "count": 32,
+          "eligibleForAlternate": true,
+          "eligibleForMinute": true,
+          "eligibleForBuzzer": true
+        },
+        {
+          "name": "Beaufort Scale",
+          "count": 12,
+          "eligibleForAlternate": true,
+          "eligibleForMinute": true,
+          "eligibleForBuzzer": true
+        },
+        {
+          "name": "Australian-Territories",
+          "count": 8,
+          "eligibleForAlternate": true,
+          "eligibleForMinute": true,
+          "eligibleForBuzzer": true
+        },
+        {
+          "name": "South African Provinces",
+          "count": 9,
+          "eligibleForAlternate": true,
+          "eligibleForMinute": true,
+          "eligibleForBuzzer": true
+        }
+      ]
+    },
+    {
+      "name": "History",
+      "categories": [
+        {
+          "name": "Historic-Injection",
+          "count": 20,
+          "eligibleForAlternate": true,
+          "eligibleForMinute": true,
+          "eligibleForBuzzer": true
+        },
+        {
+          "name": "Battles of WW1-WWII",
+          "count": 20,
+          "eligibleForAlternate": true,
+          "eligibleForMinute": true,
+          "eligibleForBuzzer": true
+        },
+        {
+          "name": "Universal Adult Suffrage-Caribbean",
+          "count": 12,
+          "eligibleForAlternate": true,
+          "eligibleForMinute": true,
+          "eligibleForBuzzer": true
+        },
+        {
+          "name": "US-Presidential History",
+          "count": 32,
+          "eligibleForAlternate": true,
+          "eligibleForMinute": true,
+          "eligibleForBuzzer": true
+        },
+        {
+          "name": "Historical-Battles",
+          "count": 20,
+          "eligibleForAlternate": true,
+          "eligibleForMinute": true,
+          "eligibleForBuzzer": true
+        },
+        {
+          "name": "Presidential Scandal-Scandal-President",
+          "count": 20,
+          "eligibleForAlternate": true,
+          "eligibleForMinute": true,
+          "eligibleForBuzzer": true
+        },
+        {
+          "name": "Presidential Scandal-Scandal-Year",
+          "count": 20,
+          "eligibleForAlternate": true,
+          "eligibleForMinute": true,
+          "eligibleForBuzzer": true
+        },
+        {
+          "name": "Presidential Scandals-Description-Scandal",
+          "count": 20,
+          "eligibleForAlternate": true,
+          "eligibleForMinute": true,
+          "eligibleForBuzzer": true
+        }
+      ]
+    },
+    {
+      "name": "Biology",
+      "categories": [
+        {
+          "name": "Gestation Period",
+          "count": 20,
+          "eligibleForAlternate": true,
+          "eligibleForMinute": true,
+          "eligibleForBuzzer": true
+        },
+        {
+          "name": "Bio-Trivia",
+          "count": 20,
+          "eligibleForAlternate": true,
+          "eligibleForMinute": true,
+          "eligibleForBuzzer": true
+        },
+        {
+          "name": "Bio-Hormones",
+          "count": 20,
+          "eligibleForAlternate": true,
+          "eligibleForMinute": true,
+          "eligibleForBuzzer": true
+        },
+        {
+          "name": "Cranial-Nerves",
+          "count": 12,
+          "eligibleForAlternate": true,
+          "eligibleForMinute": true,
+          "eligibleForBuzzer": true
+        }
+      ]
+    },
+    {
+      "name": "Local and International Affairs",
+      "categories": [
+        {
+          "name": "Tertiary-Heads",
+          "count": 18,
+          "eligibleForAlternate": true,
+          "eligibleForMinute": true,
+          "eligibleForBuzzer": true
+        },
+        {
+          "name": "Local-Mayors",
+          "count": 14,
+          "eligibleForAlternate": true,
+          "eligibleForMinute": true,
+          "eligibleForBuzzer": true
+        },
+        {
+          "name": "Local-Executive Agencies",
+          "count": 12,
+          "eligibleForAlternate": true,
+          "eligibleForMinute": true,
+          "eligibleForBuzzer": true
+        },
+        {
+          "name": "Local-Member of Parliament",
+          "count": 33,
+          "eligibleForAlternate": true,
+          "eligibleForMinute": true,
+          "eligibleForBuzzer": true
+        },
+        {
+          "name": "Local-Custodes",
+          "count": 14,
+          "eligibleForAlternate": true,
+          "eligibleForMinute": true,
+          "eligibleForBuzzer": true
+        }
+      ]
+    },
+    {
+      "name": "General Knowledge",
+      "categories": [
+        {
+          "name": "Highest Points",
+          "count": 40,
+          "eligibleForAlternate": true,
+          "eligibleForMinute": true,
+          "eligibleForBuzzer": true
+        },
+        {
+          "name": "US States-Capitals",
+          "count": 50,
+          "eligibleForAlternate": true,
+          "eligibleForMinute": true,
+          "eligibleForBuzzer": true
+        },
+        {
+          "name": "Caribbean-National Trees",
+          "count": 15,
+          "eligibleForAlternate": true,
+          "eligibleForMinute": true,
+          "eligibleForBuzzer": true
+        },
+        {
+          "name": "Caribbean-National Birds",
+          "count": 15,
+          "eligibleForAlternate": true,
+          "eligibleForMinute": true,
+          "eligibleForBuzzer": true
+        },
+        {
+          "name": "Caribbean-National-Dish",
+          "count": 15,
+          "eligibleForAlternate": true,
+          "eligibleForMinute": true,
+          "eligibleForBuzzer": true
+        },
+        {
+          "name": "Famous-Landmarks",
+          "count": 20,
+          "eligibleForAlternate": true,
+          "eligibleForMinute": true,
+          "eligibleForBuzzer": true
+        }
+      ]
+    },
+    {
+      "name": "English Language",
+      "categories": [
+        {
+          "name": "Literary devices",
+          "count": 58,
+          "eligibleForAlternate": true,
+          "eligibleForMinute": true,
+          "eligibleForBuzzer": true
+        }
+      ]
+    },
+    {
+      "name": "French",
+      "categories": [
+        {
+          "name": "French-Body-Parts",
+          "count": 30,
+          "eligibleForAlternate": true,
+          "eligibleForMinute": true,
+          "eligibleForBuzzer": true
+        }
+      ]
+    },
+    {
+      "name": "Mathematics",
+      "categories": [
+        {
+          "name": "Conversion-Celsius-Fahrenheit",
+          "count": 15,
+          "eligibleForAlternate": true,
+          "eligibleForMinute": true,
+          "eligibleForBuzzer": true
+        },
+        {
+          "name": "Coversion-Fahrenheit-Celsius",
+          "count": 14,
+          "eligibleForAlternate": true,
+          "eligibleForMinute": true,
+          "eligibleForBuzzer": true
+        },
+        {
+          "name": "Conversion-Celsius-Kelvin",
+          "count": 15,
+          "eligibleForAlternate": true,
+          "eligibleForMinute": true,
+          "eligibleForBuzzer": true
+        },
+        {
+          "name": "Conversion-Kelvin-Celsius",
+          "count": 14,
+          "eligibleForAlternate": true,
+          "eligibleForMinute": true,
+          "eligibleForBuzzer": true
+        },
+        {
+          "name": "Pythagorian Triples - Component",
+          "count": 10,
+          "eligibleForAlternate": true,
+          "eligibleForMinute": true,
+          "eligibleForBuzzer": true
+        },
+        {
+          "name": "Pythagorian Triples - Resultant",
+          "count": 5,
+          "eligibleForAlternate": true,
+          "eligibleForMinute": true,
+          "eligibleForBuzzer": true
+        },
+        {
+          "name": "Pythagorian-Triples - Trig Ratios",
+          "count": 30,
+          "eligibleForAlternate": true,
+          "eligibleForMinute": true,
+          "eligibleForBuzzer": true
+        },
+        {
+          "name": "Ratio-Simplest-Form",
+          "count": 12,
+          "eligibleForAlternate": true,
+          "eligibleForMinute": true,
+          "eligibleForBuzzer": true
+        }
+      ]
+    },
+    {
+      "name": "Bible Knowledge",
+      "categories": [
+        {
+          "name": "Churches of Asia-Order",
+          "count": 7,
+          "eligibleForAlternate": true,
+          "eligibleForMinute": true,
+          "eligibleForBuzzer": true
+        },
+        {
+          "name": "Churches of Asia-Description",
+          "count": 7,
+          "eligibleForAlternate": true,
+          "eligibleForMinute": true,
+          "eligibleForBuzzer": true
+        },
+        {
+          "name": "Prophets-Name-Meaning",
+          "count": 16,
+          "eligibleForAlternate": true,
+          "eligibleForMinute": true,
+          "eligibleForBuzzer": true
+        },
+        {
+          "name": "Prophets-Visions",
+          "count": 18,
+          "eligibleForAlternate": true,
+          "eligibleForMinute": true,
+          "eligibleForBuzzer": true
+        },
+        {
+          "name": "The Passion of Christ",
+          "count": 20,
+          "eligibleForAlternate": true,
+          "eligibleForMinute": true,
+          "eligibleForBuzzer": true
+        }
+      ]
+    },
+    {
+      "name": "Art",
+      "categories": [
+        {
+          "name": "Art-Movement",
+          "count": 16,
+          "eligibleForAlternate": true,
+          "eligibleForMinute": true,
+          "eligibleForBuzzer": true
+        },
+        {
+          "name": "Jamaican-Art",
+          "count": 17,
+          "eligibleForAlternate": true,
+          "eligibleForMinute": true,
+          "eligibleForBuzzer": true
+        },
+        {
+          "name": "Caribbean-Art",
+          "count": 18,
+          "eligibleForAlternate": true,
+          "eligibleForMinute": true,
+          "eligibleForBuzzer": true
+        }
+      ]
+    },
+    {
+      "name": "Chemistry",
+      "categories": [
+        {
+          "name": "Chemical-Name-Common-Name",
+          "count": 20,
+          "eligibleForAlternate": true,
+          "eligibleForMinute": true,
+          "eligibleForBuzzer": true
+        }
+      ]
+    },
+    {
+      "name": "Sports",
+      "categories": [
+        {
+          "name": "Local-Premier League Coaches",
+          "count": 14,
+          "eligibleForAlternate": true,
+          "eligibleForMinute": true,
+          "eligibleForBuzzer": true
+        },
+        {
+          "name": "Test-Cricket Trophies",
+          "count": 14,
+          "eligibleForAlternate": true,
+          "eligibleForMinute": true,
+          "eligibleForBuzzer": true
+        },
+        {
+          "name": "Cricket-Former-Player",
+          "count": 8,
+          "eligibleForAlternate": true,
+          "eligibleForMinute": true,
+          "eligibleForBuzzer": true
+        }
+      ]
+    },
+    {
+      "name": "Information Technology",
+      "categories": [
+        {
+          "name": "IT-Abbreviations",
+          "count": 20,
+          "eligibleForAlternate": true,
+          "eligibleForMinute": true,
+          "eligibleForBuzzer": true
+        }
+      ]
+    },
+    {
+      "name": "Literature",
+      "categories": [
+        {
+          "name": "Databank-Literature",
+          "count": 20,
+          "eligibleForAlternate": true,
+          "eligibleForMinute": true,
+          "eligibleForBuzzer": true
+        }
+      ]
+    },
+    {
+      "name": "Music",
+      "categories": [
+        {
+          "name": "Reggae",
+          "count": 29,
+          "eligibleForAlternate": true,
+          "eligibleForMinute": true,
+          "eligibleForBuzzer": true
+        },
+        {
+          "name": "Pop",
+          "count": 36,
+          "eligibleForAlternate": true,
+          "eligibleForMinute": true,
+          "eligibleForBuzzer": true
+        },
+        {
+          "name": "Oldies",
+          "count": 2,
+          "eligibleForAlternate": true,
+          "eligibleForMinute": true,
+          "eligibleForBuzzer": true
+        },
+        {
+          "name": "Dancehall",
+          "count": 8,
+          "eligibleForAlternate": true,
+          "eligibleForMinute": true,
+          "eligibleForBuzzer": true
+        },
+        {
+          "name": "Soul",
+          "count": 15,
+          "eligibleForAlternate": true,
+          "eligibleForMinute": true,
+          "eligibleForBuzzer": true
+        },
+        {
+          "name": "RNB",
+          "count": 7,
+          "eligibleForAlternate": true,
+          "eligibleForMinute": true,
+          "eligibleForBuzzer": true
+        },
+        {
+          "name": "Gospel",
+          "count": 12,
+          "eligibleForAlternate": true,
+          "eligibleForMinute": true,
+          "eligibleForBuzzer": true
+        },
+        {
+          "name": "Disco",
+          "count": 8,
+          "eligibleForAlternate": true,
+          "eligibleForMinute": true,
+          "eligibleForBuzzer": true
+        },
+        {
+          "name": "Classical",
+          "count": 2,
+          "eligibleForAlternate": true,
+          "eligibleForMinute": true,
+          "eligibleForBuzzer": true
+        },
+        {
+          "name": "Festival",
+          "count": 2,
+          "eligibleForAlternate": true,
+          "eligibleForMinute": true,
+          "eligibleForBuzzer": true
+        }
+      ]
+    }
+  ]
+}

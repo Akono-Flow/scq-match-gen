@@ -1,0 +1,13 @@
+{
+  "alternateQuestionsPerSubject": 2,
+  "minuteQuestionsPerSubject": 2,
+  "buzzerQuestionsPerSubject": 1,
+  "avoidPreviouslyUsed": true,
+  "allowFallbackCategory": false,
+  "includeAnswersInExport": true,
+  "sectionOrder": {
+    "alternate": [],
+    "minute": [],
+    "buzzer": []
+  }
+}
