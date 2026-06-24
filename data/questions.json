@@ -164,9 +164,9 @@
     "subject": "History",
     "category": "Historic-Injection",
     "question": "What term refers to the policy introduced in Japan in the 1630s that severely restricted foreign contact and trade?",
-    "answer": "Sakoku (the Closed Country Edict)",
+    "answer": "Sakoku",
     "difficulty": "Medium",
-    "info": "",
+    "info": "the Closed Country Edict",
     "media": null
   },
   {
@@ -194,9 +194,9 @@
     "subject": "History",
     "category": "Historic-Injection",
     "question": "Which 19th-century uprising in India began with sepoys rebelling against the British East India Company?",
-    "answer": "The Indian Rebellion of 1857 (or The Sepoy Mutiny)",
+    "answer": "The Indian Rebellion of 1857",
     "difficulty": "Medium",
-    "info": "",
+    "info": "or The Sepoy Mutiny",
     "media": null
   },
   {
@@ -254,9 +254,9 @@
     "subject": "History",
     "category": "Historic-Injection",
     "question": "Which 18th-century event saw American colonists formally declare independence from Britain?",
-    "answer": "The American Revolution (or The Declaration of Independence)",
+    "answer": "The American Revolution",
     "difficulty": "Medium",
-    "info": "",
+    "info": "or The Declaration of Independence",
     "media": null
   },
   {
@@ -284,9 +284,9 @@
     "subject": "History",
     "category": "Historic-Injection",
     "question": "What was the codename for the Allied plan to invade Normandy on June 6, 1944?",
-    "answer": "Operation Overlord (commonly known as D-Day)",
+    "answer": "Operation Overlord",
     "difficulty": "Medium",
-    "info": "",
+    "info": "commonly known as D-Day",
     "media": null
   },
   {
@@ -1104,9 +1104,9 @@
     "subject": "General Knowledge",
     "category": "Highest Points",
     "question": "What is the highest point in Latvia?",
-    "answer": "Gaizins (Gaizinkalns)",
+    "answer": "Gaizins",
     "difficulty": "Medium",
-    "info": "",
+    "info": "Gaizinkalns",
     "media": null
   },
   {
@@ -1184,9 +1184,9 @@
     "subject": "General Knowledge",
     "category": "Highest Points",
     "question": "What is the highest point in Ivory Coast ?",
-    "answer": "Mount Richard Molard (also called Mt. Nimba)",
+    "answer": "Mount Richard Molard",
     "difficulty": "Medium",
-    "info": "",
+    "info": "also called Mt. Nimba",
     "media": null
   },
   {
@@ -1434,9 +1434,9 @@
     "subject": "General Knowledge",
     "category": "Highest Points",
     "question": "What is the highest point in Turkey?",
-    "answer": "Mount Ararat (Ağrı Dağı)",
+    "answer": "Mount Ararat",
     "difficulty": "Medium",
-    "info": "",
+    "info": "Ağrı Dağı",
     "media": null
   },
   {
@@ -2904,9 +2904,9 @@
     "subject": "Geography",
     "category": "Continental River Systems",
     "question": "What is the longest river system in Asia?",
-    "answer": "Yangtze River (Chang Jiang)",
+    "answer": "Yangtze River",
     "difficulty": "Medium",
-    "info": "",
+    "info": "Chang Jiang",
     "media": null
   },
   {
@@ -4174,9 +4174,9 @@
     "subject": "History",
     "category": "US-Presidential History",
     "question": "Which U.S. President was in office during the Vietnam War escalation and the Moon Landing?",
-    "answer": "Lyndon B. Johnson (Vietnam escalation) / Richard Nixon (Moon Landing)",
+    "answer": "Lyndon B. Johnson",
     "difficulty": "Medium",
-    "info": "",
+    "info": "(Vietnam escalation) / Richard Nixon (Moon Landing)",
     "media": null
   },
   {
@@ -6384,9 +6384,9 @@
     "subject": "Biology",
     "category": "Bio-Trivia",
     "question": "How many lobes does the human brain have?",
-    "answer": "Four (frontal, parietal, occipital, temporal)",
+    "answer": "Four",
     "difficulty": "Medium",
-    "info": "",
+    "info": "frontal, parietal, occipital, temporal",
     "media": null
   },
   {
@@ -6474,9 +6474,9 @@
     "subject": "Biology",
     "category": "Bio-Trivia",
     "question": "What part of the ear is responsible for maintaining balance?",
-    "answer": "Inner ear (vestibular system)",
+    "answer": "Inner ear",
     "difficulty": "Medium",
-    "info": "",
+    "info": "vestibular system",
     "media": null
   },
   {
@@ -6504,9 +6504,9 @@
     "subject": "Biology",
     "category": "Bio-Hormones",
     "question": "What hormone regulates the menstrual cycle?",
-    "answer": "Follicle-stimulating hormone (FSH)",
+    "answer": "Follicle-stimulating hormone",
     "difficulty": "Medium",
-    "info": "",
+    "info": "FSH",
     "media": null
   },
   {
@@ -6514,9 +6514,9 @@
     "subject": "Biology",
     "category": "Bio-Hormones",
     "question": "What hormone promotes growth and cell division?",
-    "answer": "Human growth hormone (hGH)",
+    "answer": "Human growth hormone",
     "difficulty": "Medium",
-    "info": "",
+    "info": "hGH",
     "media": null
   },
   {
@@ -6534,9 +6534,9 @@
     "subject": "Biology",
     "category": "Bio-Hormones",
     "question": "What hormone stimulates ovulation?",
-    "answer": "Luteinizing hormone (LH)",
+    "answer": "Luteinizing hormone",
     "difficulty": "Medium",
-    "info": "",
+    "info": "LH",
     "media": null
   },
   {
@@ -6554,9 +6554,9 @@
     "subject": "Biology",
     "category": "Bio-Hormones",
     "question": "What hormone stimulates the adrenal glands to release adrenaline?",
-    "answer": "Adrenocorticotropin hormone (ACTH)",
+    "answer": "Adrenocorticotropin hormone",
     "difficulty": "Medium",
-    "info": "",
+    "info": "ACTH",
     "media": null
   },
   {
@@ -6594,9 +6594,9 @@
     "subject": "Biology",
     "category": "Bio-Hormones",
     "question": "What hormone promotes the formation of new blood vessels?",
-    "answer": "Vascular endothelial growth factor (VEGF)",
+    "answer": "Vascular endothelial growth factor",
     "difficulty": "Medium",
-    "info": "",
+    "info": "VEGF",
     "media": null
   },
   {
@@ -6644,9 +6644,9 @@
     "subject": "Biology",
     "category": "Bio-Hormones",
     "question": "What hormone regulates the metabolism of calcium?",
-    "answer": "Parathyroid hormone (PTH)",
+    "answer": "Parathyroid hormone",
     "difficulty": "Medium",
-    "info": "",
+    "info": "PTH",
     "media": null
   },
   {
@@ -8404,9 +8404,9 @@
     "subject": "Sports",
     "category": "Cricket-Former-Player",
     "question": "Look at the monitor and identify the person shown",
-    "answer": "Kapil Dev(Form Indian Cricketer)",
+    "answer": "Kapil Dev",
     "difficulty": "Medium",
-    "info": "",
+    "info": "Former Indian Cricketer",
     "media": null
   },
   {
@@ -8414,9 +8414,9 @@
     "subject": "Sports",
     "category": "Cricket-Former-Player",
     "question": "Look at the monitor and identify the person shown",
-    "answer": "Sachin Tendulkar(Former Indian Cricketer)",
+    "answer": "Sachin Tendulkar",
     "difficulty": "Medium",
-    "info": "",
+    "info": "Former Indian Cricketer",
     "media": null
   },
   {
@@ -8424,9 +8424,9 @@
     "subject": "Sports",
     "category": "Cricket-Former-Player",
     "question": "Look at the monitor and identify the person shown",
-    "answer": "Andrew Flintoff(Former English Cricketer)",
+    "answer": "Andrew Flintoff",
     "difficulty": "Medium",
-    "info": "",
+    "info": "Former English Cricketer",
     "media": null
   },
   {
@@ -8434,9 +8434,9 @@
     "subject": "Sports",
     "category": "Cricket-Former-Player",
     "question": "Look at the monitor and identify the person shown",
-    "answer": "Zaheer Khan(Former Indian Cricketer)",
+    "answer": "Zaheer Khan",
     "difficulty": "Medium",
-    "info": "",
+    "info": "Former Indian Cricketer",
     "media": null
   },
   {
@@ -8444,9 +8444,9 @@
     "subject": "Sports",
     "category": "Cricket-Former-Player",
     "question": "Look at the monitor and identify the person shown",
-    "answer": "Alastair Cook(Former English Cricketer)",
+    "answer": "Alastair Cook",
     "difficulty": "Medium",
-    "info": "",
+    "info": "Former English Cricketer",
     "media": null
   },
   {
@@ -8454,9 +8454,9 @@
     "subject": "Sports",
     "category": "Cricket-Former-Player",
     "question": "Look at the monitor and identify the person shown",
-    "answer": "Virat kohl(Former Indian Cricketer)",
+    "answer": "Virat Kohli",
     "difficulty": "Medium",
-    "info": "",
+    "info": "Indian Cricketer",
     "media": null
   },
   {
@@ -8464,9 +8464,9 @@
     "subject": "Sports",
     "category": "Cricket-Former-Player",
     "question": "Look at the monitor and identify the person shown",
-    "answer": "Yashasvi Jaiswal(Former Indian Cricketer)",
+    "answer": "Yashasvi Jaiswal",
     "difficulty": "Medium",
-    "info": "",
+    "info": "Former Indian Cricketer",
     "media": null
   },
   {
@@ -8984,9 +8984,9 @@
     "subject": "General Knowledge",
     "category": "Caribbean-National Birds",
     "question": "What is the National bird of St. Kitts and Nevis?",
-    "answer": "Brown Pelican (Booby)",
+    "answer": "Brown Pelican",
     "difficulty": "Medium",
-    "info": "",
+    "info": "Booby",
     "media": null
   },
   {
@@ -9924,9 +9924,9 @@
     "subject": "Bible Knowledge",
     "category": "The Passion of Christ",
     "question": "What robe color did the soldiers place on Jesus while mocking Him?",
-    "answer": "Purple (or scarlet)",
+    "answer": "Purple",
     "difficulty": "Medium",
-    "info": "",
+    "info": "or scarlet",
     "media": null
   },
   {
@@ -9944,9 +9944,9 @@
     "subject": "Bible Knowledge",
     "category": "The Passion of Christ",
     "question": "What inscription did Pilate order to be placed above Jesus on the cross?",
-    "answer": "Jesus of Nazareth, King of the Jews (INRI)",
+    "answer": "Jesus of Nazareth, King of the Jews",
     "difficulty": "Medium",
-    "info": "",
+    "info": "INRI",
     "media": null
   },
   {
