@@ -2248,7 +2248,7 @@ function renderMatch(sections, matchName, warnings) {
       const q = row.q;
       const mediaHtml = q.media ? `<div class="mt-8">
         ${q.media.type==='image'
-          ? `<img src="${esc(q.media.src)}" alt="${esc(q.media.caption||'')}" style="max-height:120px;border-radius:4px;cursor:pointer" onclick="this.style.maxHeight=this.style.maxHeight==='none'?'120px':'none'">`
+          ? `<img src="${esc(q.media.src)}" alt="${esc(q.media.caption||'')}" style="max-height:120px;border-radius:4px;cursor:zoom-in" onclick="openLiveImageLightbox(this.src, this.alt)">`
           : `<audio controls style="height:32px;width:200px"><source src="${esc(q.media.src)}"></audio>`
         }
         ${q.media.caption ? `<div class="text-small text-dim" style="margin-top:4px">${esc(q.media.caption)}</div>` : ''}
@@ -2405,7 +2405,10 @@ function exportMatchHTML() {
   .media-img{max-width:160px;max-height:120px;border-radius:4px;cursor:zoom-in;border:1px solid var(--border);transition:transform .15s;}
   .media-img:hover{transform:scale(1.04);}
   .media-img-full{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9999;display:flex;align-items:center;justify-content:center;cursor:zoom-out;}
-  .media-img-full img{max-width:90vw;max-height:90vh;border-radius:8px;box-shadow:0 8px 40px rgba(0,0,0,.8);}
+  .media-img-full{padding:20px;box-sizing:border-box;}
+  .media-img-full img{max-width:min(90vw,1200px);max-height:80vh;width:auto;height:auto;object-fit:contain;border-radius:8px;box-shadow:0 8px 40px rgba(0,0,0,.8);display:block;cursor:default;}
+  .media-lb-caption{color:#cdd5e0;font-size:13px;margin-top:12px;text-align:center;max-width:90vw;}
+  .media-lb-hint{color:#5a6f8a;font-size:11px;margin-top:6px;}
   .media-audio{height:28px;max-width:220px;accent-color:var(--gold);}
   .media-caption{font-size:10px;color:var(--text3);font-style:italic;}
   .media-badge{display:inline-block;padding:1px 7px;border-radius:10px;font-size:10px;font-weight:700;}
@@ -2719,8 +2722,26 @@ function openLightbox(src, caption) {
   if (existing) { existing.remove(); return; }
   const div = document.createElement('div');
   div.className = 'media-img-full';
-  div.onclick = () => div.remove();
-  div.innerHTML = \`<img src="\${escH(src)}" alt="\${escH(caption)}">\`;
+
+  const img = document.createElement('img');
+  img.src = src; img.alt = caption || '';
+  img.addEventListener('click', e => e.stopPropagation());
+
+  div.appendChild(img);
+  if (caption) {
+    const cap = document.createElement('div');
+    cap.className = 'media-lb-caption';
+    cap.textContent = caption;
+    div.appendChild(cap);
+  }
+  const hint = document.createElement('div');
+  hint.className = 'media-lb-hint';
+  hint.textContent = 'Click anywhere or press Esc to close';
+  div.appendChild(hint);
+
+  div.addEventListener('click', () => div.remove());
+  const onKey = e => { if (e.key === 'Escape') { div.remove(); document.removeEventListener('keydown', onKey); } };
+  document.addEventListener('keydown', onKey);
   document.body.appendChild(div);
 }
 
@@ -3566,6 +3587,67 @@ document.addEventListener('change', e => {
   if (e.target.id && e.target.id.startsWith('map-')) previewImport();
 });
 
+
+// ═══════════════════════════════════════════════════════════════
+// IMAGE LIGHTBOX (live match)
+// ═══════════════════════════════════════════════════════════════
+function openLiveImageLightbox(src, caption) {
+  // Remove any existing lightbox
+  const existing = document.getElementById('live-lightbox');
+  if (existing) { existing.remove(); return; }
+
+  const overlay = document.createElement('div');
+  overlay.id = 'live-lightbox';
+  overlay.style.cssText = [
+    'position:fixed', 'inset:0', 'z-index:9999',
+    'background:rgba(0,0,0,0.88)',
+    'display:flex', 'flex-direction:column',
+    'align-items:center', 'justify-content:center',
+    'cursor:zoom-out', 'padding:20px',
+    'box-sizing:border-box'
+  ].join(';');
+
+  const img = document.createElement('img');
+  img.src = src;
+  img.alt = caption || '';
+  img.style.cssText = [
+    'max-width:min(90vw, 1200px)',
+    'max-height:80vh',
+    'width:auto',
+    'height:auto',
+    'object-fit:contain',
+    'border-radius:8px',
+    'box-shadow:0 8px 40px rgba(0,0,0,0.8)',
+    'cursor:default',
+    'display:block'
+  ].join(';');
+
+  // Stop click on image itself propagating to close overlay
+  img.addEventListener('click', e => e.stopPropagation());
+
+  if (caption) {
+    const cap = document.createElement('div');
+    cap.textContent = caption;
+    cap.style.cssText = 'color:#cdd5e0;font-size:13px;margin-top:12px;text-align:center;max-width:90vw;';
+    overlay.appendChild(img);
+    overlay.appendChild(cap);
+  } else {
+    overlay.appendChild(img);
+  }
+
+  // Close instruction
+  const hint = document.createElement('div');
+  hint.textContent = 'Click anywhere or press Esc to close';
+  hint.style.cssText = 'color:#5a6f8a;font-size:11px;margin-top:8px;';
+  overlay.appendChild(hint);
+
+  // Close on overlay click or Escape key
+  overlay.addEventListener('click', () => overlay.remove());
+  const onKey = e => { if (e.key === 'Escape') { overlay.remove(); document.removeEventListener('keydown', onKey); } };
+  document.addEventListener('keydown', onKey);
+
+  document.body.appendChild(overlay);
+}
 
 // ═══════════════════════════════════════════════════════════════
 // INFO POPUP — draggable, resizable, pinnable, markdown
