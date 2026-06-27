@@ -962,6 +962,9 @@ hr.divider { border: none; border-top: 1px solid var(--border); margin: 14px 0; 
         <button class="btn btn-secondary" onclick="exportMatchJSON()" id="btn-export-json" disabled>
           {} Export JSON
         </button>
+        <button class="btn btn-secondary" onclick="openProjectorView()" id="btn-projector-view" disabled>
+          🖥 Projector View
+        </button>
         <button class="btn btn-secondary btn-sm" onclick="toggleAllAnswers()" id="btn-reveal-all">
           👁 Show Answers
         </button>
@@ -2196,6 +2199,7 @@ function generateMatch() {
   renderMatch(sections, matchName, warnings);
   el('btn-export-html').disabled = false;
   el('btn-export-json').disabled = false;
+  el('btn-projector-view').disabled = false;
   updateStats();
   updateUsageTab();
   updateAboutTab();
@@ -2286,6 +2290,7 @@ function clearMatch() {
   el('post-gen-stats').classList.add('hidden');
   el('btn-export-html').disabled = true;
   el('btn-export-json').disabled = true;
+  el('btn-projector-view').disabled = true;
   DB.lastGenerated = null;
   answersVisible = false;
   el('btn-reveal-all').textContent = '👁 Show Answers';
@@ -2901,6 +2906,107 @@ function escH(s) {
 </html>`;
 
   downloadFile(matchName.replace(/[^a-zA-Z0-9]/g,'_') + '_report.html', html, 'text/html');
+}
+
+
+// ═══════════════════════════════════════════════════════════════
+// PROJECTOR VIEW EXPORT / LINK
+// ═══════════════════════════════════════════════════════════════
+function makeProjectorManifest() {
+  if (!DB.lastGenerated) return null;
+  const { sections, matchName, timestamp } = DB.lastGenerated;
+  const baseUrl = window.location.href.split('#')[0];
+  const visuals = [];
+
+  Object.entries(sections || {}).forEach(([sectionKey, rows]) => {
+    (rows || []).forEach(row => {
+      const q = row.q || {};
+      const media = q.media || {};
+      if (media.type !== 'image' || !media.src) return;
+
+      let imageUrl = media.src;
+      try {
+        imageUrl = new URL(media.src, baseUrl).href;
+      } catch (err) {
+        // Keep original src if URL construction fails.
+      }
+
+      visuals.push({
+        section: sectionKey,
+        sectionLabel: row.section || sectionKey,
+        num: row.num,
+        subject: row.subject || q.subject || '',
+        category: row.category || q.category || '',
+        id: q.id || '',
+        question: q.question || '',
+        imageUrl,
+        caption: media.caption || '',
+        source: media.src
+      });
+    });
+  });
+
+  return {
+    app: 'SCQ Match Generator',
+    type: 'projector-visual-manifest',
+    version: 1,
+    matchName,
+    generated: timestamp || new Date().toISOString(),
+    sourcePage: baseUrl,
+    visuals
+  };
+}
+
+function encodeProjectorManifest(manifest) {
+  const json = JSON.stringify(manifest);
+  return btoa(unescape(encodeURIComponent(json)));
+}
+
+function getProjectorUrl() {
+  const manifest = makeProjectorManifest();
+  if (!manifest) return null;
+  return new URL('projector.html#data=' + encodeProjectorManifest(manifest), window.location.href).href;
+}
+
+async function openProjectorView() {
+  const manifest = makeProjectorManifest();
+  if (!manifest) {
+    alert('Generate a match first.');
+    return;
+  }
+  if (!manifest.visuals.length) {
+    alert('This generated match has no image-based visual questions to show in the projector view.');
+    return;
+  }
+
+  const url = getProjectorUrl();
+  const opened = window.open(url, '_blank');
+  let copied = false;
+
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(url);
+      copied = true;
+    }
+  } catch (err) {
+    copied = false;
+  }
+
+  if (copied) {
+    alert(`Projector view opened and the link was copied to your clipboard. Open that link on the projector computer.\n\nVisual questions found: ${manifest.visuals.length}`);
+  } else {
+    prompt(`Copy this projector link and open it on the projector computer. Visual questions found: ${manifest.visuals.length}`, url);
+  }
+
+  if (!opened) {
+    alert('Your browser blocked the projector popup. Copy the link shown and open it in a new tab.');
+  }
+}
+
+function exportProjectorManifestJSON() {
+  const manifest = makeProjectorManifest();
+  if (!manifest) return;
+  downloadFile((manifest.matchName || 'match').replace(/[^a-zA-Z0-9]/g,'_') + '_projector_manifest.json', JSON.stringify(manifest,null,2), 'application/json');
 }
 
 // ═══════════════════════════════════════════════════════════════
