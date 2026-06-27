@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SCQ Projector View</title>
+<style>
+:root{
+  --bg:#05070b;--panel:#101722;--panel2:#172033;--border:#26354f;--gold:#e8b84b;--gold2:#f5d27a;
+  --text:#eef3fb;--muted:#9aa8bd;--teal:#3ecfba;--red:#e05252;--radius:16px;
+  --font:'Segoe UI',system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{min-height:100vh;background:radial-gradient(circle at top,#162033 0,#05070b 50%);color:var(--text);font-family:var(--font);overflow:hidden}
+.app{height:100vh;display:grid;grid-template-rows:auto 1fr auto}
+header{display:flex;align-items:center;gap:14px;padding:14px 22px;background:rgba(16,23,34,.92);border-bottom:1px solid var(--border);backdrop-filter:blur(8px)}
+.logo{width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,var(--gold),#7a5f22);display:grid;place-items:center;color:#05070b;font-weight:900;letter-spacing:-1px}
+.title{flex:1;min-width:0}.title h1{font-size:18px;color:var(--gold);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.title p{font-size:12px;color:var(--muted)}
+.counter{font-family:Consolas,monospace;color:var(--gold2);font-weight:700;background:#0b111b;border:1px solid var(--border);border-radius:999px;padding:7px 12px}
+.stage{display:grid;grid-template-columns:320px 1fr;gap:18px;padding:18px;min-height:0}
+.sidebar{background:rgba(16,23,34,.86);border:1px solid var(--border);border-radius:var(--radius);padding:16px;overflow:auto}
+.side-title{font-size:12px;text-transform:uppercase;letter-spacing:1.4px;color:var(--muted);font-weight:800;margin-bottom:12px}.list{display:flex;flex-direction:column;gap:8px}
+.item{border:1px solid var(--border);background:#0c121d;border-radius:12px;padding:10px;cursor:pointer;color:var(--text);text-align:left;font-family:var(--font)}
+.item:hover,.item.active{border-color:var(--gold);background:rgba(232,184,75,.1)}.item .top{display:flex;justify-content:space-between;gap:8px;color:var(--gold);font-weight:800;font-size:12px}.item .subj{font-size:13px;margin-top:4px}.item .meta{font-size:11px;color:var(--muted);margin-top:2px}
+.viewer{background:rgba(5,7,11,.45);border:1px solid var(--border);border-radius:var(--radius);display:grid;grid-template-rows:auto 1fr auto;min-width:0;min-height:0;overflow:hidden}
+.info{padding:16px 18px;border-bottom:1px solid var(--border);background:rgba(16,23,34,.78)}.badges{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px}.badge{font-size:12px;border:1px solid var(--border);border-radius:999px;padding:4px 10px;color:var(--muted);background:#0d1421}.badge.gold{color:var(--gold2);border-color:#7a5f22;background:rgba(232,184,75,.12)}
+.question{font-size:24px;line-height:1.25;font-weight:700}.image-wrap{min-height:0;display:grid;place-items:center;padding:18px;background:#030407}.image-wrap img{max-width:100%;max-height:100%;object-fit:contain;border-radius:10px;box-shadow:0 18px 60px rgba(0,0,0,.55)}
+.caption{padding:12px 18px;border-top:1px solid var(--border);color:var(--muted);font-size:14px;background:rgba(16,23,34,.78)}
+footer{display:flex;align-items:center;justify-content:center;gap:12px;padding:12px 18px;background:rgba(16,23,34,.92);border-top:1px solid var(--border)}
+button{border:0;border-radius:12px;padding:10px 18px;font-weight:800;font-family:var(--font);cursor:pointer}.primary{background:var(--gold);color:#05070b}.secondary{background:#182235;color:var(--text);border:1px solid var(--border)}button:hover{filter:brightness(1.08)}button:disabled{opacity:.35;cursor:not-allowed}.empty{height:100%;display:grid;place-items:center;text-align:center;padding:30px;color:var(--muted)}.empty h2{color:var(--gold);margin-bottom:8px}.file{display:none}
+@media(max-width:900px){body{overflow:auto}.app{height:auto;min-height:100vh}.stage{grid-template-columns:1fr}.sidebar{max-height:220px}.viewer{height:70vh}.question{font-size:19px}}
+.fullscreen .stage{grid-template-columns:1fr}.fullscreen .sidebar,.fullscreen header{display:none}.fullscreen footer{position:fixed;bottom:0;left:0;right:0;background:rgba(0,0,0,.45)}.fullscreen .viewer{border:0;border-radius:0}.fullscreen .app{grid-template-rows:1fr}.fullscreen .image-wrap{padding:0}.fullscreen .caption,.fullscreen .info{background:rgba(0,0,0,.55)}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <header>
+    <div class="logo">SCQ</div>
+    <div class="title"><h1 id="match-title">SCQ Projector View</h1><p id="generated-label">Waiting for visual manifest…</p></div>
+    <div class="counter" id="counter">0 / 0</div>
+  </header>
+  <main class="stage">
+    <aside class="sidebar">
+      <div class="side-title">Visual Questions</div>
+      <div class="list" id="visual-list"></div>
+    </aside>
+    <section class="viewer" id="viewer">
+      <div class="empty">
+        <div>
+          <h2>No visuals loaded</h2>
+          <p>Open this page using the projector link generated by the Match Generator.</p>
+          <p style="margin-top:10px">You may also load a projector manifest JSON file.</p>
+          <p style="margin-top:16px"><button class="secondary" onclick="document.getElementById('manifest-file').click()">Load Manifest JSON</button></p>
+        </div>
+      </div>
+    </section>
+  </main>
+  <footer>
+    <button class="secondary" onclick="prevVisual()" id="prev-btn">← Previous</button>
+    <button class="primary" onclick="nextVisual()" id="next-btn">Next →</button>
+    <button class="secondary" onclick="toggleFullscreenMode()">⛶ Projector Mode</button>
+    <button class="secondary" onclick="document.getElementById('manifest-file').click()">Load JSON</button>
+  </footer>
+</div>
+<input class="file" type="file" id="manifest-file" accept=".json,application/json">
+<script>
+let manifest = null;
+let visuals = [];
+let current = 0;
+
+const $ = id => document.getElementById(id);
+function esc(s){return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function sectionName(key){return String(key||'').charAt(0).toUpperCase()+String(key||'').slice(1)}
+
+function decodePayload(encoded){
+  return JSON.parse(decodeURIComponent(escape(atob(encoded))));
+}
+
+function loadFromHash(){
+  const hash = new URLSearchParams(location.hash.replace(/^#/,''));
+  const data = hash.get('data');
+  if (!data) return false;
+  try { setManifest(decodePayload(data)); return true; }
+  catch(err){ showError('The projector link could not be read. It may have been copied incompletely.'); return false; }
+}
+
+function setManifest(data){
+  manifest = data || {};
+  visuals = Array.isArray(manifest.visuals) ? manifest.visuals : [];
+  current = 0;
+  $('match-title').textContent = manifest.matchName || 'SCQ Projector View';
+  $('generated-label').textContent = manifest.generated ? `Generated ${new Date(manifest.generated).toLocaleString()}` : 'Visual manifest loaded';
+  renderList();
+  renderCurrent();
+}
+
+function renderList(){
+  const list = $('visual-list');
+  if (!visuals.length) { list.innerHTML = '<p style="color:var(--muted)">No image-based visual questions found.</p>'; return; }
+  list.innerHTML = visuals.map((v,i)=>`<button class="item ${i===current?'active':''}" onclick="goToVisual(${i})">
+    <div class="top"><span>${esc(v.sectionLabel || sectionName(v.section))}</span><span>#${esc(v.num)}</span></div>
+    <div class="subj">${esc(v.subject || 'Subject')}</div>
+    <div class="meta">${esc(v.category || '')}${v.id ? ' • '+esc(v.id) : ''}</div>
+  </button>`).join('');
+}
+
+function renderCurrent(){
+  $('counter').textContent = visuals.length ? `${current+1} / ${visuals.length}` : '0 / 0';
+  $('prev-btn').disabled = visuals.length <= 1;
+  $('next-btn').disabled = visuals.length <= 1;
+  if (!visuals.length) return;
+  const v = visuals[current];
+  $('viewer').innerHTML = `<div class="info">
+    <div class="badges">
+      <span class="badge gold">${esc(v.sectionLabel || sectionName(v.section))} #${esc(v.num)}</span>
+      <span class="badge">${esc(v.subject || '')}</span>
+      ${v.category ? `<span class="badge">${esc(v.category)}</span>` : ''}
+    </div>
+    <div class="question">${esc(v.question || 'Visual Question')}</div>
+  </div>
+  <div class="image-wrap"><img src="${esc(v.imageUrl)}" alt="${esc(v.caption || v.subject || 'Visual question image')}" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'empty',innerHTML:'<div><h2>Image could not load</h2><p>Check that the image URL exists in your GitHub Pages site.</p></div>'}))"></div>
+  <div class="caption">${v.caption ? esc(v.caption) : 'Use the controls below, arrow keys, or the side list to move between visuals.'}</div>`;
+  renderList();
+}
+
+function goToVisual(i){ current = Math.max(0, Math.min(i, visuals.length-1)); renderCurrent(); }
+function nextVisual(){ if (!visuals.length) return; current = (current + 1) % visuals.length; renderCurrent(); }
+function prevVisual(){ if (!visuals.length) return; current = (current - 1 + visuals.length) % visuals.length; renderCurrent(); }
+function toggleFullscreenMode(){ document.body.classList.toggle('fullscreen'); }
+function showError(msg){ $('viewer').innerHTML = `<div class="empty"><div><h2>Projector Error</h2><p>${esc(msg)}</p></div></div>`; }
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === ' ') nextVisual();
+  if (e.key === 'ArrowLeft') prevVisual();
+  if (e.key.toLowerCase() === 'f') toggleFullscreenMode();
+});
+$('manifest-file').addEventListener('change', e => {
+  const file = e.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = evt => { try { setManifest(JSON.parse(evt.target.result)); } catch(err){ showError('That JSON file is not a valid projector manifest.'); } };
+  reader.readAsText(file);
+});
+loadFromHash();
+</script>
+</body>
+</html>
