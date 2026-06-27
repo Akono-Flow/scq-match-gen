@@ -782,6 +782,26 @@ input[type="file"] { display: none; }
 }
 .tool-group .btn:last-child { margin-bottom: 0; }
 .tool-group-danger { border-color: rgba(224,82,82,0.25); }
+
+.projector-link-card {
+  background: linear-gradient(180deg, rgba(62,120,212,0.10), rgba(62,120,212,0.04));
+  border: 1px solid rgba(62,120,212,0.35);
+  border-radius: var(--radius2);
+  padding: 14px 16px;
+  margin-bottom: 16px;
+}
+.projector-link-card.hidden { display: none; }
+.projector-link-row { display: flex; gap: 8px; align-items: center; margin-top: 8px; }
+.projector-link-input {
+  flex: 1;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text2);
+}
+.projector-link-meta { font-size: 11px; color: var(--text3); margin-top: 6px; }
+.settings-row select, .settings-row input[type="text"] { min-width: 150px; }
+.settings-row.compact { gap: 12px; align-items: flex-start; }
+.settings-row.compact > div:first-child { flex: 1; }
 #match-output { min-height: 200px; }
 
 /* ─── Templates ────────────────────────────────────────────────── */
@@ -1159,6 +1179,17 @@ hr.divider { border: none; border-top: 1px solid var(--border); margin: 14px 0; 
         </div>
       </details>
 
+      <div id="projector-link-card" class="projector-link-card hidden">
+        <div class="card-title" style="margin-bottom:4px"><span class="ct-icon">🖥</span>Projector Link</div>
+        <div class="text-small text-dim">Copy this link to open the media projector on another computer.</div>
+        <div class="projector-link-row">
+          <input type="text" id="projector-link-input" class="projector-link-input" readonly placeholder="Generate or import a match to create a projector link...">
+          <button class="btn btn-secondary btn-sm" onclick="copyProjectorLink()">📋 Copy</button>
+          <button class="btn btn-secondary btn-sm" onclick="openProjectorView()">↗ Open</button>
+        </div>
+        <div class="projector-link-meta" id="projector-link-meta"></div>
+      </div>
+
       <!-- Stats before generation -->
       <div id="pre-gen-stats" class="card">
         <div class="card-title"><span class="ct-icon">📊</span>Database Overview</div>
@@ -1414,6 +1445,55 @@ hr.divider { border: none; border-top: 1px solid var(--border); margin: 14px 0; 
             <span class="light-slider"></span>
           </span>
         </label>
+        <hr class="divider">
+        <div class="settings-row compact">
+          <div><div class="settings-row-label">Generation mode</div><div class="settings-row-desc">Match mode keeps normal reuse protection; training mode is useful for drilling.</div></div>
+          <select id="set-generation-mode" onchange="applyGenerationModePreset(this.value)">
+            <option value="match">Match</option>
+            <option value="training">Training / Drill</option>
+          </select>
+        </div>
+        <div class="settings-row compact">
+          <div><div class="settings-row-label">Media rule</div><div class="settings-row-desc">Choose whether generated questions may include media.</div></div>
+          <select id="set-media-policy" onchange="saveSettings()">
+            <option value="any">Any questions</option>
+            <option value="mediaOnly">Media only</option>
+            <option value="noMedia">No media</option>
+          </select>
+        </div>
+        <div class="settings-row compact">
+          <div><div class="settings-row-label">Difficulty rule</div><div class="settings-row-desc">Filter or balance by difficulty where difficulty metadata exists.</div></div>
+          <select id="set-difficulty-policy" onchange="saveSettings()">
+            <option value="any">Any difficulty</option>
+            <option value="balanced">Balanced mix</option>
+            <option value="Easy">Easy only</option>
+            <option value="Medium">Medium only</option>
+            <option value="Hard">Hard only</option>
+          </select>
+        </div>
+        <div class="settings-row compact">
+          <div><div class="settings-row-label">Category strategy</div><div class="settings-row-desc">Random is simplest; balanced spreads selections across categories.</div></div>
+          <select id="set-category-policy" onchange="saveSettings()">
+            <option value="random">Random category</option>
+            <option value="balanced">Balanced categories</option>
+          </select>
+        </div>
+        <div class="settings-row compact">
+          <div><div class="settings-row-label">Selection priority</div><div class="settings-row-desc">Decides which candidates are preferred before random tie-breaking.</div></div>
+          <select id="set-selection-priority" onchange="saveSettings()">
+            <option value="random">Random</option>
+            <option value="leastUsed">Least used first</option>
+            <option value="newest">Newest/imported later first</option>
+            <option value="oldest">Oldest/imported earlier first</option>
+          </select>
+        </div>
+        <label class="checkbox-row"><input type="checkbox" id="set-exact-count" onchange="saveSettings()"> <label for="set-exact-count">Require exact question counts; warn/skip if not possible</label></label>
+        <label class="checkbox-row"><input type="checkbox" id="set-no-repeat-category" onchange="saveSettings()"> <label for="set-no-repeat-category">Prefer no repeated category within each section</label></label>
+        <label class="checkbox-row"><input type="checkbox" id="set-use-pair-groups" onchange="saveSettings()"> <label for="set-use-pair-groups">Use pair/group IDs when available for corresponding questions</label></label>
+        <div class="settings-row compact">
+          <div><div class="settings-row-label">Random seed</div><div class="settings-row-desc">Optional. Same seed + same bank + same settings gives repeatable selections.</div></div>
+          <input type="text" id="set-random-seed" placeholder="e.g. finals-2026" onchange="saveSettings()">
+        </div>
       </div>
     </div>
 
@@ -1651,6 +1731,15 @@ let DB = {
     allowFallbackCategory: false,
     includeAnswersInExport: true,
     trackGeneratedUsage: true,
+    generationMode: 'match',
+    mediaPolicy: 'any',
+    difficultyPolicy: 'any',
+    categoryPolicy: 'random',
+    selectionPriority: 'random',
+    exactCountRequired: false,
+    noRepeatCategoryInSection: false,
+    usePairGroups: false,
+    randomSeed: '',
     sectionOrder: { alternate: [], minute: [], buzzer: [] }
   },
   templates: [],
@@ -2359,6 +2448,8 @@ function generateMatch() {
   const matchName = el('match-name').value || `Match ${new Date().toLocaleDateString()}`;
   const avoidUsed = DB.settings.avoidPreviouslyUsed;
   const fallback = DB.settings.allowFallbackCategory;
+  const exactCount = DB.settings.exactCountRequired === true;
+  const rng = makeRng(DB.settings.randomSeed || '');
 
   // Build question pools indexed by subject → category → questions[]
   const pool = {};
@@ -2372,9 +2463,7 @@ function generateMatch() {
   // then append any selected subjects not yet in the saved order.
   function buildSectionSubjects(sectionKey) {
     const savedOrder = (DB.settings.sectionOrder || {})[sectionKey] || [];
-    // Only keep subjects that are actually selected in the generator
     const inOrder = savedOrder.filter(s => selectedSubjects.includes(s));
-    // Append any selected subjects that have no saved position yet
     const extra = selectedSubjects.filter(s => !savedOrder.includes(s));
     return [...inOrder, ...extra];
   }
@@ -2382,6 +2471,42 @@ function generateMatch() {
   const usedInMatch = new Set();
   const warnings = [];
   const newUsageLog = [];
+  const usedCategoriesBySection = {};
+  const categoryCountsBySection = {};
+
+  function baseAvailable(qs, allowUsedFallback = false) {
+    return qs.filter(q =>
+      !usedInMatch.has(q.id) &&
+      passesGenerationFilters(q) &&
+      (allowUsedFallback || !avoidUsed || !DB.usedIds.has(q.id))
+    );
+  }
+
+  function pickFromAvailable(available, n) {
+    if (DB.settings.usePairGroups && n > 1) {
+      const groups = {};
+      available.forEach(q => {
+        const g = getPairGroup(q);
+        if (!g) return;
+        if (!groups[g]) groups[g] = [];
+        groups[g].push(q);
+      });
+      const groupOptions = Object.values(groups).filter(g => g.length >= n);
+      if (groupOptions.length) {
+        const chosenGroup = prioritizeCandidates(groupOptions.map(g => g[0]), rng)[0];
+        const groupId = getPairGroup(chosenGroup);
+        return pickCandidates(groups[groupId], n, rng);
+      }
+    }
+    return pickCandidates(available, n, rng);
+  }
+
+  function addUsageAndRow(rows, q, qNum, subj, cat, sectionName) {
+    rows.push({ num: qNum, q: cloneQuestionForMatch(q), subject: subj, category: cat, section: sectionName });
+    usedInMatch.add(q.id);
+    noteCategoryUse(sectionName, cat, usedCategoriesBySection, categoryCountsBySection);
+    newUsageLog.push({ questionId: q.id, usedOn: new Date().toISOString(), section: sectionName, subject: subj, category: cat, matchName });
+  }
 
   // Generate a paired section (Alternate or Minute)
   function generatePairedSection(sectionName, nPerSubject, sectionSubjects) {
@@ -2391,55 +2516,42 @@ function generateMatch() {
     sectionSubjects.forEach(subj => {
       if (!pool[subj]) { warnings.push(`No questions found for subject: ${subj}`); return; }
 
-      // Find categories with enough available questions
-      const allowedCats = getAllowedCats(subj); // null = all, Set = restricted
-      const cats = Object.entries(pool[subj])
+      const allowedCats = getAllowedCats(subj);
+      const catOptions = Object.entries(pool[subj])
         .filter(([cat]) => !allowedCats || allowedCats.has(cat))
         .map(([cat, qs]) => {
-          const available = qs.filter(q =>
-            !usedInMatch.has(q.id) &&
-            (!avoidUsed || !DB.usedIds.has(q.id))
-          );
+          const available = baseAvailable(qs, false);
           return { cat, available };
         })
         .filter(c => c.available.length >= nPerSubject);
 
-      if (cats.length === 0) {
-        // Try fallback: relax used restriction (still respect allowed cats)
-        if (fallback) {
-          const catsFallback = Object.entries(pool[subj])
-            .filter(([cat]) => !allowedCats || allowedCats.has(cat))
-            .map(([cat, qs]) => {
-              const available = qs.filter(q => !usedInMatch.has(q.id));
-              return { cat, available };
-            })
-            .filter(c => c.available.length >= nPerSubject);
+      let options = catOptions;
+      let usingFallback = false;
 
-          if (catsFallback.length === 0) {
-            warnings.push(`⚠️ ${subj}: Not enough questions for ${sectionName} (skipped)`);
-            return;
-          }
-          warnings.push(`ℹ️ ${subj}: Used previously-used questions as fallback for ${sectionName}`);
-          const chosen = catsFallback[Math.floor(Math.random()*catsFallback.length)];
-          const picked = pickRandom(chosen.available, nPerSubject);
-          picked.forEach(q => {
-            rows.push({ num: qNum++, q: cloneQuestionForMatch(q), subject: subj, category: chosen.cat, section: sectionName });
-            usedInMatch.add(q.id);
-            newUsageLog.push({ questionId: q.id, usedOn: new Date().toISOString(), section: sectionName, subject: subj, category: chosen.cat, matchName });
-          });
-        } else {
-          warnings.push(`⚠️ ${subj}: Not enough unused questions for ${sectionName} (skipped). Enable fallback in Settings.`);
-        }
+      if (options.length === 0 && fallback) {
+        options = Object.entries(pool[subj])
+          .filter(([cat]) => !allowedCats || allowedCats.has(cat))
+          .map(([cat, qs]) => ({ cat, available: baseAvailable(qs, true) }))
+          .filter(c => c.available.length >= nPerSubject);
+        usingFallback = options.length > 0;
+      }
+
+      if (options.length === 0) {
+        const reason = fallback ? `Not enough questions for ${sectionName}` : `Not enough unused questions for ${sectionName}`;
+        warnings.push(`⚠️ ${subj}: ${reason} (skipped).`);
         return;
       }
 
-      const chosen = cats[Math.floor(Math.random()*cats.length)];
-      const picked = pickRandom(chosen.available, nPerSubject);
-      picked.forEach(q => {
-        rows.push({ num: qNum++, q: cloneQuestionForMatch(q), subject: subj, category: chosen.cat, section: sectionName });
-        usedInMatch.add(q.id);
-        newUsageLog.push({ questionId: q.id, usedOn: new Date().toISOString(), section: sectionName, subject: subj, category: chosen.cat, matchName });
-      });
+      const chosen = chooseCategoryFromOptions(options, sectionName, usedCategoriesBySection, categoryCountsBySection, rng);
+      const picked = pickFromAvailable(chosen.available, nPerSubject);
+
+      if (picked.length < nPerSubject) {
+        warnings.push(`⚠️ ${subj}: Could not satisfy ${sectionName} rules for exact count ${nPerSubject}.`);
+        if (exactCount) return;
+      }
+      if (usingFallback) warnings.push(`ℹ️ ${subj}: Used previously-used questions as fallback for ${sectionName}`);
+
+      picked.slice(0, nPerSubject).forEach(q => addUsageAndRow(rows, q, qNum++, subj, chosen.cat, sectionName));
     });
 
     return rows;
@@ -2453,30 +2565,56 @@ function generateMatch() {
     sectionSubjects.forEach(subj => {
       if (!pool[subj]) return;
       const allowedCats = getAllowedCats(subj);
-      const allQs = Object.entries(pool[subj])
-        .filter(([cat]) => !allowedCats || allowedCats.has(cat))
-        .flatMap(([, qs]) => qs);
-      const available = allQs.filter(q =>
-        !usedInMatch.has(q.id) && (!avoidUsed || !DB.usedIds.has(q.id))
-      );
+      const allQsByCat = Object.entries(pool[subj])
+        .filter(([cat]) => !allowedCats || allowedCats.has(cat));
 
-      let toUse = available;
-      if (toUse.length === 0) {
-        if (fallback) {
-          toUse = allQs.filter(q => !usedInMatch.has(q.id));
-        }
-        if (toUse.length === 0) {
-          warnings.push(`⚠️ ${subj}: No questions available for Buzzer`);
-          return;
-        }
+      let candidatesByCat = allQsByCat.map(([cat, qs]) => ({ cat, available: baseAvailable(qs, false) }))
+        .filter(o => o.available.length > 0);
+      let usingFallback = false;
+
+      if (!candidatesByCat.length && fallback) {
+        candidatesByCat = allQsByCat.map(([cat, qs]) => ({ cat, available: baseAvailable(qs, true) }))
+          .filter(o => o.available.length > 0);
+        usingFallback = candidatesByCat.length > 0;
       }
 
-      const picked = pickRandom(toUse, Math.min(nPerSubject, toUse.length));
-      picked.forEach(q => {
-        rows.push({ num: qNum++, q: cloneQuestionForMatch(q), subject: subj, category: q.category, section: 'Buzzer' });
-        usedInMatch.add(q.id);
-        newUsageLog.push({ questionId: q.id, usedOn: new Date().toISOString(), section: 'Buzzer', subject: subj, category: q.category, matchName });
-      });
+      if (!candidatesByCat.length) {
+        warnings.push(`⚠️ ${subj}: No questions available for Buzzer with current rules`);
+        return;
+      }
+
+      const picked = [];
+      const localOptions = candidatesByCat.map(o => ({ ...o, available: [...o.available] }));
+      while (picked.length < nPerSubject && localOptions.some(o => o.available.length)) {
+        let usable = localOptions.filter(o => o.available.length);
+        if (DB.settings.noRepeatCategoryInSection) {
+          const used = usedCategoriesBySection['Buzzer'] || new Set();
+          const preferred = usable.filter(o => !used.has(o.cat));
+          if (preferred.length) usable = preferred;
+        }
+        const chosen = chooseCategoryFromOptions(usable, 'Buzzer', usedCategoriesBySection, categoryCountsBySection, rng);
+        const q = pickCandidates(chosen.available, 1, rng)[0];
+        if (!q) break;
+        picked.push({ q, cat: chosen.cat });
+        chosen.available = chosen.available.filter(x => x.id !== q.id);
+        if ((DB.settings.categoryPolicy || 'random') !== 'balanced') break;
+      }
+
+      // If not using balanced category mode, fill remaining from all candidates.
+      if (picked.length < nPerSubject) {
+        const already = new Set(picked.map(x => x.q.id));
+        let poolQs = candidatesByCat.flatMap(o => o.available.map(q => ({ q, cat: o.cat }))).filter(x => !already.has(x.q.id));
+        poolQs = prioritizeCandidates(poolQs.map(x => ({ ...x.q, __cat: x.cat })), rng).map(q => ({ q, cat: q.__cat || q.category }));
+        while (picked.length < nPerSubject && poolQs.length) picked.push(poolQs.shift());
+      }
+
+      if (picked.length < nPerSubject) {
+        warnings.push(`⚠️ ${subj}: Only ${picked.length} of ${nPerSubject} Buzzer question(s) could be selected.`);
+        if (exactCount) return;
+      }
+      if (usingFallback) warnings.push(`ℹ️ ${subj}: Used previously-used questions as fallback for Buzzer`);
+
+      picked.slice(0, nPerSubject).forEach(item => addUsageAndRow(rows, item.q, qNum++, subj, item.cat || item.q.category, 'Buzzer'));
     });
 
     return rows;
@@ -2487,8 +2625,7 @@ function generateMatch() {
   if (doMin) sections.minute = generatePairedSection('Minute', DB.settings.minuteQuestionsPerSubject, buildSectionSubjects('minute'));
   if (doBuz) sections.buzzer = generateBuzzerSection(DB.settings.buzzerQuestionsPerSubject, buildSectionSubjects('buzzer'));
 
-  // Save to state
-  DB.lastGenerated = { sections, matchName, timestamp: new Date().toISOString(), warnings };
+  DB.lastGenerated = { sections, matchName, timestamp: new Date().toISOString(), warnings, generationRules: snapshotGenerationRules() };
   if (DB.settings.trackGeneratedUsage !== false) {
     newUsageLog.forEach(u => { DB.usageLog.push(u); DB.usedIds.add(u.questionId); });
   } else if (newUsageLog.length) {
@@ -2496,15 +2633,14 @@ function generateMatch() {
   }
   saveAllToLocalStorage();
 
-  // Render
   renderMatch(sections, matchName, warnings);
   setMatchActionButtonsEnabled(true);
+  updateProjectorLinkCard();
   updateCorrectionCountUI();
   updateStats();
   updateUsageTab();
   updateAboutTab();
 
-  // Post-gen stats
   const totalGen = Object.values(sections).flat().length;
   const subjSet = new Set(Object.values(sections).flat().map(r=>r.subject));
   const catSet = new Set(Object.values(sections).flat().map(r=>r.category));
@@ -2516,6 +2652,22 @@ function generateMatch() {
     <div class="stat-card"><div class="stat-value">${catSet.size}</div><div class="stat-label">Categories</div></div>
     <div class="stat-card"><div class="stat-value">${warnings.length}</div><div class="stat-label">Warnings</div></div>
   `;
+}
+
+function snapshotGenerationRules() {
+  return {
+    generationMode: DB.settings.generationMode || 'match',
+    avoidPreviouslyUsed: DB.settings.avoidPreviouslyUsed !== false,
+    allowFallbackCategory: DB.settings.allowFallbackCategory === true,
+    mediaPolicy: DB.settings.mediaPolicy || 'any',
+    difficultyPolicy: DB.settings.difficultyPolicy || 'any',
+    categoryPolicy: DB.settings.categoryPolicy || 'random',
+    selectionPriority: DB.settings.selectionPriority || 'random',
+    exactCountRequired: DB.settings.exactCountRequired === true,
+    noRepeatCategoryInSection: DB.settings.noRepeatCategoryInSection === true,
+    usePairGroups: DB.settings.usePairGroups === true,
+    randomSeed: DB.settings.randomSeed || ''
+  };
 }
 
 function renderMatch(sections, matchName, warnings) {
@@ -2597,7 +2749,9 @@ function clearMatch() {
   DB.lastGenerated = null;
   answersVisible = false;
   el('btn-reveal-all').textContent = '👁 Show Answers';
+  updateProjectorLinkCard();
 }
+
 
 function revealAnswer(span) {
   span.classList.remove('hidden');
@@ -3272,7 +3426,8 @@ function rowToGeneratedRow(raw, sectionKey, idx) {
       info: qSrc.info || r.info || '',
       difficulty: qSrc.difficulty || r.difficulty || '',
       media,
-      source: qSrc.source || r.source || null
+      source: qSrc.source || r.source || null,
+      pairGroup: qSrc.pairGroup || r.pairGroup || qSrc.pairId || r.pairId || ''
     }
   };
 }
@@ -3319,6 +3474,7 @@ function restoreGeneratedMatch(imported) {
   updateCorrectionCountUI();
   renderMatch(imported.sections, imported.matchName, imported.warnings || []);
   setMatchActionButtonsEnabled(true);
+  updateProjectorLinkCard();
   updateCorrectionCountUI();
 
   const allRows = Object.values(imported.sections).flat();
@@ -3448,7 +3604,7 @@ function makeProjectorManifest() {
 function makeFullMatchJSON() {
   if (!DB.lastGenerated) return null;
   const { sections, matchName, timestamp } = DB.lastGenerated;
-  const fullMatch = { matchName, generated: timestamp, sections: {} };
+  const fullMatch = { matchName, generated: timestamp, generationRules: DB.lastGenerated.generationRules || snapshotGenerationRules(), sections: {} };
   Object.entries(sections).forEach(([k,rows]) => {
     fullMatch.sections[k] = rows.map(r => ({
       num: r.num, section: r.section, subject: r.subject, category: r.category,
@@ -3457,7 +3613,8 @@ function makeFullMatchJSON() {
       info: r.q.info || '',
       difficulty: r.q.difficulty,
       media: r.q.media || null,
-      source: r.q.source || null
+      source: r.q.source || null,
+      pairGroup: r.q.pairGroup || ''
     }));
   });
   fullMatch.corrections = makeCorrectionsPayload();
@@ -3475,6 +3632,43 @@ function getProjectorUrl() {
   return new URL('projector.html#data=' + encodeProjectorManifest(manifest), window.location.href).href;
 }
 
+function updateProjectorLinkCard() {
+  const card = el('projector-link-card');
+  const input = el('projector-link-input');
+  const meta = el('projector-link-meta');
+  if (!card || !input) return;
+  const manifest = makeProjectorManifest();
+  if (!manifest || !manifest.items || !manifest.items.length) {
+    card.classList.add('hidden');
+    input.value = '';
+    if (meta) meta.textContent = '';
+    return;
+  }
+  const url = getProjectorUrl();
+  input.value = url || '';
+  card.classList.remove('hidden');
+  if (meta) meta.textContent = `${manifest.items.length} projector media item${manifest.items.length !== 1 ? 's' : ''} available for ${manifest.matchName || 'current match'}.`;
+}
+
+async function copyProjectorLink() {
+  updateProjectorLinkCard();
+  const input = el('projector-link-input');
+  if (!input || !input.value) {
+    alert('No projector link is available yet. Generate or import a match with media first.');
+    return;
+  }
+  input.select();
+  input.setSelectionRange(0, input.value.length);
+  try {
+    if (navigator.clipboard && window.isSecureContext) await navigator.clipboard.writeText(input.value);
+    else document.execCommand('copy');
+    const meta = el('projector-link-meta');
+    if (meta) meta.textContent = 'Projector link copied to clipboard.';
+  } catch (err) {
+    alert('Copy failed. You can still select the link and copy it manually.');
+  }
+}
+
 async function openProjectorView() {
   const manifest = makeProjectorManifest();
   if (!manifest) {
@@ -3483,30 +3677,16 @@ async function openProjectorView() {
   }
   if (!manifest.items.length) {
     alert('This generated match has no projector-compatible media questions. Supported media: image, audio, video, PDF.');
+    updateProjectorLinkCard();
     return;
   }
 
+  updateProjectorLinkCard();
   const url = getProjectorUrl();
   const opened = window.open(url, '_blank');
-  let copied = false;
-
-  try {
-    if (navigator.clipboard && window.isSecureContext) {
-      await navigator.clipboard.writeText(url);
-      copied = true;
-    }
-  } catch (err) {
-    copied = false;
-  }
-
-  if (copied) {
-    alert(`Projector view opened and the link was copied to your clipboard. Open that link on the projector computer.\n\nProjector media found: ${manifest.items.length}`);
-  } else {
-    prompt(`Copy this projector link and open it on the projector computer. Projector media found: ${manifest.items.length}`, url);
-  }
-
   if (!opened) {
-    alert('Your browser blocked the projector popup. Copy the link shown and open it in a new tab.');
+    const meta = el('projector-link-meta');
+    if (meta) meta.textContent = 'Popup blocked. Copy the projector link and open it manually on the projector computer.';
   }
 }
 
@@ -3715,6 +3895,7 @@ function saveGeneratedEdit() {
   saveAllToLocalStorage();
   updateCorrectionCountUI();
   renderMatch(DB.lastGenerated.sections, DB.lastGenerated.matchName, DB.lastGenerated.warnings || []);
+  updateProjectorLinkCard();
   closeModal('modal-edit-question');
 }
 
@@ -3868,7 +4049,8 @@ function loadSheet() {
     { id: 'info',       label: 'Info (additional details)' },
     { id: 'media_type', label: 'Media Type (image/audio)' },
     { id: 'media_path', label: 'Media Path / URL' },
-    { id: 'media_caption', label: 'Media Caption' }
+    { id: 'media_caption', label: 'Media Caption' },
+    { id: 'pair_group', label: 'Pair / Group ID' }
   ];
 
   const mapGrid = el('col-map-grid');
@@ -3904,6 +4086,7 @@ function previewImport() {
   const mTypeIdx     = getMap('media_type');
   const mPathIdx     = getMap('media_path');
   const mCaptionIdx  = getMap('media_caption');
+  const pairIdx      = getMap('pair_group');
 
   if (isNaN(subjIdx) || isNaN(catIdx) || isNaN(qIdx) || isNaN(aIdx)) {
     el('import-preview-wrap').style.display = 'none';
@@ -3929,7 +4112,7 @@ function previewImport() {
     [
       ['subject', subjIdx], ['category', catIdx], ['question', qIdx], ['answer', aIdx],
       ['difficulty', dIdx], ['id', idIdx], ['info', infoIdx], ['media_type', mTypeIdx],
-      ['media_path', mPathIdx], ['media_caption', mCaptionIdx]
+      ['media_path', mPathIdx], ['media_caption', mCaptionIdx], ['pair_group', pairIdx]
     ].forEach(([field, idx]) => {
       if (!isNaN(idx) && headers[idx]) sourceColumns[field] = { index: idx, name: headers[idx].name };
     });
@@ -3937,13 +4120,14 @@ function previewImport() {
       subject: s, category: c, question: q, answer: a,
       difficulty: isNaN(dIdx) ? 'Medium' : (String(row[dIdx]||'Medium').trim()||'Medium'),
       id: isNaN(idIdx) ? null : String(row[idIdx]||'').trim(),
-      info, media,
+      info, media, pairGroup: !isNaN(pairIdx) ? String(row[pairIdx] || '').trim() : '',
       source: {
         sourceType: 'excel',
         sourceFileName: importSourceFileName || '',
         sourceSheetName: currentSheetName,
         sourceRowNumber: i + 1,
         sourceRowIndex: i,
+        importedAt: new Date().toISOString(),
         sourceColumns
       }
     });
@@ -3989,7 +4173,7 @@ function finalizeImport() {
     if (r.media && r.media.type && r.media.src) {
       media = { type: r.media.type, src: r.media.src, caption: r.media.caption || '' };
     }
-    return { id, subject: r.subject, category: r.category, question: r.question, answer: r.answer, difficulty: r.difficulty || 'Medium', info: r.info || '', media, source: r.source || null };
+    return { id, subject: r.subject, category: r.category, question: r.question, answer: r.answer, difficulty: r.difficulty || 'Medium', info: r.info || '', media, pairGroup: r.pairGroup || '', source: r.source || null };
   });
 
   DB.questions = [...DB.questions, ...newQuestions];
@@ -4329,6 +4513,22 @@ function syncUsageTrackingSwitches() {
   }
 }
 
+function applyGenerationModePreset(mode) {
+  const isTraining = mode === 'training';
+  DB.settings.generationMode = mode || 'match';
+  if (isTraining) {
+    DB.settings.trackGeneratedUsage = false;
+    DB.settings.avoidPreviouslyUsed = false;
+    DB.settings.allowFallbackCategory = true;
+    DB.settings.exactCountRequired = false;
+  } else {
+    DB.settings.trackGeneratedUsage = true;
+    DB.settings.avoidPreviouslyUsed = true;
+  }
+  loadSettingsToUI();
+  saveSettings();
+}
+
 // ═══════════════════════════════════════════════════════════════
 // SETTINGS
 // ═══════════════════════════════════════════════════════════════
@@ -4341,6 +4541,17 @@ function saveSettings() {
   DB.settings.includeAnswersInExport = el('set-include-answers').checked;
   const trackBox = el('set-track-usage-settings') || el('set-track-usage-gen');
   DB.settings.trackGeneratedUsage = trackBox ? trackBox.checked : DB.settings.trackGeneratedUsage !== false;
+  const getVal = (id, fallback) => { const node = el(id); return node ? node.value : fallback; };
+  const getChecked = (id, fallback=false) => { const node = el(id); return node ? node.checked : fallback; };
+  DB.settings.generationMode = getVal('set-generation-mode', DB.settings.generationMode || 'match');
+  DB.settings.mediaPolicy = getVal('set-media-policy', DB.settings.mediaPolicy || 'any');
+  DB.settings.difficultyPolicy = getVal('set-difficulty-policy', DB.settings.difficultyPolicy || 'any');
+  DB.settings.categoryPolicy = getVal('set-category-policy', DB.settings.categoryPolicy || 'random');
+  DB.settings.selectionPriority = getVal('set-selection-priority', DB.settings.selectionPriority || 'random');
+  DB.settings.exactCountRequired = getChecked('set-exact-count', DB.settings.exactCountRequired === true);
+  DB.settings.noRepeatCategoryInSection = getChecked('set-no-repeat-category', DB.settings.noRepeatCategoryInSection === true);
+  DB.settings.usePairGroups = getChecked('set-use-pair-groups', DB.settings.usePairGroups === true);
+  DB.settings.randomSeed = getVal('set-random-seed', DB.settings.randomSeed || '');
   syncUsageTrackingSwitches();
   // sectionOrder is saved directly by the drag-drop functions
   saveAllToLocalStorage();
@@ -4354,6 +4565,17 @@ function loadSettingsToUI() {
   el('set-fallback').checked = DB.settings.allowFallbackCategory;
   el('set-include-answers').checked = DB.settings.includeAnswersInExport;
   if (DB.settings.trackGeneratedUsage === undefined) DB.settings.trackGeneratedUsage = true;
+  const setVal = (id, value) => { const node = el(id); if (node) node.value = value; };
+  const setChecked = (id, value) => { const node = el(id); if (node) node.checked = !!value; };
+  setVal('set-generation-mode', DB.settings.generationMode || 'match');
+  setVal('set-media-policy', DB.settings.mediaPolicy || 'any');
+  setVal('set-difficulty-policy', DB.settings.difficultyPolicy || 'any');
+  setVal('set-category-policy', DB.settings.categoryPolicy || 'random');
+  setVal('set-selection-priority', DB.settings.selectionPriority || 'random');
+  setChecked('set-exact-count', DB.settings.exactCountRequired === true);
+  setChecked('set-no-repeat-category', DB.settings.noRepeatCategoryInSection === true);
+  setChecked('set-use-pair-groups', DB.settings.usePairGroups === true);
+  setVal('set-random-seed', DB.settings.randomSeed || '');
   syncUsageTrackingSwitches();
   if (!DB.settings.sectionOrder) DB.settings.sectionOrder = { alternate: [], minute: [], buzzer: [] };
   renderOrderLists();
@@ -4429,7 +4651,10 @@ function confirmClearAll() {
     localStorage.clear();
     DB = { questions:[], catalog:{}, usageLog:[], usedIds:new Set(),
       settings:{alternateQuestionsPerSubject:2,minuteQuestionsPerSubject:2,buzzerQuestionsPerSubject:1,
-        avoidPreviouslyUsed:true,allowFallbackCategory:false,randomizeSubjectOrder:false,includeAnswersInExport:true,trackGeneratedUsage:true},
+        avoidPreviouslyUsed:true,allowFallbackCategory:false,includeAnswersInExport:true,trackGeneratedUsage:true,
+        generationMode:'match',mediaPolicy:'any',difficultyPolicy:'any',categoryPolicy:'random',selectionPriority:'random',
+        exactCountRequired:false,noRepeatCategoryInSection:false,usePairGroups:false,randomSeed:'',
+        sectionOrder:{alternate:[],minute:[],buzzer:[]}},
       templates:[], corrections:[], lastGenerated:null };
     initDefaultTemplates();
     renderSubjectGrid();
@@ -4476,6 +4701,147 @@ function shuffle(arr) {
 
 function pickRandom(arr, n) {
   return shuffle(arr).slice(0, n);
+}
+
+function hashSeed(str) {
+  let h = 2166136261;
+  const text = String(str || '');
+  for (let i = 0; i < text.length; i++) {
+    h ^= text.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return h >>> 0;
+}
+
+function makeRng(seed) {
+  if (!seed) return Math.random;
+  let t = hashSeed(seed);
+  return function() {
+    t += 0x6D2B79F5;
+    let r = Math.imul(t ^ (t >>> 15), 1 | t);
+    r ^= r + Math.imul(r ^ (r >>> 7), 61 | r);
+    return ((r ^ (r >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function shuffleWithRng(arr, rng) {
+  const a = [...arr];
+  const rand = rng || Math.random;
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(rand() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function pickRandomWithRng(arr, n, rng) {
+  return shuffleWithRng(arr, rng).slice(0, n);
+}
+
+function usageCountForQuestion(q) {
+  const id = typeof q === 'string' ? q : (q && q.id);
+  if (!id) return 0;
+  return (DB.usageLog || []).filter(u => u.questionId === id).length;
+}
+
+function questionImportOrder(q) {
+  const src = (q && q.source) || {};
+  if (src.importedAt) {
+    const t = Date.parse(src.importedAt);
+    if (!Number.isNaN(t)) return t;
+  }
+  if (src.sourceRowIndex !== undefined) return Number(src.sourceRowIndex) || 0;
+  if (src.sourceRowNumber !== undefined) return Number(src.sourceRowNumber) || 0;
+  return 0;
+}
+
+function normalizeDifficultyName(d) {
+  const x = String(d || 'Medium').trim().toLowerCase();
+  if (x.startsWith('e')) return 'Easy';
+  if (x.startsWith('h')) return 'Hard';
+  return 'Medium';
+}
+
+function questionHasMedia(q) {
+  return !!(q && q.media && q.media.src);
+}
+
+function getPairGroup(q) {
+  if (!q) return '';
+  return String(q.pairGroup || q.pairId || q.groupId || q.matchGroup || q.linkedGroup || q.sourcePairId || '').trim();
+}
+
+function passesGenerationFilters(q) {
+  const mediaPolicy = DB.settings.mediaPolicy || 'any';
+  if (mediaPolicy === 'mediaOnly' && !questionHasMedia(q)) return false;
+  if (mediaPolicy === 'noMedia' && questionHasMedia(q)) return false;
+
+  const diffPolicy = DB.settings.difficultyPolicy || 'any';
+  if (['Easy','Medium','Hard'].includes(diffPolicy) && normalizeDifficultyName(q.difficulty) !== diffPolicy) return false;
+
+  return true;
+}
+
+function prioritizeCandidates(qs, rng) {
+  const shuffled = shuffleWithRng(qs, rng);
+  const priority = DB.settings.selectionPriority || 'random';
+  if (priority === 'leastUsed') {
+    return shuffled.sort((a,b) => usageCountForQuestion(a) - usageCountForQuestion(b));
+  }
+  if (priority === 'newest') {
+    return shuffled.sort((a,b) => questionImportOrder(b) - questionImportOrder(a));
+  }
+  if (priority === 'oldest') {
+    return shuffled.sort((a,b) => questionImportOrder(a) - questionImportOrder(b));
+  }
+  return shuffled;
+}
+
+function pickBalancedByDifficulty(qs, n, rng) {
+  const groups = { Easy: [], Medium: [], Hard: [] };
+  prioritizeCandidates(qs, rng).forEach(q => groups[normalizeDifficultyName(q.difficulty)].push(q));
+  const order = shuffleWithRng(['Easy','Medium','Hard'], rng);
+  const picked = [];
+  let guard = 0;
+  while (picked.length < n && guard++ < n * 6) {
+    let moved = false;
+    for (const key of order) {
+      if (picked.length >= n) break;
+      const q = groups[key].shift();
+      if (q) { picked.push(q); moved = true; }
+    }
+    if (!moved) break;
+  }
+  return picked;
+}
+
+function pickCandidates(qs, n, rng) {
+  if ((DB.settings.difficultyPolicy || 'any') === 'balanced') return pickBalancedByDifficulty(qs, n, rng);
+  return prioritizeCandidates(qs, rng).slice(0, n);
+}
+
+function chooseCategoryFromOptions(options, sectionName, usedCategoriesBySection, categoryCountsBySection, rng) {
+  let usable = options;
+  if (DB.settings.noRepeatCategoryInSection) {
+    const used = usedCategoriesBySection[sectionName] || new Set();
+    const preferred = usable.filter(o => !used.has(o.cat));
+    if (preferred.length) usable = preferred;
+  }
+  if ((DB.settings.categoryPolicy || 'random') === 'balanced') {
+    const counts = categoryCountsBySection[sectionName] || {};
+    const min = Math.min(...usable.map(o => counts[o.cat] || 0));
+    usable = usable.filter(o => (counts[o.cat] || 0) === min);
+  }
+  const ordered = prioritizeCandidates(usable.map(o => ({...o, id: o.cat, difficulty: 'Medium'})), rng);
+  const catName = ordered.length ? ordered[0].cat : usable[Math.floor((rng||Math.random)()*usable.length)].cat;
+  return usable.find(o => o.cat === catName) || usable[0];
+}
+
+function noteCategoryUse(sectionName, cat, usedCategoriesBySection, categoryCountsBySection) {
+  if (!usedCategoriesBySection[sectionName]) usedCategoriesBySection[sectionName] = new Set();
+  if (!categoryCountsBySection[sectionName]) categoryCountsBySection[sectionName] = {};
+  usedCategoriesBySection[sectionName].add(cat);
+  categoryCountsBySection[sectionName][cat] = (categoryCountsBySection[sectionName][cat] || 0) + 1;
 }
 
 function downloadFile(filename, content, type) {
