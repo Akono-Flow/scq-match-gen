@@ -11,27 +11,19 @@
   --font:'Segoe UI',system-ui,sans-serif;
 }
 *{box-sizing:border-box;margin:0;padding:0}
-body{min-height:100vh;background:radial-gradient(circle at top,#162033 0,#05070b 50%);color:var(--text);font-family:var(--font);overflow:hidden}
-.app{height:100vh;display:grid;grid-template-rows:auto 1fr auto}
-header{display:flex;align-items:center;gap:14px;padding:14px 22px;background:rgba(16,23,34,.92);border-bottom:1px solid var(--border);backdrop-filter:blur(8px)}
-.logo{width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,var(--gold),#7a5f22);display:grid;place-items:center;color:#05070b;font-weight:900;letter-spacing:-1px}
-.title{flex:1;min-width:0}.title h1{font-size:18px;color:var(--gold);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.title p{font-size:12px;color:var(--muted)}
-.counter{font-family:Consolas,monospace;color:var(--gold2);font-weight:700;background:#0b111b;border:1px solid var(--border);border-radius:999px;padding:7px 12px}
-.stage{display:grid;grid-template-columns:320px 1fr;gap:18px;padding:18px;min-height:0}
-.sidebar{background:rgba(16,23,34,.86);border:1px solid var(--border);border-radius:var(--radius);padding:16px;overflow:auto}
-.side-title{font-size:12px;text-transform:uppercase;letter-spacing:1.4px;color:var(--muted);font-weight:800;margin-bottom:12px}.list{display:flex;flex-direction:column;gap:8px}
-.item{border:1px solid var(--border);background:#0c121d;border-radius:12px;padding:10px;cursor:pointer;color:var(--text);text-align:left;font-family:var(--font)}
-.item:hover,.item.active{border-color:var(--gold);background:rgba(232,184,75,.1)}.item .top{display:flex;justify-content:space-between;gap:8px;color:var(--gold);font-weight:800;font-size:12px}.item .safe-label{font-size:13px;margin-top:4px;color:var(--muted)}
-.viewer{background:rgba(5,7,11,.45);border:1px solid var(--border);border-radius:var(--radius);display:grid;grid-template-rows:1fr auto;min-width:0;min-height:0;overflow:hidden}
-.image-wrap{position:relative;min-height:0;display:grid;place-items:center;padding:18px;background:#030407;overflow:hidden}.image-wrap img{max-width:100%;max-height:100%;object-fit:contain;border-radius:10px;box-shadow:0 18px 60px rgba(0,0,0,.55)}
-.cover-screen{position:absolute;inset:0;z-index:5;display:grid;place-items:center;text-align:center;padding:40px;cursor:pointer}.cover-screen.white{background:#fff;color:#111}.cover-screen.black{background:#000;color:#fff}.cover-box{border:2px dashed currentColor;border-radius:18px;padding:30px 40px;background:rgba(128,128,128,.08)}.cover-box h2{font-size:32px;margin-bottom:10px}.cover-box p{font-size:15px;opacity:.82}
-.controls-panel{border-top:1px solid var(--border);background:rgba(16,23,34,.92);padding:12px 18px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}.control-group{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.segmented{display:inline-flex;border:1px solid var(--border);border-radius:999px;overflow:hidden;background:#0b111b}.segmented button{border-radius:0;border:0;background:transparent;color:var(--muted);padding:8px 12px}.segmented button.active{background:var(--gold);color:#05070b}
-.reveal-box{border:1px solid var(--border);background:#0d1421;border-radius:12px;padding:10px 12px;min-width:min(460px,100%)}.reveal-label{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);font-weight:800;margin-bottom:4px}.reveal-value{color:var(--text);font-size:18px;font-weight:800;line-height:1.35}.info-value{font-size:15px;font-weight:600;white-space:pre-wrap}.placeholder{color:var(--muted);font-style:italic;font-weight:600}
-.details-panel{border-top:1px solid var(--border);background:rgba(16,23,34,.86)}.details-panel summary{list-style:none;cursor:pointer;padding:12px 18px;color:var(--gold2);font-weight:800;font-size:13px}.details-panel summary::-webkit-details-marker{display:none}.details-panel summary::before{content:'▸';display:inline-block;margin-right:8px;transition:transform .15s}.details-panel[open] summary::before{transform:rotate(90deg)}.details-body{padding:0 18px 16px;color:var(--muted);font-size:13px;display:grid;gap:8px}.detail-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px}.detail-card{border:1px solid var(--border);background:#0d1421;border-radius:10px;padding:8px}.detail-label{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:3px}.detail-value{color:var(--text);font-weight:700}.question{font-size:16px;line-height:1.35;color:var(--text)}
-footer{display:flex;align-items:center;justify-content:center;gap:12px;padding:12px 18px;background:rgba(16,23,34,.92);border-top:1px solid var(--border)}
-button{border:0;border-radius:12px;padding:10px 18px;font-weight:800;font-family:var(--font);cursor:pointer}.primary{background:var(--gold);color:#05070b}.secondary{background:#182235;color:var(--text);border:1px solid var(--border)}.danger{background:#34161a;color:#ff9ca6;border:1px solid #5b252c}button:hover{filter:brightness(1.08)}button:disabled{opacity:.35;cursor:not-allowed}.empty{height:100%;display:grid;place-items:center;text-align:center;padding:30px;color:var(--muted)}.empty h2{color:var(--gold);margin-bottom:8px}.file{display:none}
-@media(max-width:900px){body{overflow:auto}.app{height:auto;min-height:100vh}.stage{grid-template-columns:1fr}.sidebar{max-height:220px}.viewer{height:auto;min-height:70vh}.image-wrap{min-height:50vh}.question{font-size:19px}}
-.fullscreen .stage{grid-template-columns:1fr;padding:0}.fullscreen .sidebar,.fullscreen header{display:none}.fullscreen footer{position:fixed;bottom:0;left:0;right:0;background:rgba(0,0,0,.45);z-index:20}.fullscreen .viewer{border:0;border-radius:0;height:100vh}.fullscreen .app{grid-template-rows:1fr}.fullscreen .image-wrap{padding:0}.fullscreen .controls-panel,.fullscreen .details-panel{background:rgba(0,0,0,.55)}
+body{min-height:100vh;background:radial-gradient(circle at top,#162033 0,#05070b 52%);color:var(--text);font-family:var(--font);overflow:hidden}
+button{border:0;border-radius:12px;padding:10px 14px;font-weight:800;font-family:var(--font);cursor:pointer;transition:filter .15s,transform .15s,border-color .15s;background:#182235;color:var(--text);border:1px solid var(--border)}
+button:hover{filter:brightness(1.08);transform:translateY(-1px)}button:disabled{opacity:.35;cursor:not-allowed;transform:none}.primary{background:var(--gold);color:#05070b;border-color:var(--gold)}.secondary{background:#182235;color:var(--text);border:1px solid var(--border)}.danger{background:#34161a;color:#ff9ca6;border:1px solid #5b252c}.ghost{background:#0b111b;color:var(--muted)}
+.app{height:100vh;display:grid;grid-template-rows:auto 1fr}
+header{display:flex;align-items:center;gap:14px;padding:12px 18px;background:rgba(16,23,34,.92);border-bottom:1px solid var(--border);backdrop-filter:blur(8px)}
+.logo{width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,var(--gold),#7a5f22);display:grid;place-items:center;color:#05070b;font-weight:900;letter-spacing:-1px}.title{flex:1;min-width:0}.title h1{font-size:18px;color:var(--gold);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.title p{font-size:12px;color:var(--muted)}.counter{font-family:Consolas,monospace;color:var(--gold2);font-weight:800;background:#0b111b;border:1px solid var(--border);border-radius:999px;padding:7px 12px}
+.stage{display:grid;grid-template-columns:390px 1fr;gap:18px;padding:18px;min-height:0;height:100%}
+.sidebar{background:rgba(16,23,34,.88);border:1px solid var(--border);border-radius:var(--radius);padding:16px;overflow:auto;display:flex;flex-direction:column;gap:16px;min-height:0}.side-section{border:1px solid rgba(38,53,79,.9);border-radius:14px;background:rgba(7,11,18,.48);padding:14px}.side-title{font-size:12px;text-transform:uppercase;letter-spacing:1.4px;color:var(--muted);font-weight:900;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;gap:8px}.side-title .hint{font-size:10px;text-transform:none;letter-spacing:0;color:var(--muted);font-weight:700}.list{display:flex;flex-direction:column;gap:8px}.item{width:100%;border:1px solid var(--border);background:#0c121d;border-radius:12px;padding:10px 12px;cursor:pointer;color:var(--text);text-align:left;font-family:var(--font)}.item:hover,.item.active{border-color:var(--gold);background:rgba(232,184,75,.10)}.item .top{display:flex;justify-content:space-between;gap:10px;color:var(--gold);font-weight:900;font-size:13px}.item .subject-line{font-size:13px;margin-top:5px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.item .safe-label{font-size:12px;margin-top:3px;color:var(--muted)}
+.button-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.button-grid.single{grid-template-columns:1fr}.segmented{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--border);border-radius:999px;overflow:hidden;background:#0b111b;margin-bottom:10px}.segmented button{border-radius:0;border:0;background:transparent;color:var(--muted);padding:9px 12px}.segmented button.active{background:var(--gold);color:#05070b}
+details.control-details{border:1px solid var(--border);background:#0d1421;border-radius:12px;overflow:hidden}details.control-details summary{list-style:none;cursor:pointer;padding:10px 12px;color:var(--gold2);font-weight:900;font-size:13px}details.control-details summary::-webkit-details-marker{display:none}details.control-details summary::before{content:'▸';display:inline-block;margin-right:8px;transition:transform .15s}details.control-details[open] summary::before{transform:rotate(90deg)}.detail-content{border-top:1px solid var(--border);padding:12px;color:var(--text);font-size:14px;line-height:1.5;white-space:pre-wrap}.placeholder{color:var(--muted);font-style:italic;font-weight:650}.reader-grid{display:grid;gap:8px}.reader-card{border:1px solid var(--border);background:#0d1421;border-radius:10px;padding:8px}.reader-label{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:3px;font-weight:900}.reader-value{color:var(--text);font-weight:750;line-height:1.35}.question{font-size:15px;line-height:1.35;color:var(--text)}
+.viewer{background:rgba(5,7,11,.45);border:1px solid var(--border);border-radius:var(--radius);min-width:0;min-height:0;overflow:hidden;display:grid}.image-wrap{position:relative;min-height:0;display:grid;place-items:center;padding:16px;background:#030407;overflow:hidden}.image-wrap img{max-width:100%;max-height:100%;object-fit:contain;border-radius:10px;box-shadow:0 18px 60px rgba(0,0,0,.55)}.cover-screen{position:absolute;inset:0;z-index:5;display:grid;place-items:center;text-align:center;padding:40px;cursor:pointer}.cover-screen.white{background:#fff;color:#111}.cover-screen.black{background:#000;color:#fff}.cover-box{border:2px dashed currentColor;border-radius:18px;padding:30px 40px;background:rgba(128,128,128,.08)}.cover-box h2{font-size:34px;margin-bottom:10px}.cover-box p{font-size:15px;opacity:.82}.empty{height:100%;display:grid;place-items:center;text-align:center;padding:30px;color:var(--muted)}.empty h2{color:var(--gold);margin-bottom:8px}.file{display:none}
+@media(max-width:1000px){body{overflow:auto}.app{height:auto;min-height:100vh}.stage{grid-template-columns:1fr}.sidebar{max-height:none}.viewer{min-height:72vh}.image-wrap{min-height:60vh}}
+.fullscreen header{display:none}.fullscreen .app{grid-template-rows:1fr}.fullscreen .stage{padding:10px;gap:10px;grid-template-columns:330px 1fr}.fullscreen .sidebar{border-radius:10px}.fullscreen .viewer{border-radius:10px}.fullscreen .image-wrap{padding:8px}
 </style>
 </head>
 <body>
@@ -43,9 +35,61 @@ button{border:0;border-radius:12px;padding:10px 18px;font-weight:800;font-family
   </header>
   <main class="stage">
     <aside class="sidebar">
-      <div class="side-title">Visual Questions</div>
-      <div class="list" id="visual-list"></div>
+      <section class="side-section">
+        <div class="side-title">Visual Questions <span class="hint" id="sidebar-count">0 loaded</span></div>
+        <div class="list" id="visual-list"></div>
+      </section>
+
+      <section class="side-section">
+        <div class="side-title">Image Cover</div>
+        <div class="segmented" aria-label="Cover color" id="cover-buttons"></div>
+        <div class="button-grid">
+          <button class="primary" onclick="revealImage()" id="reveal-image-btn">Reveal Image</button>
+          <button class="danger" onclick="hideImage()" id="hide-image-btn">Hide Image</button>
+        </div>
+      </section>
+
+      <section class="side-section">
+        <div class="side-title">Answer / Name</div>
+        <details class="control-details" id="answer-details">
+          <summary id="answer-summary">Hidden</summary>
+          <div class="detail-content" id="answer-value">—</div>
+        </details>
+      </section>
+
+      <section class="side-section">
+        <div class="side-title">Info</div>
+        <details class="control-details" id="info-details">
+          <summary id="info-summary">Hidden</summary>
+          <div class="detail-content" id="info-value">—</div>
+        </details>
+      </section>
+
+      <section class="side-section">
+        <div class="side-title">Navigation</div>
+        <div class="button-grid">
+          <button class="secondary" onclick="prevVisual()" id="prev-btn">← Previous</button>
+          <button class="primary" onclick="nextVisual()" id="next-btn">Next →</button>
+        </div>
+      </section>
+
+      <section class="side-section">
+        <div class="side-title">System</div>
+        <div class="button-grid">
+          <button class="secondary" onclick="toggleFullscreenMode()">⛶ Projector Mode</button>
+          <button class="secondary" onclick="document.getElementById('manifest-file').click()">Load JSON</button>
+        </div>
+      </section>
+
+      <section class="side-section">
+        <div class="side-title">Hidden Details <span class="hint">quiz reader only</span></div>
+        <details class="control-details" id="reader-details">
+          <summary>Show hidden details</summary>
+          <div class="detail-content"><div class="reader-grid" id="reader-detail-grid"></div></div>
+        </details>
+      </section>
     </aside>
+
     <section class="viewer" id="viewer">
       <div class="empty">
         <div>
@@ -57,12 +101,6 @@ button{border:0;border-radius:12px;padding:10px 18px;font-weight:800;font-family
       </div>
     </section>
   </main>
-  <footer>
-    <button class="secondary" onclick="prevVisual()" id="prev-btn">← Previous</button>
-    <button class="primary" onclick="nextVisual()" id="next-btn">Next →</button>
-    <button class="secondary" onclick="toggleFullscreenMode()">⛶ Projector Mode</button>
-    <button class="secondary" onclick="document.getElementById('manifest-file').click()">Load JSON</button>
-  </footer>
 </div>
 <input class="file" type="file" id="manifest-file" accept=".json,application/json">
 <script>
@@ -71,119 +109,56 @@ let visuals = [];
 let current = 0;
 let coverColor = localStorage.getItem('scqProjectorCoverColor') || 'white';
 let imageVisible = false;
-let answerVisible = false;
-let infoVisible = false;
 
 const $ = id => document.getElementById(id);
 function esc(s){return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 function sectionName(key){return String(key||'').charAt(0).toUpperCase()+String(key||'').slice(1)}
-
-function decodePayload(encoded){
-  return JSON.parse(decodeURIComponent(escape(atob(encoded))));
+function decodePayload(encoded){return JSON.parse(decodeURIComponent(escape(atob(encoded))))}
+function loadFromHash(){const hash=new URLSearchParams(location.hash.replace(/^#/,''));const data=hash.get('data');if(!data)return false;try{setManifest(decodePayload(data));return true}catch(err){showError('The projector link could not be read. It may have been copied incompletely.');return false}}
+function resetReveals(){imageVisible=false;closeRevealPanels()}
+function closeRevealPanels(){const a=$('answer-details'),i=$('info-details'),r=$('reader-details');if(a)a.open=false;if(i)i.open=false;if(r)r.open=false}
+function setManifest(data){manifest=data||{};visuals=Array.isArray(manifest.visuals)?manifest.visuals:[];current=0;resetReveals();$('match-title').textContent=manifest.matchName||'SCQ Projector View';$('generated-label').textContent=manifest.generated?`Generated ${new Date(manifest.generated).toLocaleString()}`:'Visual manifest loaded';renderAll()}
+function visualLabel(v,i){return v.displayLabel || `${v.num || i+1}  ${v.subject || 'Visual question'}`}
+function renderAll(){renderList();renderSidebarControls();renderCurrent()}
+function renderList(){const list=$('visual-list');$('sidebar-count').textContent=`${visuals.length} loaded`;if(!visuals.length){list.innerHTML='<p style="color:var(--muted)">No image-based visual questions found.</p>';return}list.innerHTML=visuals.map((v,i)=>`<button class="item ${i===current?'active':''}" onclick="goToVisual(${i})" title="${esc(visualLabel(v,i))}">
+  <div class="top"><span>#${esc(v.num || i+1)}</span><span>${esc(v.sectionLabel || sectionName(v.section))}</span></div>
+  <div class="subject-line">${esc(v.subject || 'Visual question')}</div>
+  <div class="safe-label">Image covered — details hidden</div>
+</button>`).join('')}
+function renderSidebarControls(){
+  $('cover-buttons').innerHTML=`<button class="${coverColor==='white'?'active':''}" onclick="setCoverColor('white')">White cover</button><button class="${coverColor==='black'?'active':''}" onclick="setCoverColor('black')">Black cover</button>`;
+  const has=visuals.length>0;$('reveal-image-btn').disabled=!has;$('hide-image-btn').disabled=!has;$('prev-btn').disabled=visuals.length<=1;$('next-btn').disabled=visuals.length<=1;
+  const v=visuals[current]||{};
+  $('answer-summary').textContent='Click to reveal answer/name';$('answer-value').innerHTML=esc(v.answer||'—');
+  $('info-summary').textContent='Click to reveal info';$('info-value').innerHTML=esc(v.info||'—');
+  $('reader-detail-grid').innerHTML=has?`<div class="reader-card"><div class="reader-label">Section</div><div class="reader-value">${esc(v.sectionLabel || sectionName(v.section))} #${esc(v.num || '')}</div></div>
+  <div class="reader-card"><div class="reader-label">Subject</div><div class="reader-value">${esc(v.subject || '—')}</div></div>
+  <div class="reader-card"><div class="reader-label">Category</div><div class="reader-value">${esc(v.category || '—')}</div></div>
+  <div class="reader-card"><div class="reader-label">Question ID</div><div class="reader-value">${esc(v.id || '—')}</div></div>
+  ${v.question?`<div class="reader-card"><div class="reader-label">Question / Prompt</div><div class="question">${esc(v.question)}</div></div>`:''}
+  ${v.caption?`<div class="reader-card"><div class="reader-label">Caption</div><div class="reader-value">${esc(v.caption)}</div></div>`:''}`:'<span class="placeholder">No details loaded.</span>';
 }
-
-function loadFromHash(){
-  const hash = new URLSearchParams(location.hash.replace(/^#/,''));
-  const data = hash.get('data');
-  if (!data) return false;
-  try { setManifest(decodePayload(data)); return true; }
-  catch(err){ showError('The projector link could not be read. It may have been copied incompletely.'); return false; }
-}
-
-function resetReveals(){ imageVisible = false; answerVisible = false; infoVisible = false; }
-
-function setManifest(data){
-  manifest = data || {};
-  visuals = Array.isArray(manifest.visuals) ? manifest.visuals : [];
-  current = 0;
-  resetReveals();
-  $('match-title').textContent = manifest.matchName || 'SCQ Projector View';
-  $('generated-label').textContent = manifest.generated ? `Generated ${new Date(manifest.generated).toLocaleString()}` : 'Visual manifest loaded';
-  renderList();
-  renderCurrent();
-}
-
-function renderList(){
-  const list = $('visual-list');
-  if (!visuals.length) { list.innerHTML = '<p style="color:var(--muted)">No image-based visual questions found.</p>'; return; }
-  list.innerHTML = visuals.map((v,i)=>`<button class="item ${i===current?'active':''}" onclick="goToVisual(${i})" title="Visual ${i+1}">
-    <div class="top"><span>Visual ${i+1}</span><span>#${esc(v.num)}</span></div>
-    <div class="safe-label">Image covered — details hidden</div>
-  </button>`).join('');
-}
-
-function coverButtons(){
-  return `<div class="segmented" aria-label="Cover color">
-    <button class="${coverColor==='white'?'active':''}" onclick="setCoverColor('white')">White cover</button>
-    <button class="${coverColor==='black'?'active':''}" onclick="setCoverColor('black')">Black cover</button>
-  </div>`;
-}
-
 function renderCurrent(){
-  $('counter').textContent = visuals.length ? `${current+1} / ${visuals.length}` : '0 / 0';
-  $('prev-btn').disabled = visuals.length <= 1;
-  $('next-btn').disabled = visuals.length <= 1;
-  if (!visuals.length) return;
-  const v = visuals[current];
-  $('viewer').innerHTML = `<div class="image-wrap">
+  $('counter').textContent=visuals.length?`${current+1} / ${visuals.length}`:'0 / 0';
+  if(!visuals.length)return;
+  const v=visuals[current];
+  $('viewer').innerHTML=`<div class="image-wrap">
     <img src="${esc(v.imageUrl)}" alt="Visual question image" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'empty',innerHTML:'<div><h2>Image could not load</h2><p>Check that the image URL exists in your GitHub Pages site.</p></div>'}))">
-    ${imageVisible ? '' : `<div class="cover-screen ${coverColor}" onclick="revealImage()"><div class="cover-box"><h2>Visual Hidden</h2><p>Click to reveal the image when the question is ready.</p></div></div>`}
-  </div>
-  <div class="controls-panel">
-    <div class="control-group">
-      ${coverButtons()}
-      <button class="${imageVisible?'danger':'primary'}" onclick="${imageVisible?'hideImage()':'revealImage()'}">${imageVisible?'Hide Image':'Reveal Image'}</button>
-      <button class="secondary" onclick="toggleAnswerReveal()">${answerVisible?'Hide Answer/Name':'Reveal Answer/Name'}</button>
-      <button class="secondary" onclick="toggleInfoReveal()">${infoVisible?'Hide Info':'Reveal Info'}</button>
-    </div>
-    <div class="control-group" style="flex:1;justify-content:flex-end">
-      ${answerVisible ? `<div class="reveal-box"><div class="reveal-label">Answer / Name</div><div class="reveal-value">${esc(v.answer || '—')}</div></div>` : `<div class="reveal-box"><div class="reveal-label">Answer / Name</div><div class="placeholder">Hidden</div></div>`}
-      ${infoVisible ? `<div class="reveal-box"><div class="reveal-label">Info</div><div class="info-value">${esc(v.info || '—')}</div></div>` : `<div class="reveal-box"><div class="reveal-label">Info</div><div class="placeholder">Hidden</div></div>`}
-    </div>
-  </div>
-  <details class="details-panel">
-    <summary>Show hidden details for quiz reader</summary>
-    <div class="details-body">
-      <div class="detail-grid">
-        <div class="detail-card"><div class="detail-label">Section</div><div class="detail-value">${esc(v.sectionLabel || sectionName(v.section))} #${esc(v.num)}</div></div>
-        <div class="detail-card"><div class="detail-label">Subject</div><div class="detail-value">${esc(v.subject || '—')}</div></div>
-        <div class="detail-card"><div class="detail-label">Category</div><div class="detail-value">${esc(v.category || '—')}</div></div>
-        <div class="detail-card"><div class="detail-label">Question ID</div><div class="detail-value">${esc(v.id || '—')}</div></div>
-      </div>
-      ${v.question ? `<div><div class="detail-label">Question / Prompt</div><div class="question">${esc(v.question)}</div></div>` : ''}
-      ${v.caption ? `<div><div class="detail-label">Caption</div><div>${esc(v.caption)}</div></div>` : ''}
-    </div>
-  </details>`;
-  renderList();
+    ${imageVisible?'':`<div class="cover-screen ${coverColor}" onclick="revealImage()"><div class="cover-box"><h2>Visual Hidden</h2><p>Click to reveal the image when the question is ready.</p></div></div>`}
+  </div>`;
+  renderList();renderSidebarControls();
 }
-
-function setCoverColor(color){ coverColor = color === 'black' ? 'black' : 'white'; localStorage.setItem('scqProjectorCoverColor', coverColor); renderCurrent(); }
-function revealImage(){ imageVisible = true; renderCurrent(); }
-function hideImage(){ imageVisible = false; renderCurrent(); }
-function toggleAnswerReveal(){ answerVisible = !answerVisible; renderCurrent(); }
-function toggleInfoReveal(){ infoVisible = !infoVisible; renderCurrent(); }
-function goToVisual(i){ current = Math.max(0, Math.min(i, visuals.length-1)); resetReveals(); renderCurrent(); }
-function nextVisual(){ if (!visuals.length) return; current = (current + 1) % visuals.length; resetReveals(); renderCurrent(); }
-function prevVisual(){ if (!visuals.length) return; current = (current - 1 + visuals.length) % visuals.length; resetReveals(); renderCurrent(); }
-function toggleFullscreenMode(){ document.body.classList.toggle('fullscreen'); }
-function showError(msg){ $('viewer').innerHTML = `<div class="empty"><div><h2>Projector Error</h2><p>${esc(msg)}</p></div></div>`; }
-
-document.addEventListener('keydown', e => {
-  if (e.key === 'ArrowRight' || e.key === ' ') nextVisual();
-  if (e.key === 'ArrowLeft') prevVisual();
-  if (e.key.toLowerCase() === 'f') toggleFullscreenMode();
-  if (e.key.toLowerCase() === 'r') revealImage();
-  if (e.key.toLowerCase() === 'h') hideImage();
-  if (e.key.toLowerCase() === 'a') toggleAnswerReveal();
-  if (e.key.toLowerCase() === 'i') toggleInfoReveal();
-});
-$('manifest-file').addEventListener('change', e => {
-  const file = e.target.files[0]; if (!file) return;
-  const reader = new FileReader();
-  reader.onload = evt => { try { setManifest(JSON.parse(evt.target.result)); } catch(err){ showError('That JSON file is not a valid projector manifest.'); } };
-  reader.readAsText(file);
-});
-loadFromHash();
+function setCoverColor(color){coverColor=color==='black'?'black':'white';localStorage.setItem('scqProjectorCoverColor',coverColor);renderCurrent()}
+function revealImage(){if(!visuals.length)return;imageVisible=true;renderCurrent()}
+function hideImage(){if(!visuals.length)return;imageVisible=false;renderCurrent()}
+function goToVisual(i){current=Math.max(0,Math.min(i,visuals.length-1));resetReveals();renderCurrent()}
+function nextVisual(){if(!visuals.length)return;current=(current+1)%visuals.length;resetReveals();renderCurrent()}
+function prevVisual(){if(!visuals.length)return;current=(current-1+visuals.length)%visuals.length;resetReveals();renderCurrent()}
+function toggleFullscreenMode(){document.body.classList.toggle('fullscreen')}
+function showError(msg){$('viewer').innerHTML=`<div class="empty"><div><h2>Projector Error</h2><p>${esc(msg)}</p></div></div>`}
+document.addEventListener('keydown',e=>{if(e.target&&['INPUT','TEXTAREA'].includes(e.target.tagName))return;if(e.key==='ArrowRight'||e.key===' ')nextVisual();if(e.key==='ArrowLeft')prevVisual();if(e.key.toLowerCase()==='f')toggleFullscreenMode();if(e.key.toLowerCase()==='r')revealImage();if(e.key.toLowerCase()==='h')hideImage();if(e.key.toLowerCase()==='w')setCoverColor('white');if(e.key.toLowerCase()==='b')setCoverColor('black')});
+$('manifest-file').addEventListener('change',e=>{const file=e.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=evt=>{try{setManifest(JSON.parse(evt.target.result))}catch(err){showError('That JSON file is not a valid projector manifest.')}};reader.readAsText(file)});
+loadFromHash();renderSidebarControls();
 </script>
 </body>
 </html>
