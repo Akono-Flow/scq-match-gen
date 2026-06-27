@@ -963,6 +963,10 @@ hr.divider { border: none; border-top: 1px solid var(--border); margin: 14px 0; 
         <button class="btn btn-secondary" onclick="exportMatchJSON()" id="btn-export-json" disabled>
           {} Export JSON
         </button>
+        <button class="btn btn-secondary btn-sm" onclick="document.getElementById('match-json-input').click()">
+          📥 Import Match
+        </button>
+        <input type="file" id="match-json-input" accept=".json,.zip,application/json,application/zip" onchange="handleMatchImportFile(event)" style="display:none">
         <button class="btn btn-secondary" onclick="openProjectorView()" id="btn-projector-view" disabled>
           🖥 Projector View
         </button>
@@ -2204,11 +2208,7 @@ function generateMatch() {
 
   // Render
   renderMatch(sections, matchName, warnings);
-  el('btn-export-html').disabled = false;
-  el('btn-export-json').disabled = false;
-  el('btn-projector-view').disabled = false;
-  const projectorManifestBtn = el('btn-projector-manifest'); if (projectorManifestBtn) projectorManifestBtn.disabled = false;
-  const matchPackageBtn = el('btn-match-package'); if (matchPackageBtn) matchPackageBtn.disabled = false;
+  setMatchActionButtonsEnabled(true);
   updateStats();
   updateUsageTab();
   updateAboutTab();
@@ -2297,11 +2297,7 @@ function renderMatch(sections, matchName, warnings) {
 function clearMatch() {
   el('match-output').innerHTML = '';
   el('post-gen-stats').classList.add('hidden');
-  el('btn-export-html').disabled = true;
-  el('btn-export-json').disabled = true;
-  el('btn-projector-view').disabled = true;
-  const projectorManifestBtn = el('btn-projector-manifest'); if (projectorManifestBtn) projectorManifestBtn.disabled = true;
-  const matchPackageBtn = el('btn-match-package'); if (matchPackageBtn) matchPackageBtn.disabled = true;
+  setMatchActionButtonsEnabled(false);
   DB.lastGenerated = null;
   answersVisible = false;
   el('btn-reveal-all').textContent = '👁 Show Answers';
@@ -2919,6 +2915,138 @@ function escH(s) {
   downloadFile(matchName.replace(/[^a-zA-Z0-9]/g,'_') + '_report.html', html, 'text/html');
 }
 
+
+
+// ═══════════════════════════════════════════════════════════════
+// MATCH JSON IMPORT / RESTORE
+// ═══════════════════════════════════════════════════════════════
+function setMatchActionButtonsEnabled(enabled) {
+  const ids = ['btn-export-html','btn-export-json','btn-projector-view','btn-projector-manifest','btn-match-package'];
+  ids.forEach(id => { const b = el(id); if (b) b.disabled = !enabled; });
+}
+
+function normalizeSectionKey(sectionName) {
+  const s = String(sectionName || '').toLowerCase().trim();
+  if (s.startsWith('alt')) return 'alternate';
+  if (s.startsWith('min')) return 'minute';
+  if (s.startsWith('buz')) return 'buzzer';
+  return s || 'section';
+}
+
+function normalizeSectionLabel(sectionKey) {
+  const k = normalizeSectionKey(sectionKey);
+  if (k === 'alternate') return 'Alternate';
+  if (k === 'minute') return 'Minute';
+  if (k === 'buzzer') return 'Buzzer';
+  return String(sectionKey || 'Section');
+}
+
+function rowToGeneratedRow(raw, sectionKey, idx) {
+  const r = raw || {};
+  const qSrc = r.q || r.questionObj || r;
+  const subject = r.subject || qSrc.subject || '';
+  const category = r.category || qSrc.category || '';
+  const media = qSrc.media || r.media || null;
+  return {
+    num: Number(r.num || r.number || r.qNum || idx + 1),
+    section: r.section || normalizeSectionLabel(sectionKey),
+    subject,
+    category,
+    q: {
+      id: qSrc.id || r.id || '',
+      subject,
+      category,
+      question: qSrc.question || qSrc.questionText || r.question || r.questionText || '',
+      answer: qSrc.answer || qSrc.answerText || r.answer || r.answerText || '',
+      info: qSrc.info || r.info || '',
+      difficulty: qSrc.difficulty || r.difficulty || '',
+      media
+    }
+  };
+}
+
+function normalizeImportedMatchJSON(data) {
+  if (!data || typeof data !== 'object') throw new Error('The selected file is not a valid match JSON object.');
+
+  let sourceSections = null;
+  if (data.sections && typeof data.sections === 'object') {
+    sourceSections = data.sections;
+  } else {
+    sourceSections = {};
+    ['alternate','minute','buzzer'].forEach(k => {
+      if (Array.isArray(data[k])) sourceSections[k] = data[k];
+    });
+  }
+
+  if (!sourceSections || !Object.keys(sourceSections).length) {
+    throw new Error('No match sections were found. Please import a full match.json file, not the projector manifest.');
+  }
+
+  const sections = {};
+  Object.entries(sourceSections).forEach(([rawKey, rows]) => {
+    if (!Array.isArray(rows) || !rows.length) return;
+    const key = normalizeSectionKey(rawKey);
+    sections[key] = rows.map((row, idx) => rowToGeneratedRow(row, key, idx));
+  });
+
+  const totalRows = Object.values(sections).flat().length;
+  if (!totalRows) throw new Error('The match JSON did not contain any question rows.');
+
+  return {
+    sections,
+    matchName: data.matchName || data.name || data.title || 'Imported Match',
+    timestamp: data.generated || data.timestamp || data.importedAt || new Date().toISOString(),
+    warnings: Array.isArray(data.warnings) ? data.warnings : [`ℹ️ Imported ${totalRows} question${totalRows !== 1 ? 's' : ''} from match JSON.`]
+  };
+}
+
+function restoreGeneratedMatch(imported) {
+  DB.lastGenerated = imported;
+  renderMatch(imported.sections, imported.matchName, imported.warnings || []);
+  setMatchActionButtonsEnabled(true);
+
+  const allRows = Object.values(imported.sections).flat();
+  const subjSet = new Set(allRows.map(r => r.subject).filter(Boolean));
+  const catSet = new Set(allRows.map(r => r.category).filter(Boolean));
+  el('post-gen-stats').classList.remove('hidden');
+  el('gen-summary-stats').innerHTML = `
+    <div class="stat-card"><div class="stat-value">${allRows.length}</div><div class="stat-label">Imported</div></div>
+    <div class="stat-card"><div class="stat-value">${Object.keys(imported.sections).length}</div><div class="stat-label">Sections</div></div>
+    <div class="stat-card"><div class="stat-value">${subjSet.size}</div><div class="stat-label">Subjects</div></div>
+    <div class="stat-card"><div class="stat-value">${catSet.size}</div><div class="stat-label">Categories</div></div>
+    <div class="stat-card"><div class="stat-value">${allRows.filter(r => r.q && r.q.media && r.q.media.src).length}</div><div class="stat-label">Media Items</div></div>
+  `;
+  switchTab('generate');
+}
+
+async function extractMatchJSONFromZip(file) {
+  if (typeof JSZip === 'undefined') throw new Error('ZIP support is not available. Please import match.json directly.');
+  const zip = await JSZip.loadAsync(file);
+  const candidates = Object.keys(zip.files).filter(name => /(^|\/)match\.json$/i.test(name) && !zip.files[name].dir);
+  if (!candidates.length) throw new Error('This ZIP package does not contain a match.json file.');
+  const text = await zip.files[candidates[0]].async('string');
+  return JSON.parse(text);
+}
+
+async function handleMatchImportFile(event) {
+  const file = event.target.files && event.target.files[0];
+  event.target.value = '';
+  if (!file) return;
+
+  try {
+    let data;
+    if (/\.zip$/i.test(file.name) || file.type === 'application/zip') {
+      data = await extractMatchJSONFromZip(file);
+    } else {
+      data = JSON.parse(await file.text());
+    }
+    const imported = normalizeImportedMatchJSON(data);
+    restoreGeneratedMatch(imported);
+    alert(`Imported match: ${imported.matchName}\nQuestions restored: ${Object.values(imported.sections).flat().length}\n\nProjector View, Projector JSON, and Match Package now use this imported match.`);
+  } catch (err) {
+    alert('Could not import match JSON: ' + err.message);
+  }
+}
 
 // ═══════════════════════════════════════════════════════════════
 // PROJECTOR VIEW EXPORT / LINK / PACKAGE
