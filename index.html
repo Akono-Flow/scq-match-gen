@@ -965,6 +965,9 @@ hr.divider { border: none; border-top: 1px solid var(--border); margin: 14px 0; 
         <button class="btn btn-secondary" onclick="openProjectorView()" id="btn-projector-view" disabled>
           🖥 Projector View
         </button>
+        <button class="btn btn-secondary btn-sm" onclick="exportProjectorManifestJSON()" id="btn-projector-manifest" disabled>
+          🧾 Projector JSON
+        </button>
         <button class="btn btn-secondary btn-sm" onclick="toggleAllAnswers()" id="btn-reveal-all">
           👁 Show Answers
         </button>
@@ -2200,6 +2203,7 @@ function generateMatch() {
   el('btn-export-html').disabled = false;
   el('btn-export-json').disabled = false;
   el('btn-projector-view').disabled = false;
+  const projectorManifestBtn = el('btn-projector-manifest'); if (projectorManifestBtn) projectorManifestBtn.disabled = false;
   updateStats();
   updateUsageTab();
   updateAboutTab();
@@ -2291,6 +2295,7 @@ function clearMatch() {
   el('btn-export-html').disabled = true;
   el('btn-export-json').disabled = true;
   el('btn-projector-view').disabled = true;
+  const projectorManifestBtn = el('btn-projector-manifest'); if (projectorManifestBtn) projectorManifestBtn.disabled = true;
   DB.lastGenerated = null;
   answersVisible = false;
   el('btn-reveal-all').textContent = '👁 Show Answers';
@@ -2943,7 +2948,8 @@ function makeProjectorManifest() {
         info: q.info || '',
         imageUrl,
         caption: media.caption || '',
-        source: media.src
+        source: media.src,
+        displayLabel: `${row.num || ''}  ${row.subject || q.subject || 'Visual question'}`.trim()
       });
     });
   });
@@ -2951,7 +2957,7 @@ function makeProjectorManifest() {
   return {
     app: 'SCQ Match Generator',
     type: 'projector-visual-manifest',
-    version: 1,
+    version: 2,
     matchName,
     generated: timestamp || new Date().toISOString(),
     sourcePage: baseUrl,
