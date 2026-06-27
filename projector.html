@@ -21,15 +21,14 @@ header{display:flex;align-items:center;gap:14px;padding:14px 22px;background:rgb
 .sidebar{background:rgba(16,23,34,.86);border:1px solid var(--border);border-radius:var(--radius);padding:16px;overflow:auto}
 .side-title{font-size:12px;text-transform:uppercase;letter-spacing:1.4px;color:var(--muted);font-weight:800;margin-bottom:12px}.list{display:flex;flex-direction:column;gap:8px}
 .item{border:1px solid var(--border);background:#0c121d;border-radius:12px;padding:10px;cursor:pointer;color:var(--text);text-align:left;font-family:var(--font)}
-.item:hover,.item.active{border-color:var(--gold);background:rgba(232,184,75,.1)}.item .top{display:flex;justify-content:space-between;gap:8px;color:var(--gold);font-weight:800;font-size:12px}.item .subj{font-size:13px;margin-top:4px}.item .meta{font-size:11px;color:var(--muted);margin-top:2px}
-.viewer{background:rgba(5,7,11,.45);border:1px solid var(--border);border-radius:var(--radius);display:grid;grid-template-rows:auto 1fr auto;min-width:0;min-height:0;overflow:hidden}
-.info{padding:16px 18px;border-bottom:1px solid var(--border);background:rgba(16,23,34,.78)}.badges{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px}.badge{font-size:12px;border:1px solid var(--border);border-radius:999px;padding:4px 10px;color:var(--muted);background:#0d1421}.badge.gold{color:var(--gold2);border-color:#7a5f22;background:rgba(232,184,75,.12)}
-.question{font-size:24px;line-height:1.25;font-weight:700}.image-wrap{min-height:0;display:grid;place-items:center;padding:18px;background:#030407}.image-wrap img{max-width:100%;max-height:100%;object-fit:contain;border-radius:10px;box-shadow:0 18px 60px rgba(0,0,0,.55)}
-.caption{padding:12px 18px;border-top:1px solid var(--border);color:var(--muted);font-size:14px;background:rgba(16,23,34,.78)}
+.item:hover,.item.active{border-color:var(--gold);background:rgba(232,184,75,.1)}.item .top{display:flex;justify-content:space-between;gap:8px;color:var(--gold);font-weight:800;font-size:12px}.item .safe-label{font-size:13px;margin-top:4px;color:var(--muted)}
+.viewer{background:rgba(5,7,11,.45);border:1px solid var(--border);border-radius:var(--radius);display:grid;grid-template-rows:1fr auto;min-width:0;min-height:0;overflow:hidden}
+.image-wrap{min-height:0;display:grid;place-items:center;padding:18px;background:#030407}.image-wrap img{max-width:100%;max-height:100%;object-fit:contain;border-radius:10px;box-shadow:0 18px 60px rgba(0,0,0,.55)}
+.details-panel{border-top:1px solid var(--border);background:rgba(16,23,34,.86)}.details-panel summary{list-style:none;cursor:pointer;padding:12px 18px;color:var(--gold2);font-weight:800;font-size:13px}.details-panel summary::-webkit-details-marker{display:none}.details-panel summary::before{content:'▸';display:inline-block;margin-right:8px;transition:transform .15s}.details-panel[open] summary::before{transform:rotate(90deg)}.details-body{padding:0 18px 16px;color:var(--muted);font-size:13px;display:grid;gap:8px}.detail-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px}.detail-card{border:1px solid var(--border);background:#0d1421;border-radius:10px;padding:8px}.detail-label{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:3px}.detail-value{color:var(--text);font-weight:700}.question{font-size:16px;line-height:1.35;color:var(--text)}
 footer{display:flex;align-items:center;justify-content:center;gap:12px;padding:12px 18px;background:rgba(16,23,34,.92);border-top:1px solid var(--border)}
 button{border:0;border-radius:12px;padding:10px 18px;font-weight:800;font-family:var(--font);cursor:pointer}.primary{background:var(--gold);color:#05070b}.secondary{background:#182235;color:var(--text);border:1px solid var(--border)}button:hover{filter:brightness(1.08)}button:disabled{opacity:.35;cursor:not-allowed}.empty{height:100%;display:grid;place-items:center;text-align:center;padding:30px;color:var(--muted)}.empty h2{color:var(--gold);margin-bottom:8px}.file{display:none}
 @media(max-width:900px){body{overflow:auto}.app{height:auto;min-height:100vh}.stage{grid-template-columns:1fr}.sidebar{max-height:220px}.viewer{height:70vh}.question{font-size:19px}}
-.fullscreen .stage{grid-template-columns:1fr}.fullscreen .sidebar,.fullscreen header{display:none}.fullscreen footer{position:fixed;bottom:0;left:0;right:0;background:rgba(0,0,0,.45)}.fullscreen .viewer{border:0;border-radius:0}.fullscreen .app{grid-template-rows:1fr}.fullscreen .image-wrap{padding:0}.fullscreen .caption,.fullscreen .info{background:rgba(0,0,0,.55)}
+.fullscreen .stage{grid-template-columns:1fr}.fullscreen .sidebar,.fullscreen header{display:none}.fullscreen footer{position:fixed;bottom:0;left:0;right:0;background:rgba(0,0,0,.45)}.fullscreen .viewer{border:0;border-radius:0}.fullscreen .app{grid-template-rows:1fr}.fullscreen .image-wrap{padding:0}.fullscreen .details-panel{background:rgba(0,0,0,.55)}
 </style>
 </head>
 <body>
@@ -97,10 +96,9 @@ function setManifest(data){
 function renderList(){
   const list = $('visual-list');
   if (!visuals.length) { list.innerHTML = '<p style="color:var(--muted)">No image-based visual questions found.</p>'; return; }
-  list.innerHTML = visuals.map((v,i)=>`<button class="item ${i===current?'active':''}" onclick="goToVisual(${i})">
-    <div class="top"><span>${esc(v.sectionLabel || sectionName(v.section))}</span><span>#${esc(v.num)}</span></div>
-    <div class="subj">${esc(v.subject || 'Subject')}</div>
-    <div class="meta">${esc(v.category || '')}${v.id ? ' • '+esc(v.id) : ''}</div>
+  list.innerHTML = visuals.map((v,i)=>`<button class="item ${i===current?'active':''}" onclick="goToVisual(${i})" title="Visual ${i+1}">
+    <div class="top"><span>Visual ${i+1}</span><span>#${esc(v.num)}</span></div>
+    <div class="safe-label">Image only — details hidden</div>
   </button>`).join('');
 }
 
@@ -110,16 +108,20 @@ function renderCurrent(){
   $('next-btn').disabled = visuals.length <= 1;
   if (!visuals.length) return;
   const v = visuals[current];
-  $('viewer').innerHTML = `<div class="info">
-    <div class="badges">
-      <span class="badge gold">${esc(v.sectionLabel || sectionName(v.section))} #${esc(v.num)}</span>
-      <span class="badge">${esc(v.subject || '')}</span>
-      ${v.category ? `<span class="badge">${esc(v.category)}</span>` : ''}
+  $('viewer').innerHTML = `<div class="image-wrap"><img src="${esc(v.imageUrl)}" alt="Visual question image" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'empty',innerHTML:'<div><h2>Image could not load</h2><p>Check that the image URL exists in your GitHub Pages site.</p></div>'}))"></div>
+  <details class="details-panel">
+    <summary>Show hidden details for quiz reader</summary>
+    <div class="details-body">
+      <div class="detail-grid">
+        <div class="detail-card"><div class="detail-label">Section</div><div class="detail-value">${esc(v.sectionLabel || sectionName(v.section))} #${esc(v.num)}</div></div>
+        <div class="detail-card"><div class="detail-label">Subject</div><div class="detail-value">${esc(v.subject || '—')}</div></div>
+        <div class="detail-card"><div class="detail-label">Category</div><div class="detail-value">${esc(v.category || '—')}</div></div>
+        <div class="detail-card"><div class="detail-label">Question ID</div><div class="detail-value">${esc(v.id || '—')}</div></div>
+      </div>
+      ${v.question ? `<div><div class="detail-label">Question / Prompt</div><div class="question">${esc(v.question)}</div></div>` : ''}
+      ${v.caption ? `<div><div class="detail-label">Caption</div><div>${esc(v.caption)}</div></div>` : ''}
     </div>
-    <div class="question">${esc(v.question || 'Visual Question')}</div>
-  </div>
-  <div class="image-wrap"><img src="${esc(v.imageUrl)}" alt="${esc(v.caption || v.subject || 'Visual question image')}" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'empty',innerHTML:'<div><h2>Image could not load</h2><p>Check that the image URL exists in your GitHub Pages site.</p></div>'}))"></div>
-  <div class="caption">${v.caption ? esc(v.caption) : 'Use the controls below, arrow keys, or the side list to move between visuals.'}</div>`;
+  </details>`;
   renderList();
 }
 
