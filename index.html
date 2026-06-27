@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SCQ Match Generator</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/marked@9.1.6/marked.min.js"></script>
 <style>
 /* ─── Design Tokens ─────────────────────────────────────────── */
@@ -967,6 +968,9 @@ hr.divider { border: none; border-top: 1px solid var(--border); margin: 14px 0; 
         </button>
         <button class="btn btn-secondary btn-sm" onclick="exportProjectorManifestJSON()" id="btn-projector-manifest" disabled>
           🧾 Projector JSON
+        </button>
+        <button class="btn btn-secondary btn-sm" onclick="downloadMatchPackage()" id="btn-match-package" disabled>
+          📦 Match Package
         </button>
         <button class="btn btn-secondary btn-sm" onclick="toggleAllAnswers()" id="btn-reveal-all">
           👁 Show Answers
@@ -2204,6 +2208,7 @@ function generateMatch() {
   el('btn-export-json').disabled = false;
   el('btn-projector-view').disabled = false;
   const projectorManifestBtn = el('btn-projector-manifest'); if (projectorManifestBtn) projectorManifestBtn.disabled = false;
+  const matchPackageBtn = el('btn-match-package'); if (matchPackageBtn) matchPackageBtn.disabled = false;
   updateStats();
   updateUsageTab();
   updateAboutTab();
@@ -2296,6 +2301,7 @@ function clearMatch() {
   el('btn-export-json').disabled = true;
   el('btn-projector-view').disabled = true;
   const projectorManifestBtn = el('btn-projector-manifest'); if (projectorManifestBtn) projectorManifestBtn.disabled = true;
+  const matchPackageBtn = el('btn-match-package'); if (matchPackageBtn) matchPackageBtn.disabled = true;
   DB.lastGenerated = null;
   answersVisible = false;
   el('btn-reveal-all').textContent = '👁 Show Answers';
@@ -2915,28 +2921,43 @@ function escH(s) {
 
 
 // ═══════════════════════════════════════════════════════════════
-// PROJECTOR VIEW EXPORT / LINK
+// PROJECTOR VIEW EXPORT / LINK / PACKAGE
 // ═══════════════════════════════════════════════════════════════
+function normalizeMediaType(media) {
+  const raw = String((media && media.type) || '').toLowerCase().trim();
+  const src = String((media && media.src) || '').toLowerCase().split('?')[0].split('#')[0];
+  if (['image','audio','video','pdf'].includes(raw)) return raw;
+  if (/\.(png|jpe?g|gif|webp|svg|bmp|avif)$/.test(src)) return 'image';
+  if (/\.(mp3|wav|ogg|m4a|aac|flac)$/.test(src)) return 'audio';
+  if (/\.(mp4|webm|ogv|mov|m4v)$/.test(src)) return 'video';
+  if (/\.pdf$/.test(src)) return 'pdf';
+  return raw || 'media';
+}
+
+function makeAbsoluteUrl(src) {
+  const baseUrl = window.location.href.split('#')[0];
+  try { return new URL(src, baseUrl).href; }
+  catch (err) { return src; }
+}
+
 function makeProjectorManifest() {
   if (!DB.lastGenerated) return null;
   const { sections, matchName, timestamp } = DB.lastGenerated;
   const baseUrl = window.location.href.split('#')[0];
-  const visuals = [];
+  const items = [];
 
   Object.entries(sections || {}).forEach(([sectionKey, rows]) => {
     (rows || []).forEach(row => {
       const q = row.q || {};
       const media = q.media || {};
-      if (media.type !== 'image' || !media.src) return;
+      if (!media.src) return;
 
-      let imageUrl = media.src;
-      try {
-        imageUrl = new URL(media.src, baseUrl).href;
-      } catch (err) {
-        // Keep original src if URL construction fails.
-      }
+      const mediaType = normalizeMediaType(media);
+      if (!['image','audio','video','pdf'].includes(mediaType)) return;
 
-      visuals.push({
+      const srcUrl = makeAbsoluteUrl(media.src);
+      items.push({
+        type: mediaType,
         section: sectionKey,
         sectionLabel: row.section || sectionKey,
         num: row.num,
@@ -2946,23 +2967,43 @@ function makeProjectorManifest() {
         question: q.question || '',
         answer: q.answer || '',
         info: q.info || '',
-        imageUrl,
+        src: srcUrl,
+        url: srcUrl,
+        imageUrl: mediaType === 'image' ? srcUrl : '',
         caption: media.caption || '',
         source: media.src,
-        displayLabel: `${row.num || ''}  ${row.subject || q.subject || 'Visual question'}`.trim()
+        displayLabel: `${row.num || ''}  ${row.subject || q.subject || 'Media question'}`.trim()
       });
     });
   });
 
   return {
     app: 'SCQ Match Generator',
-    type: 'projector-visual-manifest',
-    version: 2,
+    type: 'projector-media-manifest',
+    version: 3,
     matchName,
     generated: timestamp || new Date().toISOString(),
     sourcePage: baseUrl,
-    visuals
+    items,
+    visuals: items.filter(item => item.type === 'image')
   };
+}
+
+function makeFullMatchJSON() {
+  if (!DB.lastGenerated) return null;
+  const { sections, matchName, timestamp } = DB.lastGenerated;
+  const fullMatch = { matchName, generated: timestamp, sections: {} };
+  Object.entries(sections).forEach(([k,rows]) => {
+    fullMatch.sections[k] = rows.map(r => ({
+      num: r.num, section: r.section, subject: r.subject, category: r.category,
+      id: r.q.id, question: r.q.question,
+      answer: DB.settings.includeAnswersInExport ? r.q.answer : null,
+      info: r.q.info || '',
+      difficulty: r.q.difficulty,
+      media: r.q.media || null
+    }));
+  });
+  return fullMatch;
 }
 
 function encodeProjectorManifest(manifest) {
@@ -2982,8 +3023,8 @@ async function openProjectorView() {
     alert('Generate a match first.');
     return;
   }
-  if (!manifest.visuals.length) {
-    alert('This generated match has no image-based visual questions to show in the projector view.');
+  if (!manifest.items.length) {
+    alert('This generated match has no projector-compatible media questions. Supported media: image, audio, video, PDF.');
     return;
   }
 
@@ -3001,9 +3042,9 @@ async function openProjectorView() {
   }
 
   if (copied) {
-    alert(`Projector view opened and the link was copied to your clipboard. Open that link on the projector computer.\n\nVisual questions found: ${manifest.visuals.length}`);
+    alert(`Projector view opened and the link was copied to your clipboard. Open that link on the projector computer.\n\nProjector media found: ${manifest.items.length}`);
   } else {
-    prompt(`Copy this projector link and open it on the projector computer. Visual questions found: ${manifest.visuals.length}`, url);
+    prompt(`Copy this projector link and open it on the projector computer. Projector media found: ${manifest.items.length}`, url);
   }
 
   if (!opened) {
@@ -3017,24 +3058,46 @@ function exportProjectorManifestJSON() {
   downloadFile((manifest.matchName || 'match').replace(/[^a-zA-Z0-9]/g,'_') + '_projector_manifest.json', JSON.stringify(manifest,null,2), 'application/json');
 }
 
+async function downloadMatchPackage() {
+  const manifest = makeProjectorManifest();
+  const fullMatch = makeFullMatchJSON();
+  if (!manifest || !fullMatch) {
+    alert('Generate a match first.');
+    return;
+  }
+  if (typeof JSZip === 'undefined') {
+    alert('The ZIP library could not be loaded. Please check your internet connection and try again, or export the JSON files separately.');
+    return;
+  }
+
+  const safeName = (manifest.matchName || 'match').replace(/[^a-zA-Z0-9_-]/g,'_');
+  const zip = new JSZip();
+  const folder = zip.folder(safeName + '_projector_package');
+  folder.file('match.json', JSON.stringify(fullMatch, null, 2));
+  folder.file('projector_manifest.json', JSON.stringify(manifest, null, 2));
+
+  try {
+    const res = await fetch('projector.html', { cache: 'no-store' });
+    if (res.ok) folder.file('projector.html', await res.text());
+  } catch (err) {
+    folder.file('README.txt', 'projector.html could not be fetched automatically. Copy projector.html from your GitHub repo into this folder if you want the package to be self-contained.');
+  }
+
+  const readme = `SCQ Projector Package\n\nFiles:\n- match.json: full generated match.\n- projector_manifest.json: media-only projector manifest for images, audio, video, and PDFs.\n- projector.html: universal projector presenter, if it was available to package.\n\nOpen projector.html and use Load JSON to load projector_manifest.json, or use the Projector View button from the main app.\n\nMedia files are referenced by URL; they are not copied into this package. Keep your media files hosted in GitHub Pages or another accessible location.`;
+  folder.file('README.txt', readme);
+
+  const blob = await zip.generateAsync({ type: 'blob' });
+  downloadFile(safeName + '_projector_package.zip', blob, 'application/zip');
+}
+
 // ═══════════════════════════════════════════════════════════════
 // JSON EXPORTS
 // ═══════════════════════════════════════════════════════════════
 function exportMatchJSON() {
-  if (!DB.lastGenerated) return;
-  const { sections, matchName, timestamp } = DB.lastGenerated;
-  const fullMatch = { matchName, generated: timestamp, sections: {} };
-  Object.entries(sections).forEach(([k,rows]) => {
-    fullMatch.sections[k] = rows.map(r => ({
-      num: r.num, subject: r.subject, category: r.category,
-      id: r.q.id, question: r.q.question,
-      answer: DB.settings.includeAnswersInExport ? r.q.answer : null,
-      difficulty: r.q.difficulty, media: r.q.media
-    }));
-  });
-  downloadFile(matchName.replace(/[^a-zA-Z0-9]/g,'_') + '_match.json', JSON.stringify(fullMatch,null,2), 'application/json');
+  const fullMatch = makeFullMatchJSON();
+  if (!fullMatch) return;
+  downloadFile(fullMatch.matchName.replace(/[^a-zA-Z0-9]/g,'_') + '_match.json', JSON.stringify(fullMatch,null,2), 'application/json');
 }
-
 function exportQuestionsJSON() {
   downloadFile('questions.json', JSON.stringify(DB.questions,null,2), 'application/json');
 }
