@@ -224,6 +224,59 @@ textarea { resize: vertical; min-height: 80px; }
 input[type="checkbox"] { accent-color: var(--gold); width: 14px; height: 14px; }
 .checkbox-row { display: flex; align-items: center; gap: 7px; cursor: pointer; }
 .checkbox-row label { cursor: pointer; color: var(--text); font-size: 13px; font-weight: 400; }
+
+/* ─── Light switch control ───────────────────────────────────── */
+.switch-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 10px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--text2);
+  font-size: 12px;
+  font-weight: 600;
+  user-select: none;
+}
+.switch-row.block { justify-content: space-between; border-radius: var(--radius); padding: 10px 14px; width: 100%; }
+.switch-text { display: flex; flex-direction: column; gap: 2px; }
+.switch-text .switch-title { color: var(--text); font-size: 13px; }
+.switch-text .switch-desc { color: var(--text3); font-size: 11px; font-weight: 400; }
+.light-switch { position: relative; display: inline-block; width: 48px; height: 25px; flex-shrink: 0; }
+.light-switch input { opacity: 0; width: 0; height: 0; }
+.light-slider {
+  position: absolute;
+  cursor: pointer;
+  inset: 0;
+  background: var(--bg4);
+  border: 1px solid var(--border2);
+  border-radius: 999px;
+  transition: all 0.2s;
+}
+.light-slider::before {
+  content: '';
+  position: absolute;
+  height: 19px;
+  width: 19px;
+  left: 2px;
+  top: 2px;
+  background: var(--text3);
+  border-radius: 50%;
+  transition: all 0.2s;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.4);
+}
+.light-switch input:checked + .light-slider {
+  background: rgba(232,184,75,0.2);
+  border-color: var(--gold);
+}
+.light-switch input:checked + .light-slider::before {
+  transform: translateX(23px);
+  background: var(--gold);
+  box-shadow: 0 0 10px rgba(232,184,75,0.7);
+}
+.switch-state { color: var(--gold); font-family: var(--font-mono); font-size: 11px; }
+.switch-state.off { color: var(--text3); }
 input[type="file"] { display: none; }
 .file-drop-zone {
   border: 2px dashed var(--border2);
@@ -978,6 +1031,13 @@ hr.divider { border: none; border-top: 1px solid var(--border); margin: 14px 0; 
         <button class="btn btn-primary" onclick="generateMatch()" id="btn-generate">
           ⚡ Generate Match
         </button>
+        <label class="switch-row" title="When off, generated questions will not be added to usage history.">
+          <span>Track Usage <span id="usage-track-state" class="switch-state">ON</span></span>
+          <span class="light-switch">
+            <input type="checkbox" id="set-track-usage-gen" checked onchange="toggleUsageTracking(this.checked)">
+            <span class="light-slider"></span>
+          </span>
+        </label>
         <button class="btn btn-secondary" onclick="clearMatch()">🗑 Clear</button>
         <button class="btn btn-teal" onclick="exportMatchHTML()" id="btn-export-html" disabled>
           📄 Export HTML Report
@@ -1257,6 +1317,16 @@ hr.divider { border: none; border-top: 1px solid var(--border); margin: 14px 0; 
         <label class="checkbox-row"><input type="checkbox" id="set-avoid-used" checked onchange="saveSettings()"> <label for="set-avoid-used">Avoid previously used questions</label></label>
         <label class="checkbox-row"><input type="checkbox" id="set-fallback" onchange="saveSettings()"> <label for="set-fallback">Allow fallback to another category if needed</label></label>
         <label class="checkbox-row"><input type="checkbox" id="set-include-answers" checked onchange="saveSettings()"> <label for="set-include-answers">Include answers in export</label></label>
+        <label class="switch-row block" title="Controls whether generated questions are written to the Usage tab.">
+          <span class="switch-text">
+            <span class="switch-title">Track generated questions</span>
+            <span class="switch-desc">Turn off for drills/training sets you do not want marked as used.</span>
+          </span>
+          <span class="light-switch">
+            <input type="checkbox" id="set-track-usage-settings" checked onchange="toggleUsageTracking(this.checked)">
+            <span class="light-slider"></span>
+          </span>
+        </label>
       </div>
     </div>
 
@@ -1493,6 +1563,7 @@ let DB = {
     avoidPreviouslyUsed: true,
     allowFallbackCategory: false,
     includeAnswersInExport: true,
+    trackGeneratedUsage: true,
     sectionOrder: { alternate: [], minute: [], buzzer: [] }
   },
   templates: [],
@@ -2328,7 +2399,11 @@ function generateMatch() {
 
   // Save to state
   DB.lastGenerated = { sections, matchName, timestamp: new Date().toISOString(), warnings };
-  newUsageLog.forEach(u => { DB.usageLog.push(u); DB.usedIds.add(u.questionId); });
+  if (DB.settings.trackGeneratedUsage !== false) {
+    newUsageLog.forEach(u => { DB.usageLog.push(u); DB.usedIds.add(u.questionId); });
+  } else if (newUsageLog.length) {
+    warnings.push(`ℹ️ Usage tracking is OFF: ${newUsageLog.length} generated question(s) were not added to usage history.`);
+  }
   saveAllToLocalStorage();
 
   // Render
@@ -4143,6 +4218,28 @@ function updateUsageTab() {
 }
 
 // ═══════════════════════════════════════════════════════════════
+// USAGE TRACKING SWITCH
+// ═══════════════════════════════════════════════════════════════
+function toggleUsageTracking(enabled) {
+  DB.settings.trackGeneratedUsage = !!enabled;
+  syncUsageTrackingSwitches();
+  saveAllToLocalStorage();
+}
+
+function syncUsageTrackingSwitches() {
+  const enabled = DB.settings.trackGeneratedUsage !== false;
+  ['set-track-usage-gen', 'set-track-usage-settings'].forEach(id => {
+    const box = el(id);
+    if (box) box.checked = enabled;
+  });
+  const state = el('usage-track-state');
+  if (state) {
+    state.textContent = enabled ? 'ON' : 'OFF';
+    state.classList.toggle('off', !enabled);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
 // SETTINGS
 // ═══════════════════════════════════════════════════════════════
 function saveSettings() {
@@ -4152,6 +4249,9 @@ function saveSettings() {
   DB.settings.avoidPreviouslyUsed = el('set-avoid-used').checked;
   DB.settings.allowFallbackCategory = el('set-fallback').checked;
   DB.settings.includeAnswersInExport = el('set-include-answers').checked;
+  const trackBox = el('set-track-usage-settings') || el('set-track-usage-gen');
+  DB.settings.trackGeneratedUsage = trackBox ? trackBox.checked : DB.settings.trackGeneratedUsage !== false;
+  syncUsageTrackingSwitches();
   // sectionOrder is saved directly by the drag-drop functions
   saveAllToLocalStorage();
 }
@@ -4163,6 +4263,8 @@ function loadSettingsToUI() {
   el('set-avoid-used').checked = DB.settings.avoidPreviouslyUsed;
   el('set-fallback').checked = DB.settings.allowFallbackCategory;
   el('set-include-answers').checked = DB.settings.includeAnswersInExport;
+  if (DB.settings.trackGeneratedUsage === undefined) DB.settings.trackGeneratedUsage = true;
+  syncUsageTrackingSwitches();
   if (!DB.settings.sectionOrder) DB.settings.sectionOrder = { alternate: [], minute: [], buzzer: [] };
   renderOrderLists();
   renderTemplateManager();
@@ -4237,7 +4339,7 @@ function confirmClearAll() {
     localStorage.clear();
     DB = { questions:[], catalog:{}, usageLog:[], usedIds:new Set(),
       settings:{alternateQuestionsPerSubject:2,minuteQuestionsPerSubject:2,buzzerQuestionsPerSubject:1,
-        avoidPreviouslyUsed:true,allowFallbackCategory:false,randomizeSubjectOrder:false,includeAnswersInExport:true},
+        avoidPreviouslyUsed:true,allowFallbackCategory:false,randomizeSubjectOrder:false,includeAnswersInExport:true,trackGeneratedUsage:true},
       templates:[], corrections:[], lastGenerated:null };
     initDefaultTemplates();
     renderSubjectGrid();
