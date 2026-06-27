@@ -866,6 +866,28 @@ hr.divider { border: none; border-top: 1px solid var(--border); margin: 14px 0; 
 .resize-handle.ne::after { top: 3px; right: 3px; }
 .resize-handle.sw::after { bottom: 3px; left: 3px; }
 .resize-handle.se::after { bottom: 3px; right: 3px; }
+
+
+/* ─── Match Editing / Corrections ───────────────────────────── */
+.correction-count-pill {
+  display:inline-flex; align-items:center; gap:5px;
+  background:rgba(232,184,75,0.12); color:var(--gold);
+  border:1px solid var(--gold-dim); border-radius:999px;
+  padding:3px 8px; font-size:11px; font-weight:700;
+}
+.edit-btn-inline { margin-left:auto; }
+.q-row.edited { border-color: var(--gold-dim); box-shadow: 0 0 0 1px rgba(232,184,75,0.12) inset; }
+.edit-mark { color:var(--gold); font-size:11px; font-weight:700; margin-left:6px; }
+.editor-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.editor-grid .full { grid-column:1 / -1; }
+.corrections-table { width:100%; border-collapse:collapse; font-size:12px; }
+.corrections-table th, .corrections-table td { border-bottom:1px solid var(--border); padding:8px; vertical-align:top; text-align:left; }
+.corrections-table th { color:var(--text2); text-transform:uppercase; letter-spacing:.8px; font-size:10px; }
+.change-old { color:var(--red); }
+.change-new { color:var(--green); }
+.status-pill { display:inline-block; padding:2px 7px; border-radius:12px; background:var(--bg3); border:1px solid var(--border2); color:var(--gold); font-size:10px; font-weight:700; text-transform:uppercase; }
+@media (max-width: 700px) { .editor-grid { grid-template-columns:1fr; } }
+
 </style>
 </head>
 <body>
@@ -965,6 +987,12 @@ hr.divider { border: none; border-top: 1px solid var(--border); margin: 14px 0; 
         </button>
         <button class="btn btn-secondary" onclick="exportMatchJSON()" id="btn-export-json" disabled>
           {} Export JSON
+        </button>
+        <button class="btn btn-secondary btn-sm" onclick="showCorrectionsModal()" id="btn-review-corrections" disabled>
+          📝 Corrections <span id="correction-count" class="correction-count-pill">0</span>
+        </button>
+        <button class="btn btn-secondary btn-sm" onclick="exportCorrectionsJSON()" id="btn-export-corrections" disabled>
+          🧾 Corrections JSON
         </button>
         <button class="btn btn-secondary btn-sm" onclick="document.getElementById('match-json-input').click()">
           📥 Import Match
@@ -1345,6 +1373,89 @@ hr.divider { border: none; border-top: 1px solid var(--border); margin: 14px 0; 
   </div>
 </div>
 
+
+
+<!-- ══════════════════════════════════ EDIT GENERATED QUESTION MODAL -->
+<div class="modal-overlay hidden" id="modal-edit-question">
+  <div class="modal" style="max-width:900px">
+    <div class="modal-title">
+      Edit Generated Question
+      <button class="modal-close" onclick="closeModal('modal-edit-question')">✕</button>
+    </div>
+    <input type="hidden" id="edit-section-key">
+    <input type="hidden" id="edit-row-index">
+    <div class="editor-grid">
+      <div class="form-group full">
+        <label>Question</label>
+        <textarea id="edit-question" class="w-full" rows="4"></textarea>
+      </div>
+      <div class="form-group full">
+        <label>Answer</label>
+        <textarea id="edit-answer" class="w-full" rows="2"></textarea>
+      </div>
+      <div class="form-group full">
+        <label>Info / Additional Details</label>
+        <textarea id="edit-info" class="w-full" rows="4"></textarea>
+      </div>
+      <div class="form-group">
+        <label>Subject</label>
+        <input type="text" id="edit-subject" class="w-full">
+      </div>
+      <div class="form-group">
+        <label>Category</label>
+        <input type="text" id="edit-category" class="w-full">
+      </div>
+      <div class="form-group">
+        <label>Difficulty</label>
+        <input type="text" id="edit-difficulty" class="w-full">
+      </div>
+      <div class="form-group">
+        <label>Media Type</label>
+        <select id="edit-media-type" class="w-full">
+          <option value="">None</option>
+          <option value="image">Image</option>
+          <option value="audio">Audio</option>
+          <option value="video">Video</option>
+          <option value="pdf">PDF</option>
+        </select>
+      </div>
+      <div class="form-group full">
+        <label>Media URL / Path</label>
+        <input type="text" id="edit-media-src" class="w-full">
+      </div>
+      <div class="form-group full">
+        <label>Media Caption</label>
+        <input type="text" id="edit-media-caption" class="w-full">
+      </div>
+      <div class="form-group full">
+        <label>Correction note / reason</label>
+        <textarea id="edit-note" class="w-full" rows="2" placeholder="e.g. spelling error, answer too vague, outdated title"></textarea>
+      </div>
+    </div>
+    <div class="alert alert-info mt-12" id="edit-source-summary"></div>
+    <div class="flex-row mt-12">
+      <button class="btn btn-primary" onclick="saveGeneratedEdit()">✅ Save Edit & Track Correction</button>
+      <button class="btn btn-secondary" onclick="closeModal('modal-edit-question')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════ CORRECTIONS REVIEW MODAL -->
+<div class="modal-overlay hidden" id="modal-corrections">
+  <div class="modal" style="max-width:1000px">
+    <div class="modal-title">
+      Pending Corrections
+      <button class="modal-close" onclick="closeModal('modal-corrections')">✕</button>
+    </div>
+    <div id="corrections-review-body"></div>
+    <div class="flex-row mt-12">
+      <button class="btn btn-secondary" onclick="exportCorrectionsJSON()">🧾 Export Corrections JSON</button>
+      <button class="btn btn-danger" onclick="clearPendingCorrections()">🗑 Clear Pending Corrections</button>
+      <button class="btn btn-secondary" onclick="closeModal('modal-corrections')">Close</button>
+    </div>
+  </div>
+</div>
+
 <!-- ══════════════════════════════════ MAIN SCRIPT -->
 
 
@@ -1385,11 +1496,13 @@ let DB = {
     sectionOrder: { alternate: [], minute: [], buzzer: [] }
   },
   templates: [],
+  corrections: [],   // pending source corrections captured from generated-match edits
   lastGenerated: null // {sections: {alternate:[], minute:[], buzzer:[]}, matchName, timestamp}
 };
 
 let importWorkbook = null;
 let importRows = [];
+let importSourceFileName = '';
 let answersVisible = false;
 
 // ═══════════════════════════════════════════════════════════════
@@ -1407,6 +1520,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('cb-min').checked = true;
   document.getElementById('cb-buz').checked = true;
   updateAboutTab();
+  updateCorrectionCountUI();
 });
 
 function initNavTabs() {
@@ -2049,6 +2163,13 @@ function filterQuestionBank() {
   renderQuestionBank(qs);
 }
 
+// Keep generated matches editable without mutating the browser question bank.
+function cloneQuestionForMatch(q) {
+  const copy = clonePlain(q);
+  copy.__originalSnapshot = currentQuestionSnapshot(copy);
+  return copy;
+}
+
 // ═══════════════════════════════════════════════════════════════
 // MATCH GENERATION
 // ═══════════════════════════════════════════════════════════════
@@ -2140,7 +2261,7 @@ function generateMatch() {
           const chosen = catsFallback[Math.floor(Math.random()*catsFallback.length)];
           const picked = pickRandom(chosen.available, nPerSubject);
           picked.forEach(q => {
-            rows.push({ num: qNum++, q, subject: subj, category: chosen.cat, section: sectionName });
+            rows.push({ num: qNum++, q: cloneQuestionForMatch(q), subject: subj, category: chosen.cat, section: sectionName });
             usedInMatch.add(q.id);
             newUsageLog.push({ questionId: q.id, usedOn: new Date().toISOString(), section: sectionName, subject: subj, category: chosen.cat, matchName });
           });
@@ -2153,7 +2274,7 @@ function generateMatch() {
       const chosen = cats[Math.floor(Math.random()*cats.length)];
       const picked = pickRandom(chosen.available, nPerSubject);
       picked.forEach(q => {
-        rows.push({ num: qNum++, q, subject: subj, category: chosen.cat, section: sectionName });
+        rows.push({ num: qNum++, q: cloneQuestionForMatch(q), subject: subj, category: chosen.cat, section: sectionName });
         usedInMatch.add(q.id);
         newUsageLog.push({ questionId: q.id, usedOn: new Date().toISOString(), section: sectionName, subject: subj, category: chosen.cat, matchName });
       });
@@ -2190,7 +2311,7 @@ function generateMatch() {
 
       const picked = pickRandom(toUse, Math.min(nPerSubject, toUse.length));
       picked.forEach(q => {
-        rows.push({ num: qNum++, q, subject: subj, category: q.category, section: 'Buzzer' });
+        rows.push({ num: qNum++, q: cloneQuestionForMatch(q), subject: subj, category: q.category, section: 'Buzzer' });
         usedInMatch.add(q.id);
         newUsageLog.push({ questionId: q.id, usedOn: new Date().toISOString(), section: 'Buzzer', subject: subj, category: q.category, matchName });
       });
@@ -2212,6 +2333,7 @@ function generateMatch() {
   // Render
   renderMatch(sections, matchName, warnings);
   setMatchActionButtonsEnabled(true);
+  updateCorrectionCountUI();
   updateStats();
   updateUsageTab();
   updateAboutTab();
@@ -2260,7 +2382,8 @@ function renderMatch(sections, matchName, warnings) {
         <span class="text-small text-dim">${rows.length} question${rows.length!==1?'s':''}</span>
       </div>`;
 
-    rows.forEach(row => {
+    rows.forEach((row, rowIndex) => {
+      row.__index = rowIndex;
       const q = row.q;
       const mediaHtml = q.media ? `<div class="mt-8">
         ${q.media.type==='image'
@@ -2270,7 +2393,9 @@ function renderMatch(sections, matchName, warnings) {
         ${q.media.caption ? `<div class="text-small text-dim" style="margin-top:4px">${esc(q.media.caption)}</div>` : ''}
       </div>` : '';
 
-      html += `<div class="q-row">
+      const corrKey = makeCorrectionKey(sectionKeyForRow(row.section), row.num, q.id || '');
+      const isEdited = DB.corrections.some(c => c.correctionKey === corrKey && c.status === 'pending');
+      html += `<div class="q-row ${isEdited ? 'edited' : ''}">
         <div class="q-num">${row.num}</div>
         <div class="q-body">
           <div class="q-meta">
@@ -2278,6 +2403,8 @@ function renderMatch(sections, matchName, warnings) {
             <span class="text-dim">›</span>
             <span class="meta-cat">${esc(q.category)}</span>
             <span class="meta-id">#${esc(q.id||'')}</span>
+            ${isEdited ? '<span class="edit-mark">edited</span>' : ''}
+            <button class="btn btn-secondary btn-xs edit-btn-inline" onclick="openEditQuestionModal('${sectionKeyForRow(row.section)}', ${row.__index ?? 0})">✏️ Edit</button>
           </div>
           <div class="q-question">${esc(q.question)}</div>
           ${mediaHtml}
@@ -2939,7 +3066,7 @@ function printMatchPDF() {
 // MATCH JSON / .SCQ IMPORT / RESTORE
 // ═══════════════════════════════════════════════════════════════
 function setMatchActionButtonsEnabled(enabled) {
-  const ids = ['btn-export-html','btn-export-pdf','btn-export-json','btn-projector-view','btn-projector-manifest','btn-match-package'];
+  const ids = ['btn-export-html','btn-export-pdf','btn-export-json','btn-review-corrections','btn-export-corrections','btn-projector-view','btn-projector-manifest','btn-match-package'];
   ids.forEach(id => { const b = el(id); if (b) b.disabled = !enabled; });
 }
 
@@ -2978,7 +3105,8 @@ function rowToGeneratedRow(raw, sectionKey, idx) {
       answer: qSrc.answer || qSrc.answerText || r.answer || r.answerText || '',
       info: qSrc.info || r.info || '',
       difficulty: qSrc.difficulty || r.difficulty || '',
-      media
+      media,
+      source: qSrc.source || r.source || null
     }
   };
 }
@@ -3014,14 +3142,18 @@ function normalizeImportedMatchJSON(data) {
     sections,
     matchName: data.matchName || data.name || data.title || 'Imported Match',
     timestamp: data.generated || data.timestamp || data.importedAt || new Date().toISOString(),
-    warnings: Array.isArray(data.warnings) ? data.warnings : [`ℹ️ Imported ${totalRows} question${totalRows !== 1 ? 's' : ''} from match JSON.`]
+    warnings: Array.isArray(data.warnings) ? data.warnings : [`ℹ️ Imported ${totalRows} question${totalRows !== 1 ? 's' : ''} from match JSON.`],
+    corrections: Array.isArray(data.corrections) ? data.corrections : (data.corrections && Array.isArray(data.corrections.items) ? data.corrections.items : [])
   };
 }
 
 function restoreGeneratedMatch(imported) {
   DB.lastGenerated = imported;
+  if (Array.isArray(imported.corrections)) DB.corrections = imported.corrections;
+  updateCorrectionCountUI();
   renderMatch(imported.sections, imported.matchName, imported.warnings || []);
   setMatchActionButtonsEnabled(true);
+  updateCorrectionCountUI();
 
   const allRows = Object.values(imported.sections).flat();
   const subjSet = new Set(allRows.map(r => r.subject).filter(Boolean));
@@ -3034,16 +3166,26 @@ function restoreGeneratedMatch(imported) {
     <div class="stat-card"><div class="stat-value">${catSet.size}</div><div class="stat-label">Categories</div></div>
     <div class="stat-card"><div class="stat-value">${allRows.filter(r => r.q && r.q.media && r.q.media.src).length}</div><div class="stat-label">Media Items</div></div>
   `;
+  saveAllToLocalStorage();
   switchTab('generate');
 }
 
-async function extractMatchJSONFromZip(file) {
+async function extractSCQPackageData(file) {
   if (typeof JSZip === 'undefined') throw new Error('ZIP support is not available. Please import match.json directly.');
   const zip = await JSZip.loadAsync(file);
-  const candidates = Object.keys(zip.files).filter(name => /(^|\/)match\.json$/i.test(name) && !zip.files[name].dir);
-  if (!candidates.length) throw new Error('This .SCQ/ZIP package does not contain a match.json file.');
-  const text = await zip.files[candidates[0]].async('string');
-  return JSON.parse(text);
+  const matchCandidates = Object.keys(zip.files).filter(name => /(^|\/)match\.json$/i.test(name) && !zip.files[name].dir);
+  if (!matchCandidates.length) throw new Error('This .SCQ/ZIP package does not contain a match.json file.');
+  const match = JSON.parse(await zip.files[matchCandidates[0]].async('string'));
+
+  const corrCandidates = Object.keys(zip.files).filter(name => /(^|\/)corrections\.json$/i.test(name) && !zip.files[name].dir);
+  let corrections = [];
+  if (corrCandidates.length) {
+    const corrData = JSON.parse(await zip.files[corrCandidates[0]].async('string'));
+    corrections = Array.isArray(corrData) ? corrData : (Array.isArray(corrData.items) ? corrData.items : []);
+  } else if (match.corrections) {
+    corrections = Array.isArray(match.corrections) ? match.corrections : (Array.isArray(match.corrections.items) ? match.corrections.items : []);
+  }
+  return { match, corrections };
 }
 
 async function handleMatchImportFile(event) {
@@ -3054,13 +3196,15 @@ async function handleMatchImportFile(event) {
   try {
     let data;
     if (/\.(zip|scq)$/i.test(file.name) || file.type === 'application/zip') {
-      data = await extractMatchJSONFromZip(file);
+      const pkg = await extractSCQPackageData(file);
+      data = pkg.match;
+      if (pkg.corrections && pkg.corrections.length) data.corrections = pkg.corrections;
     } else {
       data = JSON.parse(await file.text());
     }
     const imported = normalizeImportedMatchJSON(data);
     restoreGeneratedMatch(imported);
-    alert(`Imported match: ${imported.matchName}\nQuestions restored: ${Object.values(imported.sections).flat().length}\n\nProjector View, Projector JSON, PDF/Print, and .SCQ export now use this imported match.`);
+    alert(`Imported match: ${imported.matchName}\nQuestions restored: ${Object.values(imported.sections).flat().length}\n\nProjector View, Projector JSON, PDF/Print, corrections, and .SCQ export now use this imported match.`);
   } catch (err) {
     alert('Could not import match/.SCQ file: ' + err.message);
   }
@@ -3146,9 +3290,11 @@ function makeFullMatchJSON() {
       answer: DB.settings.includeAnswersInExport ? r.q.answer : null,
       info: r.q.info || '',
       difficulty: r.q.difficulty,
-      media: r.q.media || null
+      media: r.q.media || null,
+      source: r.q.source || null
     }));
   });
+  fullMatch.corrections = makeCorrectionsPayload();
   return fullMatch;
 }
 
@@ -3227,12 +3373,13 @@ async function downloadMatchPackage() {
     fileFormat: '.scq',
     matchName: manifest.matchName || fullMatch.matchName || 'Match',
     exported: new Date().toISOString(),
-    contents: ['metadata.json','match.json','projector_manifest.json','report.html','print_report.html','projector.html','README.txt']
+    contents: ['metadata.json','match.json','projector_manifest.json','corrections.json','report.html','print_report.html','projector.html','README.txt']
   };
 
   zip.file('metadata.json', JSON.stringify(metadata, null, 2));
   zip.file('match.json', JSON.stringify(fullMatch, null, 2));
   zip.file('projector_manifest.json', JSON.stringify(manifest, null, 2));
+  zip.file('corrections.json', JSON.stringify(makeCorrectionsPayload(), null, 2));
   zip.file('report.html', reportHtml);
 
   const printReportHtml = reportHtml.replace('</body>', `<script>window.addEventListener('load',()=>setTimeout(()=>window.print(),700));<\/script>\n</body>`);
@@ -3255,6 +3402,217 @@ async function downloadMatchPackage() {
 
 function makeFallbackProjectorHtml() {
   return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>SCQ Projector</title></head><body style="font-family:system-ui;padding:2rem"><h1>SCQ Projector</h1><p>The live projector.html file could not be fetched when this package was created. Please copy projector.html from your GitHub repo beside this package's JSON files, or use the Projector View button in the main app.</p></body></html>`;
+}
+
+
+
+// ═══════════════════════════════════════════════════════════════
+// GENERATED MATCH EDITING + CORRECTION TRACKING
+// ═══════════════════════════════════════════════════════════════
+function sectionKeyForRow(sectionLabel) { return normalizeSectionKey(sectionLabel); }
+
+function makeCorrectionKey(sectionKey, num, questionId) {
+  return `${normalizeSectionKey(sectionKey)}::${questionId || ''}::${num || ''}`;
+}
+
+function getGeneratedRow(sectionKey, rowIndex) {
+  if (!DB.lastGenerated || !DB.lastGenerated.sections) return null;
+  const rows = DB.lastGenerated.sections[normalizeSectionKey(sectionKey)] || [];
+  return rows[Number(rowIndex)] || null;
+}
+
+function clonePlain(obj) { return JSON.parse(JSON.stringify(obj == null ? null : obj)); }
+
+function currentQuestionSnapshot(q) {
+  const media = q.media || null;
+  return {
+    subject: q.subject || '', category: q.category || '', question: q.question || '', answer: q.answer || '',
+    info: q.info || '', difficulty: q.difficulty || '',
+    mediaType: media ? (media.type || '') : '', mediaSrc: media ? (media.src || '') : '', mediaCaption: media ? (media.caption || '') : ''
+  };
+}
+
+function sourceOriginalSnapshot(q) {
+  return q.__originalSnapshot ? clonePlain(q.__originalSnapshot) : currentQuestionSnapshot(q);
+}
+
+function findCorrection(correctionKey) {
+  return (DB.corrections || []).find(c => c.correctionKey === correctionKey && c.status === 'pending');
+}
+
+function openEditQuestionModal(sectionKey, rowIndex) {
+  const row = getGeneratedRow(sectionKey, rowIndex);
+  if (!row || !row.q) return;
+  const q = row.q;
+  const media = q.media || {};
+  el('edit-section-key').value = normalizeSectionKey(sectionKey);
+  el('edit-row-index').value = String(rowIndex);
+  el('edit-question').value = q.question || '';
+  el('edit-answer').value = q.answer || '';
+  el('edit-info').value = q.info || '';
+  el('edit-subject').value = q.subject || row.subject || '';
+  el('edit-category').value = q.category || row.category || '';
+  el('edit-difficulty').value = q.difficulty || '';
+  el('edit-media-type').value = media.type || '';
+  el('edit-media-src').value = media.src || '';
+  el('edit-media-caption').value = media.caption || '';
+  const corr = findCorrection(makeCorrectionKey(sectionKey, row.num, q.id || ''));
+  el('edit-note').value = corr ? (corr.note || '') : '';
+  const src = q.source || {};
+  const sourceText = src.sourceType
+    ? `Source: ${src.sourceFileName || 'unknown file'} → ${src.sourceSheetName || 'unknown sheet'} → row ${src.sourceRowNumber || 'unknown'} (${q.id || 'no ID'})`
+    : `Source metadata unavailable for this item. Corrections will still track question ID ${q.id || 'no ID'}, but Excel row targeting may require review.`;
+  el('edit-source-summary').textContent = sourceText;
+  el('modal-edit-question').classList.remove('hidden');
+}
+
+function buildChanges(oldSnap, newSnap) {
+  const changes = {};
+  Object.keys(newSnap).forEach(field => {
+    const oldVal = oldSnap[field] == null ? '' : String(oldSnap[field]);
+    const newVal = newSnap[field] == null ? '' : String(newSnap[field]);
+    if (oldVal !== newVal) changes[field] = { old: oldSnap[field] ?? '', new: newSnap[field] ?? '' };
+  });
+  return changes;
+}
+
+function upsertCorrection(row, sectionKey, changes, note) {
+  const q = row.q;
+  const key = makeCorrectionKey(sectionKey, row.num, q.id || '');
+  DB.corrections = DB.corrections || [];
+  const existingIdx = DB.corrections.findIndex(c => c.correctionKey === key && c.status === 'pending');
+  const now = new Date().toISOString();
+  const record = {
+    correctionKey: key,
+    status: 'pending',
+    questionId: q.id || '',
+    matchName: DB.lastGenerated ? DB.lastGenerated.matchName : '',
+    section: row.section || normalizeSectionLabel(sectionKey),
+    sectionKey: normalizeSectionKey(sectionKey),
+    questionNumber: row.num,
+    subject: q.subject || row.subject || '',
+    category: q.category || row.category || '',
+    source: q.source || null,
+    note: note || '',
+    changes,
+    createdAt: existingIdx >= 0 ? DB.corrections[existingIdx].createdAt : now,
+    updatedAt: now,
+    revision: existingIdx >= 0 ? (Number(DB.corrections[existingIdx].revision || 1) + 1) : 1
+  };
+  if (existingIdx >= 0) DB.corrections[existingIdx] = record;
+  else DB.corrections.push(record);
+}
+
+function saveGeneratedEdit() {
+  const sectionKey = el('edit-section-key').value;
+  const rowIndex = Number(el('edit-row-index').value);
+  const row = getGeneratedRow(sectionKey, rowIndex);
+  if (!row || !row.q) return;
+  let q = row.q;
+  if (DB.questions.includes(q)) {
+    q = cloneQuestionForMatch(q);
+    row.q = q;
+  }
+  if (!q.__originalSnapshot) q.__originalSnapshot = sourceOriginalSnapshot(q);
+  const original = sourceOriginalSnapshot(q);
+
+  const mediaType = el('edit-media-type').value.trim();
+  const mediaSrc = el('edit-media-src').value.trim();
+  const mediaCaption = el('edit-media-caption').value.trim();
+  const newSnap = {
+    question: el('edit-question').value.trim(),
+    answer: el('edit-answer').value.trim(),
+    info: el('edit-info').value.trim(),
+    subject: el('edit-subject').value.trim(),
+    category: el('edit-category').value.trim(),
+    difficulty: el('edit-difficulty').value.trim(),
+    mediaType, mediaSrc, mediaCaption
+  };
+  const changes = buildChanges(original, newSnap);
+  if (!Object.keys(changes).length) {
+    alert('No changes detected.');
+    return;
+  }
+
+  q.question = newSnap.question;
+  q.answer = newSnap.answer;
+  q.info = newSnap.info;
+  q.subject = newSnap.subject;
+  q.category = newSnap.category;
+  q.difficulty = newSnap.difficulty;
+  row.subject = newSnap.subject;
+  row.category = newSnap.category;
+  if (mediaType && mediaSrc) q.media = { type: mediaType, src: mediaSrc, caption: mediaCaption };
+  else q.media = null;
+
+  upsertCorrection(row, sectionKey, changes, el('edit-note').value.trim());
+  saveAllToLocalStorage();
+  updateCorrectionCountUI();
+  renderMatch(DB.lastGenerated.sections, DB.lastGenerated.matchName, DB.lastGenerated.warnings || []);
+  closeModal('modal-edit-question');
+}
+
+function makeCorrectionsPayload() {
+  const items = (DB.corrections || []).filter(c => c.status === 'pending');
+  return {
+    app: 'SCQ Match Generator',
+    type: 'source-corrections',
+    version: 1,
+    matchName: DB.lastGenerated ? DB.lastGenerated.matchName : '',
+    exported: new Date().toISOString(),
+    count: items.length,
+    items
+  };
+}
+
+function updateCorrectionCountUI() {
+  const count = (DB.corrections || []).filter(c => c.status === 'pending').length;
+  const pill = el('correction-count');
+  if (pill) pill.textContent = String(count);
+  const btn = el('btn-export-corrections');
+  if (btn) btn.disabled = count === 0;
+}
+
+function showCorrectionsModal() {
+  renderCorrectionsReview();
+  el('modal-corrections').classList.remove('hidden');
+}
+
+function renderCorrectionsReview() {
+  const items = (DB.corrections || []).filter(c => c.status === 'pending');
+  const body = el('corrections-review-body');
+  if (!items.length) {
+    body.innerHTML = `<div class="empty-state"><div class="es-icon">📝</div><div class="es-title">No pending corrections</div><div class="es-sub">Edits made to generated match questions will appear here.</div></div>`;
+    return;
+  }
+  body.innerHTML = `<div class="alert alert-info">${items.length} pending correction${items.length !== 1 ? 's' : ''}. These do not overwrite your source file. They are exported for a later correction app.</div>
+    <div class="data-table-wrap" style="max-height:520px;overflow:auto">
+    <table class="corrections-table"><thead><tr><th>Item</th><th>Source</th><th>Changes</th><th>Note</th><th>Status</th></tr></thead><tbody>
+    ${items.map(c => {
+      const changesHtml = Object.entries(c.changes || {}).map(([field, diff]) => `<div><strong>${esc(field)}</strong><br><span class="change-old">Old: ${esc(diff.old)}</span><br><span class="change-new">New: ${esc(diff.new)}</span></div>`).join('<hr class="divider">');
+      const src = c.source || {};
+      const srcText = src.sourceType ? `${esc(src.sourceFileName || '')}<br>${esc(src.sourceSheetName || '')}, row ${esc(src.sourceRowNumber || '')}` : '<span class="text-dim">No source metadata</span>';
+      return `<tr><td><strong>${esc(c.section)} #${esc(c.questionNumber)}</strong><br>${esc(c.subject)}<br><span class="text-mono text-dim">${esc(c.questionId)}</span></td><td>${srcText}</td><td>${changesHtml || '—'}</td><td>${esc(c.note || '')}</td><td><span class="status-pill">${esc(c.status)}</span><br><span class="text-dim">rev ${esc(c.revision || 1)}</span></td></tr>`;
+    }).join('')}</tbody></table></div>`;
+}
+
+function exportCorrectionsJSON() {
+  const payload = makeCorrectionsPayload();
+  if (!payload.count) {
+    alert('There are no pending corrections to export.');
+    return;
+  }
+  const safe = (payload.matchName || 'match').replace(/[^a-zA-Z0-9_-]/g,'_');
+  downloadFile(safe + '_corrections.json', JSON.stringify(payload, null, 2), 'application/json');
+}
+
+function clearPendingCorrections() {
+  if (!confirm('Clear all pending corrections from this browser session? This will not change the generated match text.')) return;
+  DB.corrections = [];
+  saveAllToLocalStorage();
+  updateCorrectionCountUI();
+  renderCorrectionsReview();
+  if (DB.lastGenerated) renderMatch(DB.lastGenerated.sections, DB.lastGenerated.matchName, DB.lastGenerated.warnings || []);
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -3303,6 +3661,7 @@ function handleExcelFile(e) {
 }
 
 function processExcelFile(file) {
+  importSourceFileName = file && file.name ? file.name : '';
   const reader = new FileReader();
   reader.onload = evt => {
     try {
@@ -3397,11 +3756,28 @@ function previewImport() {
     const mPath    = !isNaN(mPathIdx)    ? String(row[mPathIdx]    || '').trim() : '';
     const mCaption = !isNaN(mCaptionIdx) ? String(row[mCaptionIdx] || '').trim() : '';
     const media = (mType && mPath) ? { type: mType, src: mPath, caption: mCaption } : null;
+    const currentSheetName = el('sheet-select').value || '';
+    const sourceColumns = {};
+    [
+      ['subject', subjIdx], ['category', catIdx], ['question', qIdx], ['answer', aIdx],
+      ['difficulty', dIdx], ['id', idIdx], ['info', infoIdx], ['media_type', mTypeIdx],
+      ['media_path', mPathIdx], ['media_caption', mCaptionIdx]
+    ].forEach(([field, idx]) => {
+      if (!isNaN(idx) && headers[idx]) sourceColumns[field] = { index: idx, name: headers[idx].name };
+    });
     preview.push({
       subject: s, category: c, question: q, answer: a,
       difficulty: isNaN(dIdx) ? 'Medium' : (String(row[dIdx]||'Medium').trim()||'Medium'),
       id: isNaN(idIdx) ? null : String(row[idIdx]||'').trim(),
-      info, media
+      info, media,
+      source: {
+        sourceType: 'excel',
+        sourceFileName: importSourceFileName || '',
+        sourceSheetName: currentSheetName,
+        sourceRowNumber: i + 1,
+        sourceRowIndex: i,
+        sourceColumns
+      }
     });
   }
 
@@ -3445,7 +3821,7 @@ function finalizeImport() {
     if (r.media && r.media.type && r.media.src) {
       media = { type: r.media.type, src: r.media.src, caption: r.media.caption || '' };
     }
-    return { id, subject: r.subject, category: r.category, question: r.question, answer: r.answer, difficulty: r.difficulty || 'Medium', info: r.info || '', media };
+    return { id, subject: r.subject, category: r.category, question: r.question, answer: r.answer, difficulty: r.difficulty || 'Medium', info: r.info || '', media, source: r.source || null };
   });
 
   DB.questions = [...DB.questions, ...newQuestions];
@@ -3799,6 +4175,7 @@ function saveAllToLocalStorage() {
     localStorage.setItem('scq_usageLog', JSON.stringify(DB.usageLog));
     localStorage.setItem('scq_settings', JSON.stringify(DB.settings));
     localStorage.setItem('scq_templates', JSON.stringify(DB.templates));
+    localStorage.setItem('scq_corrections', JSON.stringify(DB.corrections || []));
     localStorage.setItem('scq_savedAt', new Date().toISOString());
     const ts = new Date().toLocaleTimeString();
     const label = el('last-saved-label');
@@ -3828,6 +4205,9 @@ function loadFromLocalStorage() {
     }
     const tpls = localStorage.getItem('scq_templates');
     if (tpls) DB.templates = JSON.parse(tpls);
+    const corrs = localStorage.getItem('scq_corrections');
+    if (corrs) DB.corrections = JSON.parse(corrs);
+    updateCorrectionCountUI();
     const savedAt = localStorage.getItem('scq_savedAt');
     if (savedAt && el('last-saved-label')) {
       el('last-saved-label').textContent = new Date(savedAt).toLocaleString();
@@ -3855,7 +4235,7 @@ function confirmClearAll() {
     DB = { questions:[], catalog:{}, usageLog:[], usedIds:new Set(),
       settings:{alternateQuestionsPerSubject:2,minuteQuestionsPerSubject:2,buzzerQuestionsPerSubject:1,
         avoidPreviouslyUsed:true,allowFallbackCategory:false,randomizeSubjectOrder:false,includeAnswersInExport:true},
-      templates:[], lastGenerated:null };
+      templates:[], corrections:[], lastGenerated:null };
     initDefaultTemplates();
     renderSubjectGrid();
     renderTemplates();
