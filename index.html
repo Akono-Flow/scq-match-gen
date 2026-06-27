@@ -710,6 +710,121 @@ input[type="file"] { display: none; }
 .settings-row-desc { font-size: 11px; color: var(--text3); margin-top: 2px; }
 .num-input { width: 70px; }
 
+
+/* ─── Settings Dashboard Refresh ─────────────────────────────── */
+.settings-dashboard { display: flex; flex-direction: column; gap: 16px; }
+.settings-hero {
+  display: grid;
+  grid-template-columns: minmax(260px, 0.85fr) minmax(360px, 1.15fr);
+  gap: 16px;
+}
+@media (max-width: 980px) { .settings-hero { grid-template-columns: 1fr; } }
+.settings-section-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius2);
+  padding: 18px;
+}
+.settings-section-card.featured { border-color: rgba(232,184,75,0.28); background: linear-gradient(180deg, rgba(232,184,75,0.06), var(--bg2)); }
+.settings-section-card .card-title { margin-bottom: 6px; }
+.settings-section-desc { color: var(--text3); font-size: 12px; margin-bottom: 14px; }
+.setting-group-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(255px, 1fr)); gap: 12px; }
+.setting-group {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius2);
+  padding: 14px;
+}
+.setting-group-title {
+  color: var(--gold);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+  display: flex;
+  gap: 7px;
+  align-items: center;
+}
+.setting-control {
+  display: grid;
+  grid-template-columns: 1fr minmax(130px, 190px);
+  gap: 12px;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(42,53,71,0.72);
+}
+.setting-control:last-child { border-bottom: none; padding-bottom: 0; }
+.setting-control:first-of-type { padding-top: 0; }
+.setting-control select,
+.setting-control input[type="text"],
+.setting-control input[type="number"] { width: 100%; }
+.setting-control.full { grid-template-columns: 1fr; }
+.setting-control.compact { grid-template-columns: 1fr auto; }
+.setting-label { font-size: 13px; font-weight: 700; color: var(--text); }
+.setting-help { font-size: 11px; color: var(--text3); margin-top: 2px; line-height: 1.35; }
+.setting-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 9px 0;
+  border-bottom: 1px solid rgba(42,53,71,0.72);
+}
+.setting-check:last-child { border-bottom: none; padding-bottom: 0; }
+.setting-check input { margin-top: 2px; flex-shrink: 0; }
+.setting-check .setting-label { display: block; }
+.question-count-grid { display: grid; gap: 10px; }
+.question-count-card {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px;
+  display: grid;
+  grid-template-columns: 1fr 84px;
+  gap: 12px;
+  align-items: center;
+}
+.question-count-card input { width: 100%; text-align: center; }
+.settings-side-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 900px) { .settings-side-grid { grid-template-columns: 1fr; } }
+.order-suite {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+@media (max-width: 1000px) { .order-suite { grid-template-columns: 1fr; } }
+.order-section-card {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius2);
+  padding: 14px;
+  min-width: 0;
+}
+.order-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.order-section-title {
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-size: 12px;
+}
+.order-section-meta { color: var(--text3); font-size: 11px; }
+.order-list {
+  min-height: 150px;
+  max-height: 310px;
+  overflow-y: auto;
+  padding: 8px;
+  background: rgba(13,17,23,0.45);
+}
+.order-actions { display: grid; grid-template-columns: repeat(auto-fit, minmax(94px, 1fr)); gap: 7px; margin-top: 10px; }
+.order-actions .btn { justify-content: center; }
+.tpl-manage-item { background: var(--bg3); }
+
 /* ─── Generator tab layout ────────────────────────────────────── */
 .gen-layout { display: grid; grid-template-columns: 280px 1fr; gap: 16px; }
 @media (max-width: 800px) { .gen-layout { grid-template-columns: 1fr; } }
@@ -1570,183 +1685,242 @@ hr.divider { border: none; border-top: 1px solid var(--border); margin: 14px 0; 
 
 <!-- ────────────── TAB: SETTINGS ────────────── -->
 <div id="tab-settings" class="tab-panel">
+  <div class="settings-dashboard">
 
-  <!-- Row 1: generation knobs -->
-  <div class="settings-grid" style="margin-bottom:16px">
-    <div class="card">
-      <div class="card-title"><span class="ct-icon">🔢</span>Questions per Subject</div>
-      <div class="settings-row">
-        <div><div class="settings-row-label">Alternate</div><div class="settings-row-desc">Pairs from same category</div></div>
-        <input type="number" class="num-input" id="set-alt-count" min="1" max="10" value="2" onchange="saveSettings()">
+    <div class="settings-hero">
+      <div class="settings-section-card featured">
+        <div class="card-title"><span class="ct-icon">🔢</span>Questions per Subject</div>
+        <p class="settings-section-desc">Set how many questions each selected subject contributes to each match section.</p>
+        <div class="question-count-grid">
+          <div class="question-count-card">
+            <div>
+              <div class="setting-label">Alternate</div>
+              <div class="setting-help">Pairs from the same category.</div>
+            </div>
+            <input type="number" class="num-input" id="set-alt-count" min="1" max="10" value="2" onchange="saveSettings()">
+          </div>
+          <div class="question-count-card">
+            <div>
+              <div class="setting-label">Minute</div>
+              <div class="setting-help">Pairs from the same category.</div>
+            </div>
+            <input type="number" class="num-input" id="set-min-count" min="1" max="10" value="2" onchange="saveSettings()">
+          </div>
+          <div class="question-count-card">
+            <div>
+              <div class="setting-label">Buzzer</div>
+              <div class="setting-help">Usually one question per subject.</div>
+            </div>
+            <input type="number" class="num-input" id="set-buz-count" min="1" max="10" value="1" onchange="saveSettings()">
+          </div>
+        </div>
       </div>
-      <div class="settings-row" style="margin-top:6px">
-        <div><div class="settings-row-label">Minute</div><div class="settings-row-desc">Pairs from same category</div></div>
-        <input type="number" class="num-input" id="set-min-count" min="1" max="10" value="2" onchange="saveSettings()">
-      </div>
-      <div class="settings-row" style="margin-top:6px">
-        <div><div class="settings-row-label">Buzzer</div><div class="settings-row-desc">One per subject</div></div>
-        <input type="number" class="num-input" id="set-buz-count" min="1" max="10" value="1" onchange="saveSettings()">
-      </div>
-    </div>
 
-    <div class="card">
-      <div class="card-title"><span class="ct-icon">⚙️</span>Generation Options</div>
-      <div class="flex-col">
-        <label class="checkbox-row"><input type="checkbox" id="set-avoid-used" checked onchange="saveSettings()"> <label for="set-avoid-used">Avoid previously used questions</label></label>
-        <label class="checkbox-row"><input type="checkbox" id="set-fallback" onchange="saveSettings()"> <label for="set-fallback">Allow fallback to another category if needed</label></label>
-        <label class="checkbox-row"><input type="checkbox" id="set-include-answers" checked onchange="saveSettings()"> <label for="set-include-answers">Include answers in export</label></label>
-        <label class="switch-row block" title="Controls whether generated questions are written to the Usage tab.">
-          <span class="switch-text">
-            <span class="switch-title">Track generated questions</span>
-            <span class="switch-desc">Turn off for drills/training sets you do not want marked as used.</span>
-          </span>
-          <span class="light-switch">
-            <input type="checkbox" id="set-track-usage-settings" checked onchange="toggleUsageTracking(this.checked)">
-            <span class="light-slider"></span>
-          </span>
-        </label>
-        <hr class="divider">
-        <div class="settings-row compact">
-          <div><div class="settings-row-label">Generation mode</div><div class="settings-row-desc">Match mode keeps normal reuse protection; training mode is useful for drilling.</div></div>
-          <select id="set-generation-mode" onchange="applyGenerationModePreset(this.value)">
-            <option value="match">Match</option>
-            <option value="training">Training / Drill</option>
-          </select>
-        </div>
-        <div class="settings-row compact">
-          <div><div class="settings-row-label">Media rule</div><div class="settings-row-desc">Choose whether generated questions may include media.</div></div>
-          <select id="set-media-policy" onchange="saveSettings()">
-            <option value="any">Any questions</option>
-            <option value="mediaOnly">Media only</option>
-            <option value="noMedia">No media</option>
-          </select>
-        </div>
-        <div class="settings-row compact">
-          <div><div class="settings-row-label">Difficulty rule</div><div class="settings-row-desc">Filter or balance by difficulty where difficulty metadata exists.</div></div>
-          <select id="set-difficulty-policy" onchange="saveSettings()">
-            <option value="any">Any difficulty</option>
-            <option value="balanced">Balanced mix</option>
-            <option value="Easy">Easy only</option>
-            <option value="Medium">Medium only</option>
-            <option value="Hard">Hard only</option>
-          </select>
-        </div>
-        <div class="settings-row compact">
-          <div><div class="settings-row-label">Category strategy</div><div class="settings-row-desc">Random is simplest; balanced spreads selections across categories.</div></div>
-          <select id="set-category-policy" onchange="saveSettings()">
-            <option value="random">Random category</option>
-            <option value="balanced">Balanced categories</option>
-          </select>
-        </div>
-        <div class="settings-row compact">
-          <div><div class="settings-row-label">Selection priority</div><div class="settings-row-desc">Decides which candidates are preferred before random tie-breaking.</div></div>
-          <select id="set-selection-priority" onchange="saveSettings()">
-            <option value="random">Random</option>
-            <option value="leastUsed">Least used first</option>
-            <option value="newest">Newest/imported later first</option>
-            <option value="oldest">Oldest/imported earlier first</option>
-          </select>
-        </div>
-        <label class="checkbox-row"><input type="checkbox" id="set-exact-count" onchange="saveSettings()"> <label for="set-exact-count">Require exact question counts; warn/skip if not possible</label></label>
-        <label class="checkbox-row"><input type="checkbox" id="set-no-repeat-category" onchange="saveSettings()"> <label for="set-no-repeat-category">Prefer no repeated category within each section</label></label>
-        <label class="checkbox-row"><input type="checkbox" id="set-use-pair-groups" onchange="saveSettings()"> <label for="set-use-pair-groups">Use pair/group IDs when available for corresponding questions</label></label>
-        <div class="settings-row compact">
-          <div><div class="settings-row-label">Random seed</div><div class="settings-row-desc">Optional. Same seed + same bank + same settings gives repeatable selections.</div></div>
-          <input type="text" id="set-random-seed" placeholder="e.g. finals-2026" onchange="saveSettings()">
+      <div class="settings-section-card">
+        <div class="card-title"><span class="ct-icon">⚙️</span>Core Generation Options</div>
+        <p class="settings-section-desc">Control reuse protection, exports, and whether generated questions should be written to usage history.</p>
+        <div class="setting-group-grid">
+          <div class="setting-group">
+            <div class="setting-group-title">🛡️ Reuse Protection</div>
+            <label class="setting-check">
+              <input type="checkbox" id="set-avoid-used" checked onchange="saveSettings()">
+              <span><span class="setting-label">Avoid previously used questions</span><span class="setting-help">Uses the Usage tab history when selecting candidates.</span></span>
+            </label>
+            <label class="setting-check">
+              <input type="checkbox" id="set-fallback" onchange="saveSettings()">
+              <span><span class="setting-label">Allow fallback category</span><span class="setting-help">Permits another category if the selected category cannot satisfy the request.</span></span>
+            </label>
+          </div>
+
+          <div class="setting-group">
+            <div class="setting-group-title">📦 Output & Tracking</div>
+            <label class="setting-check">
+              <input type="checkbox" id="set-include-answers" checked onchange="saveSettings()">
+              <span><span class="setting-label">Include answers in export</span><span class="setting-help">Keeps answer data in exported match files and reports.</span></span>
+            </label>
+            <label class="switch-row block" title="Controls whether generated questions are written to the Usage tab.">
+              <span class="switch-text">
+                <span class="switch-title">Track generated questions</span>
+                <span class="switch-desc">Turn off for drills/training sets you do not want marked as used.</span>
+              </span>
+              <span class="light-switch">
+                <input type="checkbox" id="set-track-usage-settings" checked onchange="toggleUsageTracking(this.checked)">
+                <span class="light-slider"></span>
+              </span>
+            </label>
+          </div>
         </div>
       </div>
     </div>
 
-    <div class="card">
-      <div class="card-title"><span class="ct-icon">💾</span>Data Management</div>
-      <div class="flex-col">
-        <button class="btn btn-secondary btn-sm" onclick="saveAllToLocalStorage()">💾 Save All to Browser Storage</button>
-        <button class="btn btn-danger btn-sm" onclick="confirmClearAll()">⚠️ Clear All Data</button>
+    <div class="settings-section-card">
+      <div class="card-title"><span class="ct-icon">🧠</span>Advanced Selection Rules</div>
+      <p class="settings-section-desc">Fine-tune the generator for match mode, training mode, media needs, category behavior, difficulty balance, and repeatable selection.</p>
+      <div class="setting-group-grid">
+        <div class="setting-group">
+          <div class="setting-group-title">🎯 Mode & Priority</div>
+          <div class="setting-control">
+            <div><div class="setting-label">Generation mode</div><div class="setting-help">Match mode keeps normal reuse protection; training mode is useful for drilling.</div></div>
+            <select id="set-generation-mode" onchange="applyGenerationModePreset(this.value)">
+              <option value="match">Match</option>
+              <option value="training">Training / Drill</option>
+            </select>
+          </div>
+          <div class="setting-control">
+            <div><div class="setting-label">Selection priority</div><div class="setting-help">Decides which candidates are preferred before random tie-breaking.</div></div>
+            <select id="set-selection-priority" onchange="saveSettings()">
+              <option value="random">Random</option>
+              <option value="leastUsed">Least used first</option>
+              <option value="newest">Newest/imported later first</option>
+              <option value="oldest">Oldest/imported earlier first</option>
+            </select>
+          </div>
+          <div class="setting-control">
+            <div><div class="setting-label">Random seed</div><div class="setting-help">Same seed + same bank + same settings gives repeatable selections.</div></div>
+            <input type="text" id="set-random-seed" placeholder="e.g. finals-2026" onchange="saveSettings()">
+          </div>
+        </div>
+
+        <div class="setting-group">
+          <div class="setting-group-title">🖼️ Media & Difficulty</div>
+          <div class="setting-control">
+            <div><div class="setting-label">Media rule</div><div class="setting-help">Choose whether generated questions may include media.</div></div>
+            <select id="set-media-policy" onchange="saveSettings()">
+              <option value="any">Any questions</option>
+              <option value="mediaOnly">Media only</option>
+              <option value="noMedia">No media</option>
+            </select>
+          </div>
+          <div class="setting-control">
+            <div><div class="setting-label">Difficulty rule</div><div class="setting-help">Filter or balance by difficulty where difficulty metadata exists.</div></div>
+            <select id="set-difficulty-policy" onchange="saveSettings()">
+              <option value="any">Any difficulty</option>
+              <option value="balanced">Balanced mix</option>
+              <option value="Easy">Easy only</option>
+              <option value="Medium">Medium only</option>
+              <option value="Hard">Hard only</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="setting-group">
+          <div class="setting-group-title">🗂️ Category Rules</div>
+          <div class="setting-control">
+            <div><div class="setting-label">Category strategy</div><div class="setting-help">Random is simplest; balanced spreads selections across categories.</div></div>
+            <select id="set-category-policy" onchange="saveSettings()">
+              <option value="random">Random category</option>
+              <option value="balanced">Balanced categories</option>
+            </select>
+          </div>
+          <label class="setting-check">
+            <input type="checkbox" id="set-no-repeat-category" onchange="saveSettings()">
+            <span><span class="setting-label">Prefer no repeated category</span><span class="setting-help">Tries to avoid repeating the same category within each section.</span></span>
+          </label>
+          <label class="setting-check">
+            <input type="checkbox" id="set-exact-count" onchange="saveSettings()">
+            <span><span class="setting-label">Require exact question counts</span><span class="setting-help">Warn or skip when the generator cannot meet the requested count.</span></span>
+          </label>
+        </div>
+
+        <div class="setting-group">
+          <div class="setting-group-title">🔗 Pairing Rules</div>
+          <label class="setting-check">
+            <input type="checkbox" id="set-use-pair-groups" onchange="saveSettings()">
+            <span><span class="setting-label">Use pair/group IDs when available</span><span class="setting-help">Useful when corresponding questions should be selected together for fairness.</span></span>
+          </label>
+          <div class="alert alert-info" style="margin-top:10px;margin-bottom:0">
+            <span>ℹ️</span><span>Pairing only activates for records that already include compatible pair or group metadata.</span>
+          </div>
+        </div>
       </div>
-      <div class="mt-8 text-small text-dim">Last saved: <span id="last-saved-label">Never</span></div>
     </div>
 
-    <div class="card">
-      <div class="card-title"><span class="ct-icon">📋</span>About</div>
-      <div class="text-small text-dim flex-col" style="gap:4px">
-        <div>SCQ Match Generator v1.0</div>
-        <div>School's Challenge Quiz — Jamaica</div>
-        <div>Static GitHub Pages app — no server required</div>
-        <div class="mt-8">Questions in bank: <span class="text-gold" id="about-q-count">0</span></div>
-        <div>Subjects loaded: <span class="text-gold" id="about-s-count">0</span></div>
-        <div>Usage records: <span class="text-gold" id="about-u-count">0</span></div>
+    <div class="settings-side-grid">
+      <div class="settings-section-card">
+        <div class="card-title"><span class="ct-icon">💾</span>Data Management</div>
+        <p class="settings-section-desc">Save the current app state to browser storage or clear all local data when starting over.</p>
+        <div class="flex-col">
+          <button class="btn btn-secondary btn-sm" onclick="saveAllToLocalStorage()">💾 Save All to Browser Storage</button>
+          <button class="btn btn-danger btn-sm" onclick="confirmClearAll()">⚠️ Clear All Data</button>
+        </div>
+        <div class="mt-12 text-small text-dim">Last saved: <span id="last-saved-label">Never</span></div>
+      </div>
+
+      <div class="settings-section-card">
+        <div class="card-title"><span class="ct-icon">📋</span>About</div>
+        <p class="settings-section-desc">Current application and loaded-data status.</p>
+        <div class="stat-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:12px">
+          <div class="stat-card"><div class="stat-value" id="about-q-count">0</div><div class="stat-label">Questions</div></div>
+          <div class="stat-card"><div class="stat-value" id="about-s-count">0</div><div class="stat-label">Subjects</div></div>
+          <div class="stat-card"><div class="stat-value" id="about-u-count">0</div><div class="stat-label">Usage</div></div>
+        </div>
+        <div class="text-small text-dim flex-col" style="gap:4px">
+          <div>SCQ Match Generator v1.0</div>
+          <div>School's Challenge Quiz — Jamaica</div>
+          <div>Static GitHub Pages app — no server required</div>
+        </div>
       </div>
     </div>
+
+    <div class="settings-section-card featured">
+      <div class="card-title"><span class="ct-icon">🔀</span>Subject Order per Section</div>
+      <p class="settings-section-desc">Drag subjects to set the exact reading order for each section. Pull from the Generate tab to quickly build the order from currently selected subjects.</p>
+      <div class="order-suite">
+        <div class="order-section-card">
+          <div class="order-section-head">
+            <div>
+              <div class="order-section-title" style="color:var(--alt-col)">▮ Alternate</div>
+              <div class="order-section-meta">Independent subject order</div>
+            </div>
+          </div>
+          <div class="order-list" id="order-list-alternate" ondragover="orderDragOver(event,'alternate')" ondragleave="orderDragLeave(event,'alternate')" ondrop="orderDrop(event,'alternate')"></div>
+          <div class="order-actions">
+            <button class="btn btn-secondary btn-xs" onclick="pullFromGenerator('alternate')">↑ From Generator</button>
+            <button class="btn btn-secondary btn-xs" onclick="clearOrderList('alternate')">✕ Clear</button>
+          </div>
+        </div>
+
+        <div class="order-section-card">
+          <div class="order-section-head">
+            <div>
+              <div class="order-section-title" style="color:var(--min-col)">▮ Minute</div>
+              <div class="order-section-meta">Can copy Alternate order</div>
+            </div>
+          </div>
+          <div class="order-list" id="order-list-minute" ondragover="orderDragOver(event,'minute')" ondragleave="orderDragLeave(event,'minute')" ondrop="orderDrop(event,'minute')"></div>
+          <div class="order-actions">
+            <button class="btn btn-secondary btn-xs" onclick="pullFromGenerator('minute')">↑ From Generator</button>
+            <button class="btn btn-secondary btn-xs" onclick="clearOrderList('minute')">✕ Clear</button>
+            <button class="btn btn-secondary btn-xs" onclick="copyOrderList('alternate','minute')">← Copy Alt</button>
+          </div>
+        </div>
+
+        <div class="order-section-card">
+          <div class="order-section-head">
+            <div>
+              <div class="order-section-title" style="color:var(--buz-col)">▮ Buzzer</div>
+              <div class="order-section-meta">Can copy Alternate order</div>
+            </div>
+          </div>
+          <div class="order-list" id="order-list-buzzer" ondragover="orderDragOver(event,'buzzer')" ondragleave="orderDragLeave(event,'buzzer')" ondrop="orderDrop(event,'buzzer')"></div>
+          <div class="order-actions">
+            <button class="btn btn-secondary btn-xs" onclick="pullFromGenerator('buzzer')">↑ From Generator</button>
+            <button class="btn btn-secondary btn-xs" onclick="clearOrderList('buzzer')">✕ Clear</button>
+            <button class="btn btn-secondary btn-xs" onclick="copyOrderList('alternate','buzzer')">← Copy Alt</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-section-card">
+      <div class="card-title"><span class="ct-icon">📋</span>Manage Templates</div>
+      <p class="settings-section-desc">Templates are created from the Generate tab. They preserve selected sections, match setup, and subject selections for reuse.</p>
+      <div class="tpl-manage-list" id="tpl-manage-list">
+        <div class="text-dim text-small">No templates saved yet.</div>
+      </div>
+    </div>
+
   </div>
-
-  <!-- Row 2: per-section subject order -->
-  <div class="card" style="margin-bottom:16px">
-    <div class="card-title"><span class="ct-icon">🔀</span>Subject Order per Section</div>
-    <p class="text-small text-dim" style="margin-bottom:12px">
-      Drag to reorder subjects within each section. Each section can have its own independent order.
-      Click <strong>↑ From Generator</strong> to pull in the subjects currently selected on the Generate tab.
-      The section order overrides alphabetical order when generating a match.
-    </p>
-    <div class="section-order-grid">
-      <!-- Alternate -->
-      <div>
-        <div class="order-col-title">
-          <span style="color:var(--alt-col)">▮</span> Alternate
-        </div>
-        <div class="order-list" id="order-list-alternate"
-          ondragover="orderDragOver(event,'alternate')"
-          ondragleave="orderDragLeave(event,'alternate')"
-          ondrop="orderDrop(event,'alternate')">
-        </div>
-        <div class="order-actions">
-          <button class="btn btn-secondary btn-xs" onclick="pullFromGenerator('alternate')">↑ From Generator</button>
-          <button class="btn btn-secondary btn-xs" onclick="clearOrderList('alternate')">✕ Clear</button>
-        </div>
-      </div>
-      <!-- Minute -->
-      <div>
-        <div class="order-col-title">
-          <span style="color:var(--min-col)">▮</span> Minute
-        </div>
-        <div class="order-list" id="order-list-minute"
-          ondragover="orderDragOver(event,'minute')"
-          ondragleave="orderDragLeave(event,'minute')"
-          ondrop="orderDrop(event,'minute')">
-        </div>
-        <div class="order-actions">
-          <button class="btn btn-secondary btn-xs" onclick="pullFromGenerator('minute')">↑ From Generator</button>
-          <button class="btn btn-secondary btn-xs" onclick="clearOrderList('minute')">✕ Clear</button>
-          <button class="btn btn-secondary btn-xs" onclick="copyOrderList('alternate','minute')">← Copy Alt</button>
-        </div>
-      </div>
-      <!-- Buzzer -->
-      <div>
-        <div class="order-col-title">
-          <span style="color:var(--buz-col)">▮</span> Buzzer
-        </div>
-        <div class="order-list" id="order-list-buzzer"
-          ondragover="orderDragOver(event,'buzzer')"
-          ondragleave="orderDragLeave(event,'buzzer')"
-          ondrop="orderDrop(event,'buzzer')">
-        </div>
-        <div class="order-actions">
-          <button class="btn btn-secondary btn-xs" onclick="pullFromGenerator('buzzer')">↑ From Generator</button>
-          <button class="btn btn-secondary btn-xs" onclick="clearOrderList('buzzer')">✕ Clear</button>
-          <button class="btn btn-secondary btn-xs" onclick="copyOrderList('alternate','buzzer')">← Copy Alt</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Row 3: template management -->
-  <div class="card">
-    <div class="card-title"><span class="ct-icon">📋</span>Manage Templates</div>
-    <p class="text-small text-dim" style="margin-bottom:10px">Templates are created from the Generate tab using the "Save Current as Template" button. They capture the match name, selected sections, and subject list.</p>
-    <div class="tpl-manage-list" id="tpl-manage-list">
-      <div class="text-dim text-small">No templates saved yet.</div>
-    </div>
-  </div>
-
 </div>
 
 </div><!-- /main-content -->
