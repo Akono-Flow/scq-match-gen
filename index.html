@@ -804,6 +804,126 @@ input[type="file"] { display: none; }
 .settings-row.compact > div:first-child { flex: 1; }
 #match-output { min-height: 200px; }
 
+
+
+/* ─── Generate Dashboard Polish ─────────────────────────────── */
+.collapsible-card {
+  padding: 0;
+  overflow: hidden;
+}
+.collapsible-card > summary {
+  list-style: none;
+  padding: 14px 16px;
+  cursor: pointer;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--gold);
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+.collapsible-card > summary::-webkit-details-marker { display: none; }
+.collapsible-card > summary::after {
+  content: '▾';
+  color: var(--text2);
+  transition: transform 0.15s;
+  font-size: 14px;
+}
+.collapsible-card:not([open]) > summary::after { transform: rotate(-90deg); }
+.collapsible-card[open] > summary { border-bottom: 1px solid var(--border); }
+.collapsible-body { padding: 16px; }
+.collapsible-card[open] { border-color: var(--border2); }
+
+.gen-primary-shell {
+  background: linear-gradient(180deg, rgba(232,184,75,0.08), rgba(232,184,75,0.02));
+  border: 1px solid rgba(232,184,75,0.25);
+  border-radius: var(--radius2);
+  padding: 14px 16px;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.gen-primary-shell .gen-primary-actions { margin-bottom: 0; }
+.gen-workflow-hint { color: var(--text3); font-size: 12px; }
+
+.current-match-card {
+  background: linear-gradient(180deg, rgba(232,184,75,0.10), rgba(22,27,34,0.95));
+  border: 1px solid rgba(232,184,75,0.30);
+  border-radius: var(--radius2);
+  padding: 16px;
+  margin-bottom: 14px;
+}
+.current-match-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 14px; flex-wrap: wrap; }
+.current-match-name { font-size: 20px; font-weight: 800; color: var(--gold); line-height: 1.2; }
+.current-match-sub { font-size: 12px; color: var(--text3); margin-top: 4px; }
+.current-match-metrics { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+.metric-pill {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 11px;
+  color: var(--text2);
+  white-space: nowrap;
+}
+.metric-pill strong { color: var(--gold2); font-family: var(--font-mono); }
+.generated-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 10px 0 12px;
+  gap: 12px;
+}
+.generated-title-row h3 { color: var(--text); font-size: 15px; margin: 0; }
+
+.next-steps-card {
+  background: linear-gradient(180deg, rgba(62,120,212,0.12), rgba(62,120,212,0.04));
+  border: 1px solid rgba(62,120,212,0.35);
+  border-radius: var(--radius2);
+  padding: 14px 16px;
+  margin-bottom: 16px;
+}
+.next-steps-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
+  gap: 8px;
+  margin-top: 10px;
+}
+.next-steps-grid .btn { justify-content: center; width: 100%; }
+
+.projector-link-card {
+  position: relative;
+}
+.projector-link-card .card-title { justify-content: space-between; }
+.projector-link-badge {
+  font-size: 10px;
+  background: rgba(62,120,212,0.18);
+  border: 1px solid rgba(62,120,212,0.45);
+  color: #9ec7ff;
+  border-radius: 999px;
+  padding: 2px 8px;
+  text-transform: uppercase;
+  letter-spacing: .6px;
+}
+
+#subj-search { position: sticky; top: 0; z-index: 2; }
+
+.dashboard-empty {
+  border: 1px dashed var(--border2);
+  background: rgba(255,255,255,0.02);
+  border-radius: var(--radius2);
+  padding: 26px 18px;
+  text-align: center;
+  color: var(--text3);
+}
+
 /* ─── Templates ────────────────────────────────────────────────── */
 .template-card {
   background: var(--bg3);
@@ -1065,13 +1185,15 @@ hr.divider { border: none; border-top: 1px solid var(--border); margin: 14px 0; 
     <div class="gen-sidebar">
 
       <!-- Templates -->
-      <div class="card">
-        <div class="card-title"><span class="ct-icon">📋</span>Templates</div>
-        <div class="template-list" id="template-list">
-          <!-- populated by JS -->
+      <details class="card collapsible-card" id="templates-collapse">
+        <summary><span><span class="ct-icon">📋</span> Match Templates</span></summary>
+        <div class="collapsible-body">
+          <div class="template-list" id="template-list">
+            <!-- populated by JS -->
+          </div>
+          <button class="btn btn-secondary btn-sm w-full mt-8" onclick="showSaveTemplateModal()">+ Save Current as Template</button>
         </div>
-        <button class="btn btn-secondary btn-sm w-full mt-8" onclick="showSaveTemplateModal()">+ Save Current as Template</button>
-      </div>
+      </details>
 
       <!-- Match Name -->
       <div class="card">
@@ -1113,17 +1235,20 @@ hr.divider { border: none; border-top: 1px solid var(--border); margin: 14px 0; 
 
     <!-- Main: output -->
     <div class="gen-main">
-      <div class="gen-primary-actions">
-        <button class="btn btn-primary" onclick="generateMatch()" id="btn-generate">
-          ⚡ Generate Match
-        </button>
-        <label class="switch-row" title="When off, generated questions will not be added to usage history.">
-          <span>Track Usage <span id="usage-track-state" class="switch-state">ON</span></span>
-          <span class="light-switch">
-            <input type="checkbox" id="set-track-usage-gen" checked onchange="toggleUsageTracking(this.checked)">
-            <span class="light-slider"></span>
-          </span>
-        </label>
+      <div class="gen-primary-shell">
+        <div class="gen-primary-actions">
+          <button class="btn btn-primary" onclick="generateMatch()" id="btn-generate">
+            ⚡ Generate Match
+          </button>
+          <label class="switch-row" title="When off, generated questions will not be added to usage history.">
+            <span>Track Usage <span id="usage-track-state" class="switch-state">ON</span></span>
+            <span class="light-switch">
+              <input type="checkbox" id="set-track-usage-gen" checked onchange="toggleUsageTracking(this.checked)">
+              <span class="light-slider"></span>
+            </span>
+          </label>
+        </div>
+        <div class="gen-workflow-hint">Configure → Generate → Review → Project / Export</div>
       </div>
 
       <details class="match-tools-panel" id="match-tools-panel">
@@ -1180,7 +1305,7 @@ hr.divider { border: none; border-top: 1px solid var(--border); margin: 14px 0; 
       </details>
 
       <div id="projector-link-card" class="projector-link-card hidden">
-        <div class="card-title" style="margin-bottom:4px"><span class="ct-icon">🖥</span>Projector Link</div>
+        <div class="card-title" style="margin-bottom:4px"><span><span class="ct-icon">🖥</span>Projector Link</span><span class="projector-link-badge">ready</span></div>
         <div class="text-small text-dim">Copy this link to open the media projector on another computer.</div>
         <div class="projector-link-row">
           <input type="text" id="projector-link-input" class="projector-link-input" readonly placeholder="Generate or import a match to create a projector link...">
@@ -1190,27 +1315,42 @@ hr.divider { border: none; border-top: 1px solid var(--border); margin: 14px 0; 
         <div class="projector-link-meta" id="projector-link-meta"></div>
       </div>
 
-      <!-- Stats before generation -->
-      <div id="pre-gen-stats" class="card">
-        <div class="card-title"><span class="ct-icon">📊</span>Database Overview</div>
-        <div class="stat-grid" id="overview-stats">
-          <div class="stat-card"><div class="stat-value" id="stat-total">0</div><div class="stat-label">Total Questions</div></div>
-          <div class="stat-card"><div class="stat-value" id="stat-subjects">0</div><div class="stat-label">Subjects</div></div>
-          <div class="stat-card"><div class="stat-value" id="stat-categories">0</div><div class="stat-label">Categories</div></div>
-          <div class="stat-card"><div class="stat-value" id="stat-used">0</div><div class="stat-label">Used</div></div>
-          <div class="stat-card"><div class="stat-value" id="stat-unused">0</div><div class="stat-label">Available</div></div>
-          <div class="stat-card"><div class="stat-value" id="stat-media">0</div><div class="stat-label">With Media</div></div>
+      <div id="next-steps-card" class="next-steps-card hidden">
+        <div class="card-title" style="margin-bottom:4px"><span class="ct-icon">➡️</span>Next Steps</div>
+        <div class="text-small text-dim">Common actions for the current match.</div>
+        <div class="next-steps-grid">
+          <button class="btn btn-secondary btn-sm" onclick="openProjectorView()" id="quick-open-projector" disabled>🖥 Open Projector</button>
+          <button class="btn btn-secondary btn-sm" onclick="downloadMatchPackage()" id="quick-export-scq" disabled>📦 Export .SCQ</button>
+          <button class="btn btn-teal btn-sm" onclick="printMatchPDF()" id="quick-print-match" disabled>🖨 Print / PDF</button>
+          <button class="btn btn-secondary btn-sm" onclick="showCorrectionsModal()" id="quick-review-corrections" disabled>📝 Review Corrections</button>
         </div>
       </div>
+
+      <!-- Stats before generation -->
+      <details id="pre-gen-stats" class="card collapsible-card">
+        <summary><span><span class="ct-icon">📊</span> Database Overview</span></summary>
+        <div class="collapsible-body">
+          <div class="stat-grid" id="overview-stats">
+            <div class="stat-card"><div class="stat-value" id="stat-total">0</div><div class="stat-label">Total Questions</div></div>
+            <div class="stat-card"><div class="stat-value" id="stat-subjects">0</div><div class="stat-label">Subjects</div></div>
+            <div class="stat-card"><div class="stat-value" id="stat-categories">0</div><div class="stat-label">Categories</div></div>
+            <div class="stat-card"><div class="stat-value" id="stat-used">0</div><div class="stat-label">Used</div></div>
+            <div class="stat-card"><div class="stat-value" id="stat-unused">0</div><div class="stat-label">Available</div></div>
+            <div class="stat-card"><div class="stat-value" id="stat-media">0</div><div class="stat-label">With Media</div></div>
+          </div>
+        </div>
+      </details>
 
       <!-- Generated Match output -->
       <div id="match-output"></div>
 
       <!-- Post-gen stats -->
-      <div id="post-gen-stats" class="card hidden">
-        <div class="card-title"><span class="ct-icon">📈</span>Generation Summary</div>
-        <div class="stat-grid" id="gen-summary-stats"></div>
-      </div>
+      <details id="post-gen-stats" class="card collapsible-card hidden">
+        <summary><span><span class="ct-icon">📈</span> Generation Summary</span></summary>
+        <div class="collapsible-body">
+          <div class="stat-grid" id="gen-summary-stats"></div>
+        </div>
+      </details>
     </div>
   </div>
 </div>
@@ -2657,6 +2797,7 @@ function generateMatch() {
   renderMatch(sections, matchName, warnings);
   setMatchActionButtonsEnabled(true);
   updateProjectorLinkCard();
+  updateGenerateWorkflowUI();
   updateCorrectionCountUI();
   updateStats();
   updateUsageTab();
@@ -2696,14 +2837,35 @@ function renderMatch(sections, matchName, warnings) {
   answersVisible = false;
   el('btn-reveal-all').textContent = '👁 Show Answers';
 
-  let html = `<div class="card" style="margin-bottom:16px">
-    <div style="font-size:18px; font-weight:700; color:var(--gold); margin-bottom:4px">${esc(matchName)}</div>
-    <div class="text-small text-dim">Generated ${new Date().toLocaleString()}</div>
+  const allRows = Object.values(sections || {}).flat();
+  const totalQuestions = allRows.length;
+  const sectionCount = Object.keys(sections || {}).filter(k => (sections[k] || []).length).length;
+  const mediaCount = allRows.filter(r => r.q && r.q.media && r.q.media.src).length;
+  const timestamp = DB.lastGenerated && DB.lastGenerated.timestamp ? new Date(DB.lastGenerated.timestamp) : new Date();
+  const trackingState = DB.settings.trackGeneratedUsage === false ? 'OFF' : 'ON';
+  const modeLabel = DB.settings.generationMode === 'training' ? 'Training' : 'Match';
+  let html = `<div class="current-match-card">
+    <div class="current-match-top">
+      <div>
+        <div class="text-small text-dim" style="text-transform:uppercase;letter-spacing:1px;margin-bottom:3px">Current Match</div>
+        <div class="current-match-name">${esc(matchName)}</div>
+        <div class="current-match-sub">Generated ${timestamp.toLocaleString()}</div>
+      </div>
+      <div class="current-match-metrics">
+        <span class="metric-pill"><strong>${totalQuestions}</strong> Questions</span>
+        <span class="metric-pill"><strong>${sectionCount}</strong> Sections</span>
+        <span class="metric-pill"><strong>${mediaCount}</strong> Media</span>
+        <span class="metric-pill">Mode: <strong>${esc(modeLabel)}</strong></span>
+        <span class="metric-pill">Tracking: <strong>${esc(trackingState)}</strong></span>
+      </div>
+    </div>
   </div>`;
 
   if (warnings && warnings.length) {
     html += warnings.map(w => `<div class="alert ${w.startsWith('⚠️')?'alert-warn':'alert-info'}">${esc(w)}</div>`).join('');
   }
+
+  html += `<div class="generated-title-row"><h3>Generated Questions</h3><span class="text-small text-dim">Review, edit, or present this match</span></div>`;
 
   const sectionDefs = [
     { key: 'alternate', label: 'Alternate Section', pillClass: 'pill-alt', color: 'var(--alt-col)' },
@@ -2771,6 +2933,7 @@ function clearMatch() {
   answersVisible = false;
   el('btn-reveal-all').textContent = '👁 Show Answers';
   updateProjectorLinkCard();
+  updateGenerateWorkflowUI();
 }
 
 
@@ -3407,8 +3570,20 @@ function printMatchPDF() {
 // MATCH JSON / .SCQ IMPORT / RESTORE
 // ═══════════════════════════════════════════════════════════════
 function setMatchActionButtonsEnabled(enabled) {
-  const ids = ['btn-export-html','btn-export-pdf','btn-export-json','btn-review-corrections','btn-export-corrections','btn-projector-view','btn-projector-manifest','btn-match-package'];
+  const ids = ['btn-export-html','btn-export-pdf','btn-export-json','btn-review-corrections','btn-export-corrections','btn-projector-view','btn-projector-manifest','btn-match-package','quick-export-scq','quick-print-match','quick-review-corrections','quick-open-projector'];
   ids.forEach(id => { const b = el(id); if (b) b.disabled = !enabled; });
+}
+
+
+function updateGenerateWorkflowUI() {
+  const hasMatch = !!DB.lastGenerated;
+  const next = el('next-steps-card');
+  if (next) next.classList.toggle('hidden', !hasMatch);
+  if (!hasMatch) return;
+  const manifest = makeProjectorManifest ? makeProjectorManifest() : null;
+  const hasProjectorItems = !!(manifest && manifest.items && manifest.items.length);
+  const qp = el('quick-open-projector');
+  if (qp) qp.disabled = !hasProjectorItems;
 }
 
 function normalizeSectionKey(sectionName) {
@@ -3496,6 +3671,7 @@ function restoreGeneratedMatch(imported) {
   renderMatch(imported.sections, imported.matchName, imported.warnings || []);
   setMatchActionButtonsEnabled(true);
   updateProjectorLinkCard();
+  updateGenerateWorkflowUI();
   updateCorrectionCountUI();
 
   const allRows = Object.values(imported.sections).flat();
@@ -3917,6 +4093,7 @@ function saveGeneratedEdit() {
   updateCorrectionCountUI();
   renderMatch(DB.lastGenerated.sections, DB.lastGenerated.matchName, DB.lastGenerated.warnings || []);
   updateProjectorLinkCard();
+  updateGenerateWorkflowUI();
   closeModal('modal-edit-question');
 }
 
