@@ -1502,6 +1502,7 @@ let DB = {
 
 let importWorkbook = null;
 let importRows = [];
+let importHeaders = []; // persists mapped Excel headers for previewImport/finalizeImport
 let importSourceFileName = '';
 let answersVisible = false;
 
@@ -3689,7 +3690,8 @@ function loadSheet() {
     return;
   }
 
-  const headers = importRows[0].map((h, i) => ({ idx: i, name: String(h || `Column ${i+1}`) }));
+  importHeaders = importRows[0].map((h, i) => ({ idx: i, name: String(h || `Column ${i+1}`) }));
+  const headers = importHeaders;
 
   const requiredCols = [
     { id: 'subject',    label: 'Subject *' },
@@ -3721,6 +3723,7 @@ function loadSheet() {
 }
 
 function previewImport() {
+  const headers = importHeaders || [];
   const getMap = id => {
     const v = el('map-' + id);
     return v ? parseInt(v.value) : NaN;
