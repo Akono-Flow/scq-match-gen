@@ -1335,9 +1335,29 @@ hr.divider { border: none; border-top: 1px solid var(--border); margin: 14px 0; 
               ondrop="handleJSONDrop(event)">
               <div class="drop-icon">{ }</div>
               <div class="drop-label">Click or drag questions.json</div>
-              <div class="drop-sub">Load an existing question bank</div>
+              <div class="drop-sub">Load an existing question bank from your computer</div>
             </div>
             <input type="file" id="json-file-input" accept=".json" onchange="handleJSONFile(event)">
+          </div>
+        </div>
+
+        <div class="import-step">
+          <div class="import-step-num">🌐</div>
+          <div class="import-step-body">
+            <div class="import-step-title">Load Question Bank from GitHub Pages</div>
+            <p class="text-small text-dim" style="margin-bottom:10px">Use <span class="text-mono">question_banks.json</span> for the dropdown, or type a JSON path manually.</p>
+            <div class="form-row">
+              <select id="github-bank-select" style="min-width:260px; flex:1">
+                <option value="">Loading question bank list…</option>
+              </select>
+              <button class="btn btn-secondary btn-sm" onclick="refreshGitHubBankList()">↻ Refresh List</button>
+              <button class="btn btn-primary btn-sm" onclick="loadSelectedGitHubBank()">Load Selected</button>
+            </div>
+            <div class="form-row mt-8">
+              <input type="text" id="github-bank-path" class="search-input" placeholder="e.g. questions.json or data/questions_2026.json" style="flex:1">
+              <button class="btn btn-secondary btn-sm" onclick="loadTypedGitHubBank()">Load by Path</button>
+            </div>
+            <div id="github-bank-status" class="mt-8"></div>
           </div>
         </div>
 
@@ -1770,6 +1790,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('cb-buz').checked = true;
   updateAboutTab();
   updateCorrectionCountUI();
+  refreshGitHubBankList(true);
 });
 
 function initNavTabs() {
@@ -4200,29 +4221,109 @@ function handleJSONFile(e) {
   if (file) processJSONFile(file);
 }
 
+function processQuestionBankData(data, sourceLabel = 'JSON') {
+  if (Array.isArray(data)) {
+    DB.questions = data;
+  } else if (data && Array.isArray(data.questions)) {
+    DB.questions = data.questions;
+  } else {
+    throw new Error('Unrecognized format. Expected an array or {questions:[…]}');
+  }
+
+  buildCatalog(true);
+  renderSubjectGrid();
+  updateStats();
+  renderQuestionBank();
+  updateAboutTab();
+  saveAllToLocalStorage();
+
+  const msg = `✅ Loaded ${DB.questions.length} questions from ${sourceLabel}.`;
+  showAlert('catalog-status', msg, 'ok');
+  if (el('github-bank-status')) showAlert('github-bank-status', msg, 'ok');
+}
+
 function processJSONFile(file) {
   const reader = new FileReader();
   reader.onload = evt => {
     try {
-      let data = JSON.parse(evt.target.result);
-      if (Array.isArray(data)) {
-        DB.questions = data;
-      } else if (data.questions) {
-        DB.questions = data.questions;
-      } else {
-        throw new Error('Unrecognized format. Expected an array or {questions:[…]}');
-      }
-      buildCatalog(true);
-      renderSubjectGrid();
-      updateStats();
-      renderQuestionBank();
-      saveAllToLocalStorage();
-      showAlert('catalog-status', `✅ Loaded ${DB.questions.length} questions from JSON.`, 'ok');
+      const data = JSON.parse(evt.target.result);
+      processQuestionBankData(data, file.name || 'JSON file');
     } catch (err) {
       alert('Error loading JSON: ' + err.message);
     }
   };
   reader.readAsText(file);
+}
+
+function normalizeGitHubBankList(data) {
+  const raw = Array.isArray(data) ? data : (data && Array.isArray(data.banks) ? data.banks : []);
+  return raw.map((item, idx) => {
+    if (typeof item === 'string') return { label: item, path: item };
+    return {
+      label: item.label || item.name || item.title || item.path || `Question Bank ${idx + 1}`,
+      path: item.path || item.url || item.href || ''
+    };
+  }).filter(item => item.path);
+}
+
+async function refreshGitHubBankList(silent = false) {
+  const select = el('github-bank-select');
+  if (!select) return;
+  select.innerHTML = '<option value="">Loading question bank list…</option>';
+
+  try {
+    const res = await fetch('question_banks.json', { cache: 'no-store' });
+    if (!res.ok) throw new Error(`question_banks.json not found (${res.status})`);
+    const data = await res.json();
+    const banks = normalizeGitHubBankList(data);
+    if (!banks.length) throw new Error('question_banks.json did not contain any usable banks.');
+
+    select.innerHTML = '<option value="">Choose a question bank…</option>';
+    banks.forEach(bank => {
+      const opt = document.createElement('option');
+      opt.value = bank.path;
+      opt.textContent = bank.label;
+      opt.dataset.label = bank.label;
+      select.appendChild(opt);
+    });
+    if (!silent) showAlert('github-bank-status', `✅ Found ${banks.length} question bank option(s).`, 'ok');
+  } catch (err) {
+    select.innerHTML = '<option value="">No question_banks.json list found</option>';
+    if (!silent) showAlert('github-bank-status', `ℹ️ ${err.message}. You can still type a JSON path manually.`, 'info');
+  }
+}
+
+async function loadQuestionBankFromPath(path, label = '') {
+  path = (path || '').trim();
+  if (!path) {
+    showAlert('github-bank-status', '⚠️ Enter or select a JSON path first.', 'warn');
+    return;
+  }
+
+  showAlert('github-bank-status', `Loading ${path}…`, 'info');
+  try {
+    const res = await fetch(path, { cache: 'no-store' });
+    if (!res.ok) throw new Error(`Could not load ${path} (${res.status})`);
+    const data = await res.json();
+    processQuestionBankData(data, label || path);
+  } catch (err) {
+    showAlert('github-bank-status', `❌ ${err.message}`, 'error');
+  }
+}
+
+function loadSelectedGitHubBank() {
+  const select = el('github-bank-select');
+  if (!select || !select.value) {
+    showAlert('github-bank-status', '⚠️ Choose a question bank from the dropdown first.', 'warn');
+    return;
+  }
+  const label = select.selectedOptions[0]?.dataset?.label || select.selectedOptions[0]?.textContent || select.value;
+  loadQuestionBankFromPath(select.value, label);
+}
+
+function loadTypedGitHubBank() {
+  const path = el('github-bank-path')?.value || '';
+  loadQuestionBankFromPath(path, path);
 }
 
 function handleUsageFile(e) {
