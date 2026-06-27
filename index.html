@@ -38,6 +38,38 @@
   --shadow:    0 4px 20px rgba(0,0,0,0.5);
 }
 
+
+body.light-theme {
+  --bg:        #f4f7fb;
+  --bg2:       #ffffff;
+  --bg3:       #eef3fb;
+  --bg4:       #e2eaf5;
+  --border:    #c9d6e8;
+  --border2:   #9fb2cf;
+  --gold:      #b37a00;
+  --gold2:     #d99b14;
+  --gold-dim:  #8a650d;
+  --teal:      #0e8f82;
+  --teal-dim:  #c9f1eb;
+  --red:       #bd3232;
+  --red-dim:   #ffe1e1;
+  --green:     #1f9151;
+  --green-dim: #d8f3e3;
+  --text:      #1c2634;
+  --text2:     #40536d;
+  --text3:     #687b95;
+  --shadow:    0 4px 20px rgba(22,34,52,0.12);
+}
+body.light-theme .subject-chip.selected,
+body.light-theme .template-card:hover,
+body.light-theme .cat-chip.selected {
+  background: rgba(179,122,0,0.10);
+}
+body.light-theme .q-answer.hidden { color: var(--bg4); background: var(--bg4); }
+body.light-theme .order-list { background: rgba(244,247,251,0.75); }
+body.light-theme .data-table tr:hover td { background: #eaf1fb; }
+
+
 /* ─── Reset / Base ──────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { height: 100%; }
@@ -277,6 +309,29 @@ input[type="checkbox"] { accent-color: var(--gold); width: 14px; height: 14px; }
 }
 .switch-state { color: var(--gold); font-family: var(--font-mono); font-size: 11px; }
 .switch-state.off { color: var(--text3); }
+
+.header-theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 8px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--bg3);
+  color: var(--text2);
+  font-size: 11px;
+  font-weight: 700;
+}
+.media-rule-suite { display: flex; flex-direction: column; gap: 14px; }
+.media-default-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px; }
+.media-rule-table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius); }
+.media-rule-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.media-rule-table th, .media-rule-table td { padding: 9px 10px; border-bottom: 1px solid var(--border); text-align: left; }
+.media-rule-table th { background: var(--bg3); color: var(--text2); text-transform: uppercase; letter-spacing: 0.7px; font-size: 10px; }
+.media-rule-table tr:last-child td { border-bottom: none; }
+.media-rule-table select { min-width: 135px; }
+.rule-chip { display:inline-block; padding:2px 7px; border-radius:20px; font-size:10px; font-weight:800; background:var(--bg4); color:var(--text2); }
+
 input[type="file"] { display: none; }
 .file-drop-zone {
   border: 2px dashed var(--border2);
@@ -1283,6 +1338,13 @@ hr.divider { border: none; border-top: 1px solid var(--border); margin: 14px 0; 
     <button class="nav-tab" data-tab="settings">⚙️ Settings</button>
   </nav>
   <div class="header-right">
+    <label class="header-theme-toggle" title="Toggle light/dark appearance">
+      <span id="theme-toggle-label">🌙 Dark</span>
+      <span class="light-switch">
+        <input type="checkbox" id="theme-toggle" onchange="setThemeMode(this.checked ? 'light' : 'dark')">
+        <span class="light-slider"></span>
+      </span>
+    </label>
     <div id="db-status">
       <div class="status-dot" id="status-dot"></div>
       <span id="status-text">No data loaded</span>
@@ -1835,6 +1897,55 @@ hr.divider { border: none; border-top: 1px solid var(--border); margin: 14px 0; 
       </div>
     </div>
 
+
+    <div class="settings-section-card">
+      <div class="card-title"><span class="ct-icon">🌓</span>Appearance</div>
+      <p class="settings-section-desc">Switch between dark mode and light mode depending on room lighting or projector visibility.</p>
+      <label class="switch-row block" title="Switch between dark and light mode.">
+        <span class="switch-text">
+          <span class="switch-title">Light mode</span>
+          <span class="switch-desc">Turn on for brighter rooms; turn off for the original dark interface.</span>
+        </span>
+        <span class="light-switch">
+          <input type="checkbox" id="set-light-mode" onchange="setThemeMode(this.checked ? 'light' : 'dark')">
+          <span class="light-slider"></span>
+        </span>
+      </label>
+    </div>
+
+
+    <div class="settings-section-card featured">
+      <div class="card-title"><span class="ct-icon">🎛️</span>Section-aware Subject Media Rules</div>
+      <p class="settings-section-desc">Tell the generator when media is required, preferred, excluded, or unrestricted for each section and subject. These rules sit on top of the global Media Rule above.</p>
+      <div class="media-rule-suite">
+        <div class="setting-group">
+          <div class="setting-group-title">Section defaults</div>
+          <div class="media-default-grid">
+            <div class="setting-control">
+              <div><div class="setting-label">Alternate default</div><div class="setting-help">Used when a subject has no specific Alternate rule.</div></div>
+              <select id="media-default-alternate" onchange="saveSettings()"></select>
+            </div>
+            <div class="setting-control">
+              <div><div class="setting-label">Minute default</div><div class="setting-help">Default is text-only because Minute questions normally do not use media.</div></div>
+              <select id="media-default-minute" onchange="saveSettings()"></select>
+            </div>
+            <div class="setting-control">
+              <div><div class="setting-label">Buzzer default</div><div class="setting-help">Used when a subject has no specific Buzzer rule.</div></div>
+              <select id="media-default-buzzer" onchange="saveSettings()"></select>
+            </div>
+          </div>
+        </div>
+        <div class="setting-group">
+          <div class="setting-group-title">Subject-specific rules</div>
+          <div class="text-small text-dim" style="margin-bottom:10px">Defaults: Local & International Affairs, Theatre & Cinema, Sports, and Music require media for Alternate/Buzzer; Art prefers media; Minute is text-only.</div>
+          <div id="subject-media-rules-table"></div>
+          <div class="flex-row mt-12">
+            <button class="btn btn-secondary btn-sm" onclick="resetSubjectMediaRulesToDefaults()">↺ Reset SCQ Defaults</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="settings-side-grid">
       <div class="settings-section-card">
         <div class="card-title"><span class="ct-icon">💾</span>Data Management</div>
@@ -2074,6 +2185,9 @@ let DB = {
     noRepeatCategoryInSection: false,
     usePairGroups: false,
     randomSeed: '',
+    appearanceMode: 'dark',
+    mediaSectionDefaults: { alternate: 'any', minute: 'textOnly', buzzer: 'any' },
+    subjectMediaRules: defaultSubjectMediaRules(),
     sectionOrder: { alternate: [], minute: [], buzzer: [] }
   },
   templates: [],
@@ -2087,11 +2201,69 @@ let importHeaders = []; // persists mapped Excel headers for previewImport/final
 let importSourceFileName = '';
 let answersVisible = false;
 
+
+function defaultSubjectMediaRules() {
+  return {
+    'Local & International Affairs': { alternate: 'requireMedia', minute: 'textOnly', buzzer: 'requireMedia' },
+    'Theatre and Cinema': { alternate: 'requireMedia', minute: 'textOnly', buzzer: 'requireMedia' },
+    'Theatre & Cinema': { alternate: 'requireMedia', minute: 'textOnly', buzzer: 'requireMedia' },
+    'Sports': { alternate: 'requireMedia', minute: 'textOnly', buzzer: 'requireMedia' },
+    'Music': { alternate: 'requireMedia', minute: 'textOnly', buzzer: 'requireMedia' },
+    'Art': { alternate: 'preferMedia', minute: 'textOnly', buzzer: 'preferMedia' }
+  };
+}
+
+function mediaRuleOptionsHTML(selected) {
+  const options = [
+    ['any', 'Any'],
+    ['requireMedia', 'Require media'],
+    ['preferMedia', 'Prefer media'],
+    ['textOnly', 'Text-only']
+  ];
+  return options.map(([value, label]) => `<option value="${value}" ${value === selected ? 'selected' : ''}>${label}</option>`).join('');
+}
+
+function canonicalSectionKey(sectionName) {
+  const s = String(sectionName || '').toLowerCase();
+  if (s.startsWith('alt')) return 'alternate';
+  if (s.startsWith('min')) return 'minute';
+  if (s.startsWith('buz')) return 'buzzer';
+  return s || 'alternate';
+}
+
+function getSubjectMediaRule(subject, sectionName) {
+  const sectionKey = canonicalSectionKey(sectionName);
+  const rules = DB.settings.subjectMediaRules || {};
+  const direct = rules[subject] || rules[String(subject || '').replace('&', 'and')] || rules[String(subject || '').replace('and', '&')];
+  if (direct && direct[sectionKey]) return direct[sectionKey];
+  const defaults = DB.settings.mediaSectionDefaults || { alternate: 'any', minute: 'textOnly', buzzer: 'any' };
+  return defaults[sectionKey] || 'any';
+}
+
+function setThemeMode(mode) {
+  const selected = mode === 'light' ? 'light' : 'dark';
+  DB.settings.appearanceMode = selected;
+  applyThemeMode(selected);
+  saveAllToLocalStorage();
+}
+
+function applyThemeMode(mode) {
+  const light = mode === 'light';
+  document.body.classList.toggle('light-theme', light);
+  const themeToggle = el('theme-toggle');
+  if (themeToggle) themeToggle.checked = light;
+  const settingsToggle = el('set-light-mode');
+  if (settingsToggle) settingsToggle.checked = light;
+  const label = el('theme-toggle-label');
+  if (label) label.textContent = light ? '☀️ Light' : '🌙 Dark';
+}
+
 // ═══════════════════════════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', () => {
   loadFromLocalStorage();
+  applyThemeMode(DB.settings.appearanceMode || 'dark');
   initNavTabs();
   initDefaultTemplates();
   renderSubjectGrid();
@@ -2809,12 +2981,15 @@ function generateMatch() {
   const usedCategoriesBySection = {};
   const categoryCountsBySection = {};
 
-  function baseAvailable(qs, allowUsedFallback = false) {
-    return qs.filter(q =>
+  function baseAvailable(qs, sectionName, allowUsedFallback = false) {
+    let filtered = qs.filter(q =>
       !usedInMatch.has(q.id) &&
-      passesGenerationFilters(q) &&
+      passesGenerationFilters(q, sectionName) &&
       (allowUsedFallback || !avoidUsed || !DB.usedIds.has(q.id))
     );
+    const rule = getSubjectMediaRule(qs[0] && qs[0].subject, sectionName);
+    if (rule === 'preferMedia' && filtered.some(questionHasMedia)) filtered = filtered.filter(questionHasMedia);
+    return filtered;
   }
 
   function pickFromAvailable(available, n) {
@@ -2855,7 +3030,7 @@ function generateMatch() {
       const catOptions = Object.entries(pool[subj])
         .filter(([cat]) => !allowedCats || allowedCats.has(cat))
         .map(([cat, qs]) => {
-          const available = baseAvailable(qs, false);
+          const available = baseAvailable(qs, sectionName, false);
           return { cat, available };
         })
         .filter(c => c.available.length >= nPerSubject);
@@ -2866,7 +3041,7 @@ function generateMatch() {
       if (options.length === 0 && fallback) {
         options = Object.entries(pool[subj])
           .filter(([cat]) => !allowedCats || allowedCats.has(cat))
-          .map(([cat, qs]) => ({ cat, available: baseAvailable(qs, true) }))
+          .map(([cat, qs]) => ({ cat, available: baseAvailable(qs, sectionName, true) }))
           .filter(c => c.available.length >= nPerSubject);
         usingFallback = options.length > 0;
       }
@@ -2903,12 +3078,12 @@ function generateMatch() {
       const allQsByCat = Object.entries(pool[subj])
         .filter(([cat]) => !allowedCats || allowedCats.has(cat));
 
-      let candidatesByCat = allQsByCat.map(([cat, qs]) => ({ cat, available: baseAvailable(qs, false) }))
+      let candidatesByCat = allQsByCat.map(([cat, qs]) => ({ cat, available: baseAvailable(qs, 'Buzzer', false) }))
         .filter(o => o.available.length > 0);
       let usingFallback = false;
 
       if (!candidatesByCat.length && fallback) {
-        candidatesByCat = allQsByCat.map(([cat, qs]) => ({ cat, available: baseAvailable(qs, true) }))
+        candidatesByCat = allQsByCat.map(([cat, qs]) => ({ cat, available: baseAvailable(qs, 'Buzzer', true) }))
           .filter(o => o.available.length > 0);
         usingFallback = candidatesByCat.length > 0;
       }
@@ -5004,6 +5179,20 @@ function saveSettings() {
   DB.settings.noRepeatCategoryInSection = getChecked('set-no-repeat-category', DB.settings.noRepeatCategoryInSection === true);
   DB.settings.usePairGroups = getChecked('set-use-pair-groups', DB.settings.usePairGroups === true);
   DB.settings.randomSeed = getVal('set-random-seed', DB.settings.randomSeed || '');
+  DB.settings.appearanceMode = (el('set-light-mode') && el('set-light-mode').checked) ? 'light' : (DB.settings.appearanceMode || 'dark');
+  DB.settings.mediaSectionDefaults = {
+    alternate: getVal('media-default-alternate', (DB.settings.mediaSectionDefaults || {}).alternate || 'any'),
+    minute: getVal('media-default-minute', (DB.settings.mediaSectionDefaults || {}).minute || 'textOnly'),
+    buzzer: getVal('media-default-buzzer', (DB.settings.mediaSectionDefaults || {}).buzzer || 'any')
+  };
+  document.querySelectorAll('[data-media-rule-subject]').forEach(sel => {
+    const subject = sel.dataset.mediaRuleSubject;
+    const section = sel.dataset.mediaRuleSection;
+    if (!DB.settings.subjectMediaRules) DB.settings.subjectMediaRules = {};
+    if (!DB.settings.subjectMediaRules[subject]) DB.settings.subjectMediaRules[subject] = {};
+    DB.settings.subjectMediaRules[subject][section] = sel.value;
+  });
+  applyThemeMode(DB.settings.appearanceMode || 'dark');
   syncUsageTrackingSwitches();
   // sectionOrder is saved directly by the drag-drop functions
   saveAllToLocalStorage();
@@ -5017,6 +5206,9 @@ function loadSettingsToUI() {
   el('set-fallback').checked = DB.settings.allowFallbackCategory;
   el('set-include-answers').checked = DB.settings.includeAnswersInExport;
   if (DB.settings.trackGeneratedUsage === undefined) DB.settings.trackGeneratedUsage = true;
+  if (!DB.settings.mediaSectionDefaults) DB.settings.mediaSectionDefaults = { alternate: 'any', minute: 'textOnly', buzzer: 'any' };
+  if (!DB.settings.subjectMediaRules) DB.settings.subjectMediaRules = defaultSubjectMediaRules();
+  if (!DB.settings.appearanceMode) DB.settings.appearanceMode = 'dark';
   const setVal = (id, value) => { const node = el(id); if (node) node.value = value; };
   const setChecked = (id, value) => { const node = el(id); if (node) node.checked = !!value; };
   setVal('set-generation-mode', DB.settings.generationMode || 'match');
@@ -5028,10 +5220,51 @@ function loadSettingsToUI() {
   setChecked('set-no-repeat-category', DB.settings.noRepeatCategoryInSection === true);
   setChecked('set-use-pair-groups', DB.settings.usePairGroups === true);
   setVal('set-random-seed', DB.settings.randomSeed || '');
+  applyThemeMode(DB.settings.appearanceMode || 'dark');
+  renderSubjectMediaRules();
   syncUsageTrackingSwitches();
   if (!DB.settings.sectionOrder) DB.settings.sectionOrder = { alternate: [], minute: [], buzzer: [] };
   renderOrderLists();
   renderTemplateManager();
+}
+
+
+function renderSubjectMediaRules() {
+  const defaults = DB.settings.mediaSectionDefaults || { alternate: 'any', minute: 'textOnly', buzzer: 'any' };
+  const defaultSelects = {
+    alternate: el('media-default-alternate'),
+    minute: el('media-default-minute'),
+    buzzer: el('media-default-buzzer')
+  };
+  Object.entries(defaultSelects).forEach(([key, node]) => {
+    if (node) node.innerHTML = mediaRuleOptionsHTML(defaults[key] || (key === 'minute' ? 'textOnly' : 'any'));
+  });
+
+  const mount = el('subject-media-rules-table');
+  if (!mount) return;
+  if (!DB.settings.subjectMediaRules) DB.settings.subjectMediaRules = defaultSubjectMediaRules();
+  const baseSubjects = ['Local & International Affairs', 'Theatre and Cinema', 'Theatre & Cinema', 'Sports', 'Music', 'Art'];
+  const loadedSubjects = [...new Set(DB.questions.map(q => q.subject).filter(Boolean))];
+  const subjects = [...new Set([...baseSubjects, ...loadedSubjects.filter(s => DB.settings.subjectMediaRules[s])])];
+  mount.innerHTML = `<div class="media-rule-table-wrap"><table class="media-rule-table">
+    <thead><tr><th>Subject</th><th>Alternate</th><th>Minute</th><th>Buzzer</th></tr></thead>
+    <tbody>${subjects.map(subject => {
+      const r = DB.settings.subjectMediaRules[subject] || {};
+      return `<tr>
+        <td><strong>${esc(subject)}</strong><br><span class="rule-chip">subject rule</span></td>
+        <td><select data-media-rule-subject="${esc(subject)}" data-media-rule-section="alternate" onchange="saveSettings()">${mediaRuleOptionsHTML(r.alternate || defaults.alternate || 'any')}</select></td>
+        <td><select data-media-rule-subject="${esc(subject)}" data-media-rule-section="minute" onchange="saveSettings()">${mediaRuleOptionsHTML(r.minute || defaults.minute || 'textOnly')}</select></td>
+        <td><select data-media-rule-subject="${esc(subject)}" data-media-rule-section="buzzer" onchange="saveSettings()">${mediaRuleOptionsHTML(r.buzzer || defaults.buzzer || 'any')}</select></td>
+      </tr>`;
+    }).join('')}</tbody>
+  </table></div>`;
+}
+
+function resetSubjectMediaRulesToDefaults() {
+  DB.settings.mediaSectionDefaults = { alternate: 'any', minute: 'textOnly', buzzer: 'any' };
+  DB.settings.subjectMediaRules = defaultSubjectMediaRules();
+  renderSubjectMediaRules();
+  saveSettings();
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -5104,7 +5337,7 @@ function confirmClearAll() {
     DB = { questions:[], catalog:{}, usageLog:[], usedIds:new Set(),
       settings:{alternateQuestionsPerSubject:2,minuteQuestionsPerSubject:2,buzzerQuestionsPerSubject:1,
         avoidPreviouslyUsed:true,allowFallbackCategory:false,includeAnswersInExport:true,trackGeneratedUsage:true,
-        generationMode:'match',mediaPolicy:'any',difficultyPolicy:'any',categoryPolicy:'random',selectionPriority:'random',
+        generationMode:'match',mediaPolicy:'any',difficultyPolicy:'any',categoryPolicy:'random',selectionPriority:'random',appearanceMode:'dark',mediaSectionDefaults:{alternate:'any',minute:'textOnly',buzzer:'any'},subjectMediaRules:defaultSubjectMediaRules(),
         exactCountRequired:false,noRepeatCategoryInSection:false,usePairGroups:false,randomSeed:'',
         sectionOrder:{alternate:[],minute:[],buzzer:[]}},
       templates:[], corrections:[], lastGenerated:null };
@@ -5223,7 +5456,11 @@ function getPairGroup(q) {
   return String(q.pairGroup || q.pairId || q.groupId || q.matchGroup || q.linkedGroup || q.sourcePairId || '').trim();
 }
 
-function passesGenerationFilters(q) {
+function passesGenerationFilters(q, sectionName) {
+  const subjectRule = getSubjectMediaRule(q && q.subject, sectionName);
+  if (subjectRule === 'requireMedia' && !questionHasMedia(q)) return false;
+  if (subjectRule === 'textOnly' && questionHasMedia(q)) return false;
+
   const mediaPolicy = DB.settings.mediaPolicy || 'any';
   if (mediaPolicy === 'mediaOnly' && !questionHasMedia(q)) return false;
   if (mediaPolicy === 'noMedia' && questionHasMedia(q)) return false;
