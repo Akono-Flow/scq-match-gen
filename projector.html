@@ -5,158 +5,58 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SCQ Projector View</title>
 <style>
-:root{
-  --bg:#05070b;--panel:#101722;--panel2:#172033;--border:#26354f;--gold:#e8b84b;--gold2:#f5d27a;
-  --text:#eef3fb;--muted:#9aa8bd;--teal:#3ecfba;--red:#e05252;--radius:16px;
-  --font:'Segoe UI',system-ui,sans-serif;
-}
-*{box-sizing:border-box;margin:0;padding:0}
-body{min-height:100vh;background:radial-gradient(circle at top,#162033 0,#05070b 52%);color:var(--text);font-family:var(--font);overflow:hidden}
-button{border:0;border-radius:12px;padding:10px 14px;font-weight:800;font-family:var(--font);cursor:pointer;transition:filter .15s,transform .15s,border-color .15s;background:#182235;color:var(--text);border:1px solid var(--border)}
-button:hover{filter:brightness(1.08);transform:translateY(-1px)}button:disabled{opacity:.35;cursor:not-allowed;transform:none}.primary{background:var(--gold);color:#05070b;border-color:var(--gold)}.secondary{background:#182235;color:var(--text);border:1px solid var(--border)}.danger{background:#34161a;color:#ff9ca6;border:1px solid #5b252c}.ghost{background:#0b111b;color:var(--muted)}
-.app{height:100vh;display:grid;grid-template-rows:auto 1fr}
-header{display:flex;align-items:center;gap:14px;padding:12px 18px;background:rgba(16,23,34,.92);border-bottom:1px solid var(--border);backdrop-filter:blur(8px)}
-.logo{width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,var(--gold),#7a5f22);display:grid;place-items:center;color:#05070b;font-weight:900;letter-spacing:-1px}.title{flex:1;min-width:0}.title h1{font-size:18px;color:var(--gold);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.title p{font-size:12px;color:var(--muted)}.counter{font-family:Consolas,monospace;color:var(--gold2);font-weight:800;background:#0b111b;border:1px solid var(--border);border-radius:999px;padding:7px 12px}
-.stage{display:grid;grid-template-columns:390px 1fr;gap:18px;padding:18px;min-height:0;height:100%}
-.sidebar{background:rgba(16,23,34,.88);border:1px solid var(--border);border-radius:var(--radius);padding:16px;overflow:auto;display:flex;flex-direction:column;gap:16px;min-height:0}.side-section{border:1px solid rgba(38,53,79,.9);border-radius:14px;background:rgba(7,11,18,.48);padding:14px}.side-title{font-size:12px;text-transform:uppercase;letter-spacing:1.4px;color:var(--muted);font-weight:900;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;gap:8px}.side-title .hint{font-size:10px;text-transform:none;letter-spacing:0;color:var(--muted);font-weight:700}.list{display:flex;flex-direction:column;gap:8px}.item{width:100%;border:1px solid var(--border);background:#0c121d;border-radius:12px;padding:10px 12px;cursor:pointer;color:var(--text);text-align:left;font-family:var(--font)}.item:hover,.item.active{border-color:var(--gold);background:rgba(232,184,75,.10)}.item .top{display:flex;justify-content:space-between;gap:10px;color:var(--gold);font-weight:900;font-size:13px}.item .subject-line{font-size:13px;margin-top:5px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.item .safe-label{font-size:12px;margin-top:3px;color:var(--muted)}
-.button-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.button-grid.single{grid-template-columns:1fr}.segmented{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--border);border-radius:999px;overflow:hidden;background:#0b111b;margin-bottom:10px}.segmented button{border-radius:0;border:0;background:transparent;color:var(--muted);padding:9px 12px}.segmented button.active{background:var(--gold);color:#05070b}
-details.control-details{border:1px solid var(--border);background:#0d1421;border-radius:12px;overflow:hidden}details.control-details summary{list-style:none;cursor:pointer;padding:10px 12px;color:var(--gold2);font-weight:900;font-size:13px}details.control-details summary::-webkit-details-marker{display:none}details.control-details summary::before{content:'▸';display:inline-block;margin-right:8px;transition:transform .15s}details.control-details[open] summary::before{transform:rotate(90deg)}.detail-content{border-top:1px solid var(--border);padding:12px;color:var(--text);font-size:14px;line-height:1.5;white-space:pre-wrap}.placeholder{color:var(--muted);font-style:italic;font-weight:650}.reader-grid{display:grid;gap:8px}.reader-card{border:1px solid var(--border);background:#0d1421;border-radius:10px;padding:8px}.reader-label{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:3px;font-weight:900}.reader-value{color:var(--text);font-weight:750;line-height:1.35}.question{font-size:15px;line-height:1.35;color:var(--text)}
-.viewer{background:rgba(5,7,11,.45);border:1px solid var(--border);border-radius:var(--radius);min-width:0;min-height:0;overflow:hidden;display:grid}.image-wrap{position:relative;min-height:0;display:grid;place-items:center;padding:16px;background:#030407;overflow:hidden}.image-wrap img{max-width:100%;max-height:100%;object-fit:contain;border-radius:10px;box-shadow:0 18px 60px rgba(0,0,0,.55)}.cover-screen{position:absolute;inset:0;z-index:5;display:grid;place-items:center;text-align:center;padding:40px;cursor:pointer}.cover-screen.white{background:#fff;color:#111}.cover-screen.black{background:#000;color:#fff}.cover-box{border:2px dashed currentColor;border-radius:18px;padding:30px 40px;background:rgba(128,128,128,.08)}.cover-box h2{font-size:34px;margin-bottom:10px}.cover-box p{font-size:15px;opacity:.82}.empty{height:100%;display:grid;place-items:center;text-align:center;padding:30px;color:var(--muted)}.empty h2{color:var(--gold);margin-bottom:8px}.file{display:none}
-@media(max-width:1000px){body{overflow:auto}.app{height:auto;min-height:100vh}.stage{grid-template-columns:1fr}.sidebar{max-height:none}.viewer{min-height:72vh}.image-wrap{min-height:60vh}}
-.fullscreen header{display:none}.fullscreen .app{grid-template-rows:1fr}.fullscreen .stage{padding:10px;gap:10px;grid-template-columns:330px 1fr}.fullscreen .sidebar{border-radius:10px}.fullscreen .viewer{border-radius:10px}.fullscreen .image-wrap{padding:8px}
+:root{--bg:#05070b;--panel:#101722;--panel2:#172033;--border:#26354f;--gold:#e8b84b;--gold2:#f5d27a;--text:#eef3fb;--muted:#9aa8bd;--red:#e05252;--radius:16px;--font:'Segoe UI',system-ui,sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}body{height:100vh;background:radial-gradient(circle at top,#162033 0,#05070b 52%);color:var(--text);font-family:var(--font);overflow:hidden}button{border:0;border-radius:12px;padding:10px 14px;font-weight:800;font-family:var(--font);cursor:pointer;transition:filter .15s,transform .15s;background:#182235;color:var(--text);border:1px solid var(--border)}button:hover{filter:brightness(1.08);transform:translateY(-1px)}button:disabled{opacity:.35;cursor:not-allowed;transform:none}.primary{background:var(--gold);color:#05070b;border-color:var(--gold)}.secondary{background:#182235;color:var(--text)}.danger{background:#34161a;color:#ff9ca6;border-color:#5b252c}.app{height:100vh;display:grid;grid-template-rows:auto 1fr}header{display:flex;align-items:center;gap:14px;padding:12px 18px;background:rgba(16,23,34,.92);border-bottom:1px solid var(--border);backdrop-filter:blur(8px)}.logo{width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,var(--gold),#7a5f22);display:grid;place-items:center;color:#05070b;font-weight:900}.title{flex:1;min-width:0}.title h1{font-size:18px;color:var(--gold);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.title p{font-size:12px;color:var(--muted)}.counter{font-family:Consolas,monospace;color:var(--gold2);font-weight:800;background:#0b111b;border:1px solid var(--border);border-radius:999px;padding:7px 12px}.stage{display:grid;grid-template-columns:390px 1fr;gap:18px;padding:18px;min-height:0;height:100%}.sidebar{background:rgba(16,23,34,.88);border:1px solid var(--border);border-radius:var(--radius);padding:16px;overflow:auto;display:flex;flex-direction:column;gap:16px;min-height:0}.side-section{border:1px solid rgba(38,53,79,.9);border-radius:14px;background:rgba(7,11,18,.48);padding:14px}.side-title{font-size:12px;text-transform:uppercase;letter-spacing:1.4px;color:var(--muted);font-weight:900;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;gap:8px}.hint{font-size:10px;text-transform:none;letter-spacing:0;color:var(--muted);font-weight:700}.list{display:flex;flex-direction:column;gap:8px}.item{width:100%;border:1px solid var(--border);background:#0c121d;border-radius:12px;padding:10px 12px;cursor:pointer;color:var(--text);text-align:left}.item:hover,.item.active{border-color:var(--gold);background:rgba(232,184,75,.10)}.item .top{display:flex;justify-content:space-between;gap:10px;color:var(--gold);font-weight:900;font-size:13px}.item .subject-line{font-size:13px;margin-top:5px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.item .safe-label{font-size:12px;margin-top:3px;color:var(--muted)}.button-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.button-grid.single{grid-template-columns:1fr}.segmented{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--border);border-radius:999px;overflow:hidden;background:#0b111b;margin-bottom:10px}.segmented button{border-radius:0;border:0;background:transparent;color:var(--muted);padding:9px 12px}.segmented button.active{background:var(--gold);color:#05070b}details.control-details{border:1px solid var(--border);background:#0d1421;border-radius:12px;overflow:hidden}details.control-details summary{list-style:none;cursor:pointer;padding:10px 12px;color:var(--gold2);font-weight:900;font-size:13px}details.control-details summary::-webkit-details-marker{display:none}details.control-details summary::before{content:'▸';display:inline-block;margin-right:8px;transition:transform .15s}details.control-details[open] summary::before{transform:rotate(90deg)}.detail-content{border-top:1px solid var(--border);padding:12px;color:var(--text);font-size:14px;line-height:1.5;white-space:pre-wrap}.reader-grid{display:grid;gap:8px}.reader-card{border:1px solid var(--border);background:#0d1421;border-radius:10px;padding:8px}.reader-label{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:3px;font-weight:900}.reader-value{color:var(--text);font-weight:750;line-height:1.35}.viewer{background:#030407;border:1px solid var(--border);border-radius:var(--radius);min-width:0;min-height:0;overflow:hidden;display:grid}.media-wrap{position:relative;min-height:0;display:grid;place-items:center;padding:16px;background:#030407;overflow:hidden}.media-wrap img,.media-wrap video,.media-wrap iframe{max-width:100%;max-height:100%;width:100%;height:100%;object-fit:contain;border:0;border-radius:10px;box-shadow:0 18px 60px rgba(0,0,0,.55)}.media-wrap audio{width:min(900px,88%);transform:scale(1.15)}.audio-card{display:grid;place-items:center;gap:20px;border:1px solid var(--border);border-radius:20px;padding:40px;min-width:min(720px,90%);background:#0d1421;text-align:center}.audio-icon{font-size:80px}.audio-card h2{color:var(--gold);font-size:28px}.pdf-frame{background:#fff}.cover-screen{position:absolute;inset:0;z-index:5;display:grid;place-items:center;text-align:center;padding:40px;cursor:pointer}.cover-screen.white{background:#fff;color:#111}.cover-screen.black{background:#000;color:#fff}.cover-box{border:2px dashed currentColor;border-radius:18px;padding:30px 40px;background:rgba(128,128,128,.08)}.cover-box h2{font-size:34px;margin-bottom:10px}.cover-box p{font-size:15px;opacity:.82}.empty{height:100%;display:grid;place-items:center;text-align:center;padding:30px;color:var(--muted)}.empty h2{color:var(--gold);margin-bottom:8px}.file{display:none}.type-pill{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#05070b;background:var(--gold);border-radius:999px;padding:2px 7px;font-weight:900}@media(max-width:1000px){body{overflow:auto}.app{height:auto;min-height:100vh}.stage{grid-template-columns:1fr}.viewer{min-height:72vh}.media-wrap{min-height:60vh}}.fullscreen header{display:none}.fullscreen .app{grid-template-rows:1fr}.fullscreen .stage{padding:10px;gap:10px;grid-template-columns:330px 1fr}.fullscreen .sidebar{border-radius:10px}.fullscreen .viewer{border-radius:10px}.fullscreen .media-wrap{padding:8px}
 </style>
 </head>
 <body>
-<div class="app" id="app">
-  <header>
-    <div class="logo">SCQ</div>
-    <div class="title"><h1 id="match-title">SCQ Projector View</h1><p id="generated-label">Waiting for visual manifest…</p></div>
-    <div class="counter" id="counter">0 / 0</div>
-  </header>
+<div class="app">
+  <header><div class="logo">SCQ</div><div class="title"><h1 id="match-title">SCQ Projector View</h1><p id="generated-label">Waiting for projector manifest…</p></div><div class="counter" id="counter">0 / 0</div></header>
   <main class="stage">
     <aside class="sidebar">
-      <section class="side-section">
-        <div class="side-title">Visual Questions <span class="hint" id="sidebar-count">0 loaded</span></div>
-        <div class="list" id="visual-list"></div>
-      </section>
-
-      <section class="side-section">
-        <div class="side-title">Image Cover</div>
-        <div class="segmented" aria-label="Cover color" id="cover-buttons"></div>
-        <div class="button-grid">
-          <button class="primary" onclick="revealImage()" id="reveal-image-btn">Reveal Image</button>
-          <button class="danger" onclick="hideImage()" id="hide-image-btn">Hide Image</button>
-        </div>
-      </section>
-
-      <section class="side-section">
-        <div class="side-title">Answer / Name</div>
-        <details class="control-details" id="answer-details">
-          <summary id="answer-summary">Hidden</summary>
-          <div class="detail-content" id="answer-value">—</div>
-        </details>
-      </section>
-
-      <section class="side-section">
-        <div class="side-title">Info</div>
-        <details class="control-details" id="info-details">
-          <summary id="info-summary">Hidden</summary>
-          <div class="detail-content" id="info-value">—</div>
-        </details>
-      </section>
-
-      <section class="side-section">
-        <div class="side-title">Navigation</div>
-        <div class="button-grid">
-          <button class="secondary" onclick="prevVisual()" id="prev-btn">← Previous</button>
-          <button class="primary" onclick="nextVisual()" id="next-btn">Next →</button>
-        </div>
-      </section>
-
-      <section class="side-section">
-        <div class="side-title">System</div>
-        <div class="button-grid">
-          <button class="secondary" onclick="toggleFullscreenMode()">⛶ Projector Mode</button>
-          <button class="secondary" onclick="document.getElementById('manifest-file').click()">Load JSON</button>
-        </div>
-      </section>
-
-      <section class="side-section">
-        <div class="side-title">Hidden Details <span class="hint">quiz reader only</span></div>
-        <details class="control-details" id="reader-details">
-          <summary>Show hidden details</summary>
-          <div class="detail-content"><div class="reader-grid" id="reader-detail-grid"></div></div>
-        </details>
-      </section>
+      <section class="side-section"><div class="side-title">Projector Media <span class="hint" id="sidebar-count">0 loaded</span></div><div class="list" id="media-list"></div></section>
+      <section class="side-section"><div class="side-title">Cover</div><div class="segmented" id="cover-buttons"></div><div class="button-grid"><button class="primary" onclick="revealMedia()" id="reveal-media-btn">Reveal Media</button><button class="danger" onclick="hideMedia()" id="hide-media-btn">Hide Media</button></div></section>
+      <section class="side-section"><div class="side-title">Answer / Name</div><details class="control-details" id="answer-details"><summary>Click to reveal answer/name</summary><div class="detail-content" id="answer-value">—</div></details></section>
+      <section class="side-section"><div class="side-title">Info</div><details class="control-details" id="info-details"><summary>Click to reveal info</summary><div class="detail-content" id="info-value">—</div></details></section>
+      <section class="side-section"><div class="side-title">Navigation</div><div class="button-grid"><button class="secondary" onclick="prevItem()" id="prev-btn">← Previous</button><button class="primary" onclick="nextItem()" id="next-btn">Next →</button></div></section>
+      <section class="side-section"><div class="side-title">System</div><div class="button-grid"><button class="secondary" onclick="toggleFullscreenMode()">⛶ Projector Mode</button><button class="secondary" onclick="document.getElementById('manifest-file').click()">Load JSON</button></div></section>
+      <section class="side-section"><div class="side-title">Hidden Details <span class="hint">quiz reader only</span></div><details class="control-details" id="reader-details"><summary>Show hidden details</summary><div class="detail-content"><div class="reader-grid" id="reader-detail-grid"></div></div></details></section>
     </aside>
-
-    <section class="viewer" id="viewer">
-      <div class="empty">
-        <div>
-          <h2>No visuals loaded</h2>
-          <p>Open this page using the projector link generated by the Match Generator.</p>
-          <p style="margin-top:10px">You may also load a projector manifest JSON file.</p>
-          <p style="margin-top:16px"><button class="secondary" onclick="document.getElementById('manifest-file').click()">Load Manifest JSON</button></p>
-        </div>
-      </div>
-    </section>
+    <section class="viewer" id="viewer"><div class="empty"><div><h2>No projector media loaded</h2><p>Open this page using the projector link generated by the Match Generator.</p><p style="margin-top:10px">You may also load projector_manifest.json.</p><p style="margin-top:16px"><button class="secondary" onclick="document.getElementById('manifest-file').click()">Load Manifest JSON</button></p></div></div></section>
   </main>
 </div>
 <input class="file" type="file" id="manifest-file" accept=".json,application/json">
 <script>
-let manifest = null;
-let visuals = [];
-let current = 0;
-let coverColor = localStorage.getItem('scqProjectorCoverColor') || 'white';
-let imageVisible = false;
-
-const $ = id => document.getElementById(id);
-function esc(s){return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+let manifest=null, items=[], current=0;
+let coverColor=localStorage.getItem('scqProjectorCoverColor')||'white';
+let mediaVisible=false;
+const $=id=>document.getElementById(id);
+function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 function sectionName(key){return String(key||'').charAt(0).toUpperCase()+String(key||'').slice(1)}
 function decodePayload(encoded){return JSON.parse(decodeURIComponent(escape(atob(encoded))))}
+function normalType(v){const t=String(v.type||'').toLowerCase(); if(['image','audio','video','pdf'].includes(t))return t; const s=String(v.src||v.url||v.imageUrl||'').toLowerCase().split('?')[0]; if(/\.(png|jpe?g|gif|webp|svg|bmp|avif)$/.test(s))return'image'; if(/\.(mp3|wav|ogg|m4a|aac|flac)$/.test(s))return'audio'; if(/\.(mp4|webm|ogv|mov|m4v)$/.test(s))return'video'; if(/\.pdf$/.test(s))return'pdf'; return 'media'}
+function srcOf(v){return v.src||v.url||v.imageUrl||''}
 function loadFromHash(){const hash=new URLSearchParams(location.hash.replace(/^#/,''));const data=hash.get('data');if(!data)return false;try{setManifest(decodePayload(data));return true}catch(err){showError('The projector link could not be read. It may have been copied incompletely.');return false}}
-function resetReveals(){imageVisible=false;closeRevealPanels()}
-function closeRevealPanels(){const a=$('answer-details'),i=$('info-details'),r=$('reader-details');if(a)a.open=false;if(i)i.open=false;if(r)r.open=false}
-function setManifest(data){manifest=data||{};visuals=Array.isArray(manifest.visuals)?manifest.visuals:[];current=0;resetReveals();$('match-title').textContent=manifest.matchName||'SCQ Projector View';$('generated-label').textContent=manifest.generated?`Generated ${new Date(manifest.generated).toLocaleString()}`:'Visual manifest loaded';renderAll()}
-function visualLabel(v,i){return v.displayLabel || `${v.num || i+1}  ${v.subject || 'Visual question'}`}
+function resetReveals(){mediaVisible=false;closeRevealPanels();stopActiveMedia()}
+function closeRevealPanels(){['answer-details','info-details','reader-details'].forEach(id=>{const el=$(id); if(el)el.open=false})}
+function stopActiveMedia(){document.querySelectorAll('audio,video').forEach(m=>{try{m.pause();m.currentTime=0}catch(e){}})}
+function setManifest(data){manifest=data||{};items=Array.isArray(manifest.items)?manifest.items:(Array.isArray(manifest.visuals)?manifest.visuals:[]);current=0;resetReveals();$('match-title').textContent=manifest.matchName||'SCQ Projector View';$('generated-label').textContent=manifest.generated?`Generated ${new Date(manifest.generated).toLocaleString()}`:'Projector manifest loaded';renderAll()}
+function itemLabel(v,i){return v.displayLabel||`${v.num||i+1}  ${v.subject||'Projector media'}`}
 function renderAll(){renderList();renderSidebarControls();renderCurrent()}
-function renderList(){const list=$('visual-list');$('sidebar-count').textContent=`${visuals.length} loaded`;if(!visuals.length){list.innerHTML='<p style="color:var(--muted)">No image-based visual questions found.</p>';return}list.innerHTML=visuals.map((v,i)=>`<button class="item ${i===current?'active':''}" onclick="goToVisual(${i})" title="${esc(visualLabel(v,i))}">
-  <div class="top"><span>#${esc(v.num || i+1)}</span><span>${esc(v.sectionLabel || sectionName(v.section))}</span></div>
-  <div class="subject-line">${esc(v.subject || 'Visual question')}</div>
-  <div class="safe-label">Image covered — details hidden</div>
-</button>`).join('')}
-function renderSidebarControls(){
-  $('cover-buttons').innerHTML=`<button class="${coverColor==='white'?'active':''}" onclick="setCoverColor('white')">White cover</button><button class="${coverColor==='black'?'active':''}" onclick="setCoverColor('black')">Black cover</button>`;
-  const has=visuals.length>0;$('reveal-image-btn').disabled=!has;$('hide-image-btn').disabled=!has;$('prev-btn').disabled=visuals.length<=1;$('next-btn').disabled=visuals.length<=1;
-  const v=visuals[current]||{};
-  $('answer-summary').textContent='Click to reveal answer/name';$('answer-value').innerHTML=esc(v.answer||'—');
-  $('info-summary').textContent='Click to reveal info';$('info-value').innerHTML=esc(v.info||'—');
-  $('reader-detail-grid').innerHTML=has?`<div class="reader-card"><div class="reader-label">Section</div><div class="reader-value">${esc(v.sectionLabel || sectionName(v.section))} #${esc(v.num || '')}</div></div>
-  <div class="reader-card"><div class="reader-label">Subject</div><div class="reader-value">${esc(v.subject || '—')}</div></div>
-  <div class="reader-card"><div class="reader-label">Category</div><div class="reader-value">${esc(v.category || '—')}</div></div>
-  <div class="reader-card"><div class="reader-label">Question ID</div><div class="reader-value">${esc(v.id || '—')}</div></div>
-  ${v.question?`<div class="reader-card"><div class="reader-label">Question / Prompt</div><div class="question">${esc(v.question)}</div></div>`:''}
-  ${v.caption?`<div class="reader-card"><div class="reader-label">Caption</div><div class="reader-value">${esc(v.caption)}</div></div>`:''}`:'<span class="placeholder">No details loaded.</span>';
-}
-function renderCurrent(){
-  $('counter').textContent=visuals.length?`${current+1} / ${visuals.length}`:'0 / 0';
-  if(!visuals.length)return;
-  const v=visuals[current];
-  $('viewer').innerHTML=`<div class="image-wrap">
-    <img src="${esc(v.imageUrl)}" alt="Visual question image" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'empty',innerHTML:'<div><h2>Image could not load</h2><p>Check that the image URL exists in your GitHub Pages site.</p></div>'}))">
-    ${imageVisible?'':`<div class="cover-screen ${coverColor}" onclick="revealImage()"><div class="cover-box"><h2>Visual Hidden</h2><p>Click to reveal the image when the question is ready.</p></div></div>`}
-  </div>`;
-  renderList();renderSidebarControls();
-}
+function renderList(){const list=$('media-list');$('sidebar-count').textContent=`${items.length} loaded`;if(!items.length){list.innerHTML='<p style="color:var(--muted)">No projector media found.</p>';return}list.innerHTML=items.map((v,i)=>`<button class="item ${i===current?'active':''}" onclick="goToItem(${i})" title="${esc(itemLabel(v,i))}"><div class="top"><span>#${esc(v.num||i+1)}</span><span class="type-pill">${esc(normalType(v))}</span></div><div class="subject-line">${esc(v.subject||'Projector media')}</div><div class="safe-label">Media covered — details hidden</div></button>`).join('')}
+function renderSidebarControls(){ $('cover-buttons').innerHTML=`<button class="${coverColor==='white'?'active':''}" onclick="setCoverColor('white')">White cover</button><button class="${coverColor==='black'?'active':''}" onclick="setCoverColor('black')">Black cover</button>`; const has=items.length>0; ['reveal-media-btn','hide-media-btn'].forEach(id=>$(id).disabled=!has); $('prev-btn').disabled=items.length<=1;$('next-btn').disabled=items.length<=1; const v=items[current]||{}; $('answer-value').innerHTML=esc(v.answer||'—'); $('info-value').innerHTML=esc(v.info||'—'); $('reader-detail-grid').innerHTML=has?`<div class="reader-card"><div class="reader-label">Section</div><div class="reader-value">${esc(v.sectionLabel||sectionName(v.section))} #${esc(v.num||'')}</div></div><div class="reader-card"><div class="reader-label">Subject</div><div class="reader-value">${esc(v.subject||'—')}</div></div><div class="reader-card"><div class="reader-label">Category</div><div class="reader-value">${esc(v.category||'—')}</div></div><div class="reader-card"><div class="reader-label">Media Type</div><div class="reader-value">${esc(normalType(v))}</div></div><div class="reader-card"><div class="reader-label">Question ID</div><div class="reader-value">${esc(v.id||'—')}</div></div>${v.question?`<div class="reader-card"><div class="reader-label">Question / Prompt</div><div class="reader-value">${esc(v.question)}</div></div>`:''}${v.caption?`<div class="reader-card"><div class="reader-label">Caption</div><div class="reader-value">${esc(v.caption)}</div></div>`:''}`:'<span style="color:var(--muted);font-style:italic">No details loaded.</span>'}
+function mediaHtml(v){const type=normalType(v), src=esc(srcOf(v)); if(type==='image')return`<img src="${src}" alt="Projector image" onerror="mediaError()">`; if(type==='audio')return`<div class="audio-card"><div class="audio-icon">🎧</div><h2>Audio Clip</h2><audio src="${src}" controls preload="metadata" onerror="mediaError()"></audio></div>`; if(type==='video')return`<video src="${src}" controls preload="metadata" onerror="mediaError()"></video>`; if(type==='pdf')return`<iframe class="pdf-frame" src="${src}" title="Projector PDF"></iframe>`; return`<div class="empty"><div><h2>Unsupported media</h2><p>${esc(type)}</p></div></div>`}
+function renderCurrent(){ $('counter').textContent=items.length?`${current+1} / ${items.length}`:'0 / 0'; if(!items.length)return; const v=items[current]; $('viewer').innerHTML=`<div class="media-wrap">${mediaHtml(v)}${mediaVisible?'':`<div class="cover-screen ${coverColor}" onclick="revealMedia()"><div class="cover-box"><h2>Media Hidden</h2><p>Click to reveal when the question is ready.</p></div></div>`}</div>`; renderList();renderSidebarControls()}
+function mediaError(){const wrap=document.querySelector('.media-wrap'); if(wrap)wrap.innerHTML='<div class="empty"><div><h2>Media could not load</h2><p>Check that the URL exists and is accessible from this projector computer.</p></div></div>'}
 function setCoverColor(color){coverColor=color==='black'?'black':'white';localStorage.setItem('scqProjectorCoverColor',coverColor);renderCurrent()}
-function revealImage(){if(!visuals.length)return;imageVisible=true;renderCurrent()}
-function hideImage(){if(!visuals.length)return;imageVisible=false;renderCurrent()}
-function goToVisual(i){current=Math.max(0,Math.min(i,visuals.length-1));resetReveals();renderCurrent()}
-function nextVisual(){if(!visuals.length)return;current=(current+1)%visuals.length;resetReveals();renderCurrent()}
-function prevVisual(){if(!visuals.length)return;current=(current-1+visuals.length)%visuals.length;resetReveals();renderCurrent()}
+function revealMedia(){if(!items.length)return;mediaVisible=true;renderCurrent()}
+function hideMedia(){if(!items.length)return;stopActiveMedia();mediaVisible=false;renderCurrent()}
+function goToItem(i){current=Math.max(0,Math.min(i,items.length-1));resetReveals();renderCurrent()}
+function nextItem(){if(!items.length)return;current=(current+1)%items.length;resetReveals();renderCurrent()}
+function prevItem(){if(!items.length)return;current=(current-1+items.length)%items.length;resetReveals();renderCurrent()}
 function toggleFullscreenMode(){document.body.classList.toggle('fullscreen')}
 function showError(msg){$('viewer').innerHTML=`<div class="empty"><div><h2>Projector Error</h2><p>${esc(msg)}</p></div></div>`}
-document.addEventListener('keydown',e=>{if(e.target&&['INPUT','TEXTAREA'].includes(e.target.tagName))return;if(e.key==='ArrowRight'||e.key===' ')nextVisual();if(e.key==='ArrowLeft')prevVisual();if(e.key.toLowerCase()==='f')toggleFullscreenMode();if(e.key.toLowerCase()==='r')revealImage();if(e.key.toLowerCase()==='h')hideImage();if(e.key.toLowerCase()==='w')setCoverColor('white');if(e.key.toLowerCase()==='b')setCoverColor('black')});
+document.addEventListener('keydown',e=>{if(e.target&&['INPUT','TEXTAREA'].includes(e.target.tagName))return;if(e.key==='ArrowRight'||e.key===' ')nextItem();if(e.key==='ArrowLeft')prevItem();if(e.key.toLowerCase()==='f')toggleFullscreenMode();if(e.key.toLowerCase()==='r')revealMedia();if(e.key.toLowerCase()==='h')hideMedia();if(e.key.toLowerCase()==='w')setCoverColor('white');if(e.key.toLowerCase()==='b')setCoverColor('black')});
 $('manifest-file').addEventListener('change',e=>{const file=e.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=evt=>{try{setManifest(JSON.parse(evt.target.result))}catch(err){showError('That JSON file is not a valid projector manifest.')}};reader.readAsText(file)});
 loadFromHash();renderSidebarControls();
 </script>
