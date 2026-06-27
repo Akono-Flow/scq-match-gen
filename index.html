@@ -960,13 +960,16 @@ hr.divider { border: none; border-top: 1px solid var(--border); margin: 14px 0; 
         <button class="btn btn-teal" onclick="exportMatchHTML()" id="btn-export-html" disabled>
           📄 Export HTML Report
         </button>
+        <button class="btn btn-teal btn-sm" onclick="printMatchPDF()" id="btn-export-pdf" disabled>
+          🖨 Create PDF / Print
+        </button>
         <button class="btn btn-secondary" onclick="exportMatchJSON()" id="btn-export-json" disabled>
           {} Export JSON
         </button>
         <button class="btn btn-secondary btn-sm" onclick="document.getElementById('match-json-input').click()">
           📥 Import Match
         </button>
-        <input type="file" id="match-json-input" accept=".json,.zip,application/json,application/zip" onchange="handleMatchImportFile(event)" style="display:none">
+        <input type="file" id="match-json-input" accept=".json,.zip,.scq,application/json,application/zip" onchange="handleMatchImportFile(event)" style="display:none">
         <button class="btn btn-secondary" onclick="openProjectorView()" id="btn-projector-view" disabled>
           🖥 Projector View
         </button>
@@ -974,7 +977,7 @@ hr.divider { border: none; border-top: 1px solid var(--border); margin: 14px 0; 
           🧾 Projector JSON
         </button>
         <button class="btn btn-secondary btn-sm" onclick="downloadMatchPackage()" id="btn-match-package" disabled>
-          📦 Match Package
+          📦 Export .SCQ
         </button>
         <button class="btn btn-secondary btn-sm" onclick="toggleAllAnswers()" id="btn-reveal-all">
           👁 Show Answers
@@ -2318,8 +2321,8 @@ function toggleAllAnswers() {
 // ═══════════════════════════════════════════════════════════════
 // EXPORT HTML REPORT (AG Grid + print-safe static table)
 // ═══════════════════════════════════════════════════════════════
-function exportMatchHTML() {
-  if (!DB.lastGenerated) return;
+function exportMatchHTML(returnHtmlOnly = false) {
+  if (!DB.lastGenerated) return returnHtmlOnly ? '' : undefined;
   const { sections, matchName, timestamp, warnings } = DB.lastGenerated;
   const includeAnswers = DB.settings.includeAnswersInExport;
 
@@ -2912,16 +2915,31 @@ function escH(s) {
 </body>
 </html>`;
 
+  if (returnHtmlOnly) return html;
   downloadFile(matchName.replace(/[^a-zA-Z0-9]/g,'_') + '_report.html', html, 'text/html');
+}
+
+function printMatchPDF() {
+  const html = exportMatchHTML(true);
+  if (!html) return;
+  const w = window.open('', '_blank');
+  if (!w) {
+    alert('Your browser blocked the print window. Please allow popups, then try again.');
+    return;
+  }
+  w.document.open();
+  w.document.write(html + `<script>setTimeout(() => { window.focus(); window.print(); }, 600);<\/script>`);
+  w.document.close();
 }
 
 
 
+
 // ═══════════════════════════════════════════════════════════════
-// MATCH JSON IMPORT / RESTORE
+// MATCH JSON / .SCQ IMPORT / RESTORE
 // ═══════════════════════════════════════════════════════════════
 function setMatchActionButtonsEnabled(enabled) {
-  const ids = ['btn-export-html','btn-export-json','btn-projector-view','btn-projector-manifest','btn-match-package'];
+  const ids = ['btn-export-html','btn-export-pdf','btn-export-json','btn-projector-view','btn-projector-manifest','btn-match-package'];
   ids.forEach(id => { const b = el(id); if (b) b.disabled = !enabled; });
 }
 
@@ -3023,7 +3041,7 @@ async function extractMatchJSONFromZip(file) {
   if (typeof JSZip === 'undefined') throw new Error('ZIP support is not available. Please import match.json directly.');
   const zip = await JSZip.loadAsync(file);
   const candidates = Object.keys(zip.files).filter(name => /(^|\/)match\.json$/i.test(name) && !zip.files[name].dir);
-  if (!candidates.length) throw new Error('This ZIP package does not contain a match.json file.');
+  if (!candidates.length) throw new Error('This .SCQ/ZIP package does not contain a match.json file.');
   const text = await zip.files[candidates[0]].async('string');
   return JSON.parse(text);
 }
@@ -3035,16 +3053,16 @@ async function handleMatchImportFile(event) {
 
   try {
     let data;
-    if (/\.zip$/i.test(file.name) || file.type === 'application/zip') {
+    if (/\.(zip|scq)$/i.test(file.name) || file.type === 'application/zip') {
       data = await extractMatchJSONFromZip(file);
     } else {
       data = JSON.parse(await file.text());
     }
     const imported = normalizeImportedMatchJSON(data);
     restoreGeneratedMatch(imported);
-    alert(`Imported match: ${imported.matchName}\nQuestions restored: ${Object.values(imported.sections).flat().length}\n\nProjector View, Projector JSON, and Match Package now use this imported match.`);
+    alert(`Imported match: ${imported.matchName}\nQuestions restored: ${Object.values(imported.sections).flat().length}\n\nProjector View, Projector JSON, PDF/Print, and .SCQ export now use this imported match.`);
   } catch (err) {
-    alert('Could not import match JSON: ' + err.message);
+    alert('Could not import match/.SCQ file: ' + err.message);
   }
 }
 
@@ -3190,32 +3208,53 @@ async function downloadMatchPackage() {
   const manifest = makeProjectorManifest();
   const fullMatch = makeFullMatchJSON();
   if (!manifest || !fullMatch) {
-    alert('Generate a match first.');
+    alert('Generate or import a match first.');
     return;
   }
   if (typeof JSZip === 'undefined') {
-    alert('The ZIP library could not be loaded. Please check your internet connection and try again, or export the JSON files separately.');
+    alert('The ZIP library could not be loaded. Please check your internet connection and try again.');
     return;
   }
 
   const safeName = (manifest.matchName || 'match').replace(/[^a-zA-Z0-9_-]/g,'_');
+  const reportHtml = exportMatchHTML(true) || '';
   const zip = new JSZip();
-  const folder = zip.folder(safeName + '_projector_package');
-  folder.file('match.json', JSON.stringify(fullMatch, null, 2));
-  folder.file('projector_manifest.json', JSON.stringify(manifest, null, 2));
+
+  const metadata = {
+    app: 'SCQ Match Generator',
+    packageType: 'scq-match-package',
+    packageVersion: 1,
+    fileFormat: '.scq',
+    matchName: manifest.matchName || fullMatch.matchName || 'Match',
+    exported: new Date().toISOString(),
+    contents: ['metadata.json','match.json','projector_manifest.json','report.html','print_report.html','projector.html','README.txt']
+  };
+
+  zip.file('metadata.json', JSON.stringify(metadata, null, 2));
+  zip.file('match.json', JSON.stringify(fullMatch, null, 2));
+  zip.file('projector_manifest.json', JSON.stringify(manifest, null, 2));
+  zip.file('report.html', reportHtml);
+
+  const printReportHtml = reportHtml.replace('</body>', `<script>window.addEventListener('load',()=>setTimeout(()=>window.print(),700));<\/script>\n</body>`);
+  zip.file('print_report.html', printReportHtml);
 
   try {
     const res = await fetch('projector.html', { cache: 'no-store' });
-    if (res.ok) folder.file('projector.html', await res.text());
+    if (res.ok) zip.file('projector.html', await res.text());
+    else throw new Error('projector.html fetch failed');
   } catch (err) {
-    folder.file('README.txt', 'projector.html could not be fetched automatically. Copy projector.html from your GitHub repo into this folder if you want the package to be self-contained.');
+    zip.file('projector.html', makeFallbackProjectorHtml());
   }
 
-  const readme = `SCQ Projector Package\n\nFiles:\n- match.json: full generated match.\n- projector_manifest.json: media-only projector manifest for images, audio, video, and PDFs.\n- projector.html: universal projector presenter, if it was available to package.\n\nOpen projector.html and use Load JSON to load projector_manifest.json, or use the Projector View button from the main app.\n\nMedia files are referenced by URL; they are not copied into this package. Keep your media files hosted in GitHub Pages or another accessible location.`;
-  folder.file('README.txt', readme);
+  const readme = `SCQ Match Package (.scq)\n\nThis is a ZIP-based SCQ package with a custom .scq extension.\n\nFiles inside:\n- metadata.json: package metadata.\n- match.json: full generated match.\n- projector_manifest.json: media-only projector manifest for images, audio, video, and PDFs.\n- report.html: printable/searchable match report.\n- print_report.html: opens the browser print dialog automatically for creating a PDF or printing hard copies.\n- projector.html: universal projector presenter.\n\nHow to create a PDF:\nOpen print_report.html and choose Save as PDF in the browser print dialog.\n\nNote: Browser security does not allow a static GitHub Pages app to silently save a PDF file without showing the print/save dialog. This package makes the PDF workflow automatic up to the browser's required confirmation step.\n\nMedia files are referenced by URL; they are not copied into this package. Keep your media files hosted in GitHub Pages or another accessible location.`;
+  zip.file('README.txt', readme);
 
   const blob = await zip.generateAsync({ type: 'blob' });
-  downloadFile(safeName + '_projector_package.zip', blob, 'application/zip');
+  downloadFile(safeName + '.scq', blob, 'application/zip');
+}
+
+function makeFallbackProjectorHtml() {
+  return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>SCQ Projector</title></head><body style="font-family:system-ui;padding:2rem"><h1>SCQ Projector</h1><p>The live projector.html file could not be fetched when this package was created. Please copy projector.html from your GitHub repo beside this package's JSON files, or use the Projector View button in the main app.</p></body></html>`;
 }
 
 // ═══════════════════════════════════════════════════════════════
