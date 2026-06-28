@@ -4,6 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SCQ Match Generator</title>
+<!-- SCQ Auth System — add these in this order -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="https://akono-gate-flow.learnwithcole.com/js/config.js"></script>
+<script src="https://akono-gate-flow.learnwithcole.com/js/auth.js"></script>
+  
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/marked@9.1.6/marked.min.js"></script>
@@ -1320,7 +1325,15 @@ hr.divider { border: none; border-top: 1px solid var(--border); margin: 14px 0; 
 </style>
 </head>
 <body>
-
+  <div id="page-loader" style="
+    position:fixed;inset:0;background:#050911;
+    display:flex;align-items:center;justify-content:center;
+    z-index:9999;font-family:monospace;color:#2563eb;font-size:1.1rem;
+    flex-direction:column;gap:12px;
+  ">
+    <span style="font-size:2rem">🔒</span>
+    Verifying access…
+  </div>
 <!-- ══════════════════════════════════════════════════ HEADER -->
 <header id="app-header">
   <div class="header-logo">
@@ -2261,7 +2274,12 @@ function applyThemeMode(mode) {
 // ═══════════════════════════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════════════════════════
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+
+  const auth = await requireAppAccess('matchgen', 'no-access.html');
+  if (!auth) return;
+  document.getElementById('page-loader').remove();
+  
   loadFromLocalStorage();
   applyThemeMode(DB.settings.appearanceMode || 'dark');
   initNavTabs();
