@@ -3487,17 +3487,14 @@ function exportMatchHTML(returnHtmlOnly = false) {
     #exp-info-popup,#exp-info-popup.visible{display:none!important;}
     .info-icon-exp{display:none!important;}
     .warn{background:#fff8e0;border:1px solid #e8b84b;color:#7a5500;padding:6px 10px;border-radius:4px;font-size:11px;margin-bottom:6px;}
+    .alert{display:none!important;}
+    .alert-warn{display:none!important;}
+    .alert-info{display:none!important;}
+    .alert-error{display:none!important;}
+    .alert-ok{display:none!important;}
   }
   .warn{background:rgba(232,184,75,.1);border:1px solid rgba(232,184,75,.3);color:var(--gold);padding:8px 12px;border-radius:6px;font-size:12px;margin-bottom:8px;}
-  @media print {
-    .alert,
-    .alert-warn,
-    .alert-info,
-    .alert-error,
-    .alert-ok {
-      display: none !important;
-    }
-  }
+
 /* ─── Section Order (Settings) ──────────────────────────────── */
 .section-order-grid {
   display: grid;
